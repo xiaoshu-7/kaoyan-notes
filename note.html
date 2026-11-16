@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!--
+  ============================================================
+  笔记页模板
+  这个文件只负责「长什么样」。所有文字都在 data.js 里。
+  访问方式：note.html?id=bst
+  ============================================================
+-->
+<title>笔记 · 数据结构</title>
+<link rel="stylesheet" href="app.css?v=202611170030">
+</head>
+<body data-page="note">
+
+<div class="book">
+  <div class="holes"></div>
+
+  <aside class="spine">
+    <div class="hand-sub">STUDY NOTEBOOK</div>
+    <div class="hand-title">考研<span>笔记</span></div>
+    <div class="tape">408</div>
+
+    <div class="rule-doodle"></div>
+
+    <div class="toc-label">Contents</div>
+    <ul class="toc" id="toc"></ul>
+
+    <div class="memo" id="memo">加载中…</div>
+  </aside>
+
+  <div class="page">
+    <div class="page-top">
+      <div class="l">
+        <button class="menu-btn" id="menuBtn" title="收起 / 展开目录"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="mb-text">章节</span></button>
+        <div id="crumb"></div>
+      </div>
+      <div id="date">2026.11.16</div>
+    </div>
+    <main id="main"></main>
+  </div>
+</div>
+
+<div class="mask" id="mask"></div>
+
+<script src="data/ds.js"></script>
+<script src="data/coa.js"></script>
+<script src="data/os.js"></script>
+<script src="data/math.js"></script>
+<script src="data/en.js"></script>
+<script src="data/pol.js"></script>
+<script src="data/net.js"></script>
+<script src="render.js"></script>
+</body>
+</html>
