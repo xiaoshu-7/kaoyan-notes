@@ -403,28 +403,32 @@ const BANK = [
    配置
    ============================================================ */
 /* ============ 知识点碎片：每关通关掉落一张 ============ */
-const CARDS = [
-  {id:'c1',  lv:1,  title:'线性表的定义', src:'1.1',
-   body:'n 个数据元素的有限序列，n=0 时是空表。它是逻辑结构，不是存储结构。'},
-  {id:'c2',  lv:2,  title:'逻辑结构 vs 存储结构', src:'1.1',
-   body:'逻辑结构描述元素之间的关系（一对一）；存储结构是它在内存里的实现方式（顺序 / 链式）。'},
-  {id:'c3',  lv:3,  title:'顺序表插入', src:'1.1',
-   body:'第 i 个位置插入，要移动 n−i+1 个元素。注意和删除的 (n−i) 差一个 1，这两个最易混。'},
-  {id:'c4',  lv:4,  title:'链表插入的顺序', src:'1.1',
-   body:'先让 s 接住 p 的后继（s->next = p->next），再让 p 指向 s。顺序反了会丢掉原来的后继，链表断裂。'},
-  {id:'c5',  lv:5,  title:'头结点的作用', src:'1.1',
-   body:'有了头结点，在第一个位置插入删除不用特殊处理头指针，代码逻辑统一。代价是多占一个结点的空间。'},
-  {id:'c6',  lv:6,  title:'存储密度', src:'1.1',
-   body:'存储密度 = 数据占空间 / 结点总空间。链表每结点要存 next 指针，所以密度 < 1；顺序表密度 = 1。'},
-  {id:'c7',  lv:7,  title:'删除结点的陷阱', src:'1.1',
-   body:'必须先保存 q，让 p 跳过 q，最后才 free(q)。先 free 再访问 q->next 是野指针错误。'},
-  {id:'c8',  lv:8,  title:'顺序表删除', src:'1.1',
-   body:'删除第 i 个元素要移动 n−i 个，i 等概率取 1..n，平均移动 (n−1)/2 个。'},
-  {id:'c9',  lv:9,  title:'时间复杂度', src:'1.1',
-   body:'顺序表：按位置访问 O(1)，插入删除 O(n)。链表：访问 O(n)，已定位时插入删除 O(1)。'},
-  {id:'c10', lv:10, title:'顺序表 vs 链表', src:'1.1',
-   body:'五维对比：随机访问（顺序优）、插入删除（链表优）、存储密度（顺序优）、空间连续性（链表优）、缓存友好（顺序优）。'}
-];
+const CARDS = {
+  1: [
+    {id:'c1-1',  title:'线性表的定义', src:'1.1', body:'n 个数据元素的有限序列，n=0 时是空表。它是逻辑结构，不是存储结构。'},
+    {id:'c1-2',  title:'逻辑结构 vs 存储结构', src:'1.1', body:'逻辑结构描述元素之间的关系（一对一）；存储结构是它在内存里的实现方式。'},
+    {id:'c1-3',  title:'顺序表插入', src:'1.1', body:'第 i 个位置插入，要移动 n−i+1 个元素。和删除的 (n−i) 差一个 1。'},
+    {id:'c1-4',  title:'链表插入的顺序', src:'1.1', body:'先 s->next = p->next，再 p->next = s。顺序反了会断链。'},
+    {id:'c1-5',  title:'头结点的作用', src:'1.1', body:'统一空表与非空表的操作，代价是多占一个结点。'},
+    {id:'c1-6',  title:'存储密度', src:'1.1', body:'数据占空间 / 结点总空间。链表要存指针所以 <1，顺序表 =1。'},
+    {id:'c1-7',  title:'删除结点的陷阱', src:'1.1', body:'先保存 q，让 p 跳过 q，最后才 free(q)。先 free 再访问是野指针。'},
+    {id:'c1-8',  title:'顺序表删除', src:'1.1', body:'删除第 i 个平均移动 (n−1)/2 个元素。'},
+    {id:'c1-9',  title:'时间复杂度', src:'1.1', body:'顺序表访问 O(1)、插入删除 O(n)；链表访问 O(n)、已定位插入 O(1)。'},
+    {id:'c1-10', title:'顺序表 vs 链表', src:'1.1', body:'五维对比：随机访问、插入删除、存储密度、空间连续性、缓存友好。'}
+  ],
+  2: [
+    {id:'c2-1',  title:'栈的定义', src:'2.1', body:'后进先出（LIFO），只在栈顶插入和删除。栈是操作受限的线性表。'},
+    {id:'c2-2',  title:'顺序栈的 top 指针', src:'2.1', body:'top 指向栈顶元素（初始 −1，空栈 top==−1，满栈 top==MAXSIZE−1）。也可以指向栈顶下一空位（初始 0）。两种写法要配套。'},
+    {id:'c2-3',  title:'出栈序列的判断', src:'2.1', body:'入栈 1、2、3，出栈 3、1、2 不可能——3 先出说明 1、2 都在栈里，栈顶是 2，下一个只能是 2。n 个元素共 Catalan 种出栈序列。'},
+    {id:'c2-4',  title:'栈的三大应用', src:'2.2', body:'括号匹配、表达式求值（中缀转后缀）、递归调用（栈帧保存返回地址和局部变量）。'},
+    {id:'c2-5',  title:'共享栈', src:'2.2', body:'两个栈从数组两端向中间生长，top1 + 1 == top2 时满。空间利用率最高。'},
+    {id:'c2-6',  title:'队列的定义', src:'2.3', body:'先进先出（FIFO），队尾入队、队头出队。也是操作受限的线性表。'},
+    {id:'c2-7',  title:'循环队列判空判满', src:'2.3', body:'判空 front == rear；判满 (rear+1)%MAXSIZE == front（少用一个空间）。两者不能混。'},
+    {id:'c2-8',  title:'循环队列元素个数', src:'2.3', body:'(rear − front + MAXSIZE) % MAXSIZE。加 MAXSIZE 是因为 rear 可能小于 front（绕回了）。'},
+    {id:'c2-9',  title:'假溢出', src:'2.3', body:'顺序队列出队后队头前移，但队尾到了数组末尾就报满——明明前面还有空位。解法是改成循环队列。'},
+    {id:'c2-10', title:'队列的应用', src:'2.4', body:'二叉树层次遍历（BFS）、打印缓冲区、任务调度、消息队列。只要「先来先服务」就是队列。'}
+  ]
+};
 
 const SIZES = {
   s: {cols:40, rows:30, name:'小'},
@@ -1235,7 +1239,7 @@ function showSettle(final){
     '<span style="opacity:' + (i < stars ? 1 : .16) + '">★</span>'
   ).join('');
 
-  const card = grantCard(G.level);
+  const card = grantCard(G.chapter, G.level);
   const cardHtml = card
     ? '<div style="margin:14px auto 4px;max-width:340px;padding:12px 14px;text-align:left;' +
       'background:rgba(255,209,102,.07);border:1px solid rgba(255,209,102,.35);border-radius:4px">' +
@@ -2002,8 +2006,9 @@ function startGame(){
   nextQuestion();
 }
 
-function grantCard(level){
-  const c = CARDS[level - 1];
+function grantCard(chapter, level){
+  const list = CARDS[chapter] || CARDS[1];
+  const c = list[level - 1];
   if(!c) return null;
   try{
     const k = 'qz:cards';
