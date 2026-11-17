@@ -227,6 +227,23 @@ body{
 .codex-item.locked{opacity:.42}
 .codex-item.locked .ic{border-style:dashed}
 
+.card-item{
+  padding:11px 12px;margin-bottom:9px;
+  background:rgba(255,209,102,.05);
+  border:1px solid rgba(255,209,102,.28);border-radius:4px;
+}
+.card-item.locked{
+  background:rgba(90,210,150,.02);
+  border:1px dashed #1e3529;opacity:.5;
+}
+.card-item .cd-h{
+  display:flex;align-items:baseline;gap:8px;margin-bottom:5px;
+}
+.card-item .cd-t{font-size:12px;color:#ffd166}
+.card-item .cd-s{font-size:9.5px;color:#6d8a7b}
+.card-item .cd-b{font-size:10.5px;color:#a8bfae;line-height:1.85}
+.card-item.locked .cd-t{color:#4d6b5c}
+
 /* 皮肤 */
 .skin-sec{margin-bottom:18px}
 .skin-sec h4{
@@ -366,6 +383,7 @@ body{
       <div class="tabs">
         <button class="on" data-tab="trait">特性 12</button>
         <button data-tab="enemy">敌人 4</button>
+        <button data-tab="card">碎片 <span id="cardCount">0</span>/10</button>
       </div>
       <div id="codexBody"></div>
     </div>
@@ -439,6 +457,19 @@ const TRAITS = [
   {id:'orbit',  name:'环绕',     icon:'◍', col:'#c77dff', max:3, desc:'增加 1 颗绕你转的光球，碰到敌人掉血。'},
   {id:'chain',  name:'电弧',     icon:'⌁', col:'#7fd6ff', max:3, desc:'每 3 秒电击最近的敌人，不用瞄准。'},
   {id:'steal',  name:'吸血',     icon:'♥', col:'#ff6b8a', max:2, desc:'击杀回 2 血，配合多重射击回得飞快。'}
+];
+
+const CARDS = [
+  {id:'c1',  lv:1,  title:'线性表的定义', src:'1.1', body:'n 个数据元素的有限序列，n=0 时是空表。它是逻辑结构，不是存储结构。'},
+  {id:'c2',  lv:2,  title:'逻辑结构 vs 存储结构', src:'1.1', body:'逻辑结构描述元素之间的关系（一对一）；存储结构是它在内存里的实现方式。'},
+  {id:'c3',  lv:3,  title:'顺序表插入', src:'1.1', body:'第 i 个位置插入，要移动 n−i+1 个元素。和删除的 (n−i) 差一个 1。'},
+  {id:'c4',  lv:4,  title:'链表插入的顺序', src:'1.1', body:'先 s->next = p->next，再 p->next = s。顺序反了会断链。'},
+  {id:'c5',  lv:5,  title:'头结点的作用', src:'1.1', body:'统一空表与非空表的操作，代价是多占一个结点。'},
+  {id:'c6',  lv:6,  title:'存储密度', src:'1.1', body:'数据占空间 / 结点总空间。链表要存指针所以 <1，顺序表 =1。'},
+  {id:'c7',  lv:7,  title:'删除结点的陷阱', src:'1.1', body:'先保存 q，让 p 跳过 q，最后才 free(q)。先 free 再访问是野指针。'},
+  {id:'c8',  lv:8,  title:'顺序表删除', src:'1.1', body:'删除第 i 个平均移动 (n−1)/2 个元素。'},
+  {id:'c9',  lv:9,  title:'时间复杂度', src:'1.1', body:'顺序表访问 O(1)、插入删除 O(n)；链表访问 O(n)、已定位插入 O(1)。'},
+  {id:'c10', lv:10, title:'顺序表 vs 链表', src:'1.1', body:'五维对比：随机访问、插入删除、存储密度、空间连续性、缓存友好。'}
 ];
 
 const ETYPES = [
@@ -653,6 +684,22 @@ function renderCodex(tab){
           '<div class="ds" style="color:#6d8a7b">' + t.desc + '</div>' +
         '</div></div>';
     }).join('');
+  } else if(tab === 'card'){
+    let got = [];
+    try{ got = JSON.parse(localStorage.getItem('qz:cards') || '[]'); }catch(e){}
+    const cnt = document.getElementById('cardCount');
+    if(cnt) cnt.textContent = got.length;
+
+    body.innerHTML = CARDS.map(c => {
+      const has = got.includes(c.id);
+      return '<div class="card-item' + (has ? '' : ' locked') + '">' +
+        '<div class="cd-h">' +
+          '<span class="cd-t">' + (has ? c.title : '???' ) + '</span>' +
+          '<span class="cd-s">' + (has ? c.src + ' 线性表' : '第 ' + c.lv + ' 关掉落') + '</span>' +
+        '</div>' +
+        (has ? '<div class="cd-b">' + c.body + '</div>' : '') +
+      '</div>';
+    }).join('');
   } else {
     body.innerHTML = ETYPES.map(e =>
       '<div class="codex-item" style="color:' + e.col + '">' +
@@ -721,6 +768,13 @@ function renderSkins(){
    ============================================================ */
 renderHeader();
 render();
+
+/* 支持 ?panel=codex&tab=card 直接打开面板（调试用） */
+(function(){
+  var qs = new URLSearchParams(location.search);
+  var pn = qs.get('panel');
+  if(pn){ openPanel(pn); if(pn === 'codex') renderCodex(qs.get('tab') || 'trait'); }
+})();
 </script>
 </body>
 </html>
