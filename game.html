@@ -116,6 +116,11 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .qhead .n{color:var(--gold);font-size:11.5px}
 .qhead .sp{flex:1}
 .qhead .st{color:var(--cyan)}
+.reward-tag{
+  font-size:10px;padding:2px 7px;border-radius:2px;
+  border:1px solid currentColor;color:#7fd6ff;
+  white-space:nowrap;letter-spacing:.02em;
+}
 
 .qbody{padding:16px 18px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1}
 .qtext{font-size:14px;line-height:1.9;color:#dcefe4}
@@ -222,6 +227,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
       </div>
 
       <div class="hud">
+        <span>我 <span class="bar"><i id="meBar" style="width:100%;background:#7fd6ff"></i></span> <b id="meTxt">100</b></span>
         <span>基地 <span class="bar"><i id="hpBar" style="width:100%"></i></span> <b id="hpTxt">100</b></span>
         <span>火力 <b id="lvTxt">1</b></span>
         <span class="threat">威胁 <b id="threatTxt">1</b></span>
@@ -236,6 +242,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
         <span class="n" id="qno">第 1 题</span>
         <span>数据结构 · 线性表</span>
         <span class="sp"></span>
+        <span class="reward-tag" id="rewardTag">答对 ——</span>
         <span class="st" id="streakBox">连对 0</span>
       </div>
       <div class="qbody">
@@ -288,6 +295,14 @@ const DIFFS = {
 
 const TILE = 24;
 
+/* 敌人类型 */
+const ETYPES = {
+  drone:   {name:'游荡', hp:1, spd:1.00, fire:0, r:8,  col:'#ff6b6b', score:80,  keep:0},
+  shooter: {name:'射手', hp:2, spd:0.72, fire:1, r:9,  col:'#ffa94d', score:130, keep:150},
+  charger: {name:'冲锋', hp:1, spd:1.95, fire:0, r:8,  col:'#ff4d6d', score:160, keep:0, suicide:true},
+  tank:    {name:'重甲', hp:5, spd:0.50, fire:1, r:12, col:'#c77dff', score:260, keep:120}
+};
+
 /* ============================================================
    状态
    ============================================================ */
@@ -304,7 +319,8 @@ const G = {
   score:0, okN:0, noN:0, streak:0,
   shake:0, zoom:1,
   viewW:0, viewH:0,
-  fireMode:'manual', floats:[]
+  fireMode:'manual', floats:[],
+  slowT:0, rageT:0, pendReward:null
 };
 
 const cv = document.getElementById('cv');
@@ -370,7 +386,8 @@ function genWorld(){
     x: spot.c*TILE + TILE/2,
     y: spot.r*TILE + TILE/2,
     r: 9, speed: 2.6,
-    angle: 0, cd: 0, lv: 1, shield: 90
+    angle: 0, cd: 0, lv: 1, shield: 90,
+    hp: 100, maxHp: 100, dead: 0
   };
 
   G.cam.x = G.player.x - G.viewW/2;
@@ -460,6 +477,8 @@ function update(){
   G.t++;
   if(G.shake > 0) G.shake--;
   if(G.zoom > 1) G.zoom = Math.max(1, G.zoom - 0.028);
+  if(G.slowT > 0) G.slowT--;
+  if(G.rageT > 0) G.rageT--;
 
   const p = G.player;
   const cfg = DIFFS[G.diff];
@@ -493,7 +512,7 @@ function update(){
   const wantFire = G.fireMode === 'auto' || mouse.down || keys[' '];
   if(wantFire && p.cd <= 0){
     fire(p.x + Math.cos(p.angle)*13, p.y + Math.sin(p.angle)*13, p.angle, 'player', p.lv);
-    p.cd = p.lv >= 3 ? 8 : (p.lv >= 2 ? 11 : 15);
+    p.cd = (p.lv >= 3 ? 8 : (p.lv >= 2 ? 11 : 15)) * (G.rageT > 0 ? 0.5 : 1);
   }
 
   // --- 敌人 ---
@@ -504,15 +523,26 @@ function update(){
     const ang = Math.atan2(ty - e.y, tx - e.x);
     e.angle = ang;
 
-    const nx = e.x + Math.cos(ang)*e.speed;
-    const ny = e.y + Math.sin(ang)*e.speed;
+    const distT = Math.hypot(tx - e.x, ty - e.y);
+    let moveAng = ang;
+    let moveSpd = e.speed * (G.slowT > 0 ? 0.45 : 1);
+
+    // 射手/重甲：保持在射程边缘
+    if(e.keep > 0){
+      if(distT < e.keep * 0.7) moveAng = ang + Math.PI;
+      else if(distT < e.keep) moveSpd = 0;
+    }
+
+    const nx = e.x + Math.cos(moveAng)*moveSpd;
+    const ny = e.y + Math.sin(moveAng)*moveSpd;
     const blockX = hitsWall(nx, e.y, e.r);
     const blockY = hitsWall(e.x, ny, e.r);
     if(!blockX) e.x = nx;
     if(!blockY) e.y = ny;
     e.blocked = (blockX && blockY);
-    // 被墙挡住 → 朝墙开火打穿，不再傻站着
-    if(e.blocked && e.cd <= 0){
+
+    // 被墙挡住 → 朝墙开火打穿
+    if(e.blocked && e.keep === 0 && e.cd <= 0){
       fire(e.x, e.y, ang, 'enemy', 1);
       e.cd = 45;
     }
@@ -521,9 +551,20 @@ function update(){
     if(Math.hypot(e.x-G.base.x, e.y-G.base.y) < G.base.r + e.r - 3){
       damage(cfg.baseDmg); e.hp = 0; boom(e.x, e.y, '#ff6b6b'); continue;
     }
+    // 冲锋者：靠近就自爆（范围伤害）
+    if(e.suicide && Math.hypot(e.x-p.x, e.y-p.y) < e.r + p.r + 6){
+      boom(e.x, e.y, '#ff4d6d');
+      for(let k=0;k<10;k++){
+        const aa = Math.random()*Math.PI*2;
+        G.parts.push({x:e.x,y:e.y,vx:Math.cos(aa)*2.5,vy:Math.sin(aa)*2.5,life:18,col:'#ff8fa3',sz:2});
+      }
+      if(Math.hypot(e.x-p.x, e.y-p.y) < 74 && p.shield <= 0) hurtPlayer(20);
+      if(Math.hypot(e.x-G.base.x, e.y-G.base.y) < 74) damage(8);
+      e.hp = 0; continue;
+    }
     // 撞玩家
     if(p.shield <= 0 && Math.hypot(e.x-p.x, e.y-p.y) < e.r + p.r){
-      damage(8); e.hp = 0; boom(e.x, e.y, '#ffd166'); p.shield = 80; continue;
+      hurtPlayer(12); e.hp = 0; boom(e.x, e.y, '#ffd166'); continue;
     }
 
     // 敌人射击
@@ -563,7 +604,7 @@ function update(){
         }
       } else {
         if(p.shield<=0 && Math.hypot(b.x-p.x, b.y-p.y) < p.r+3){
-          damage(6); b.dead=true; boom(b.x,b.y,'#ffd166'); p.shield=80;
+          hurtPlayer(7); b.dead=true; boom(b.x,b.y,'#ffd166');
         }
       }
     }
@@ -617,28 +658,41 @@ function fire(x, y, ang, owner, lv){
   });
 }
 
+function pickType(stage){
+  const pool = ['drone','drone'];
+  if(stage >= 3) pool.push('shooter');
+  if(stage >= 5) pool.push('charger');
+  if(stage >= 7) pool.push('tank');
+  if(stage >= 6) pool.push('shooter');
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
 function spawnEnemy(){
   const p = G.player;
   const cfg = DIFFS[G.diff];
+  const stage = threatLevel();
+  const type = pickType(stage);
+  const T = ETYPES[type];
+
   for(let tries=0; tries<30; tries++){
     const ang = Math.random()*Math.PI*2;
-    const dist = 380 + Math.random()*140;
+    const dist = 380 + Math.random()*150;
     const x = p.x + Math.cos(ang)*dist;
     const y = p.y + Math.sin(ang)*dist;
     if(x < TILE*2 || x > G.worldW-TILE*2) continue;
     if(y < TILE*2 || y > G.worldH-TILE*2) continue;
     if(hitsWall(x, y, 10)) continue;
 
-    const heavy = G.t > 720 && Math.random() < 0.25;
-    const hp = (heavy ? 3 : 1) + cfg.hpAdd;
+    const hp = T.hp + cfg.hpAdd;
     G.enemies.push({
-      x, y,
-      r: heavy ? 10 : 8,
-      angle: 0,
-      speed: (heavy ? 0.75 : 1.15) * cfg.spd,
+      x, y, type,
+      r: T.r, angle: 0,
+      speed: T.spd * cfg.spd,
       hp, maxHp: hp,
-      heavy, flash: 0,
-      target: Math.random() < 0.65 ? 'player' : 'base',
+      flash: 0,
+      target: type === 'charger' ? 'player' : (Math.random() < 0.6 ? 'player' : 'base'),
+      keep: T.keep || 0,
+      suicide: !!T.suicide,
       cd: 40 + Math.random()*60,
       fireGap: cfg.fireGap + Math.round(Math.random()*30)
     });
@@ -646,10 +700,28 @@ function spawnEnemy(){
   }
 }
 
+function hurtPlayer(n){
+  const p = G.player;
+  if(!p || p.shield > 0) return;
+  p.hp -= n;
+  if(p.hp <= 0){
+    p.hp = 0;
+    boom(p.x, p.y, '#7fd6ff');
+    addFloat(p.x, p.y - 30, '阵亡 · 基地 -18', '#ff6b6b');
+    G.base.hp -= 18;
+    p.hp = p.maxHp;
+    p.shield = 200;
+    p.x = G.base.x - 46;
+    p.y = G.base.y;
+    if(G.base.hp <= 0){ G.base.hp = 0; gameOver(); }
+  } else {
+    addFloat(p.x, p.y - 26, '-' + n, '#ff8f8f');
+  }
+}
+
 function damage(n){
   G.base.hp -= n;
-  G.shake = 9;
-  G.zoom = 1.26;
+  G.zoom = 1.22;
   if(G.base.hp <= 0){ G.base.hp = 0; gameOver(); }
 }
 
@@ -675,7 +747,6 @@ function render(){
   ctx.fillRect(0,0,vw,vh);
 
   ctx.save();
-  if(G.shake > 0) ctx.translate((Math.random()-.5)*4, (Math.random()-.5)*4);
 
   const zoom = G.zoom, camX = G.cam.x, camY = G.cam.y;
   ctx.save();
@@ -743,24 +814,48 @@ function render(){
 
   // 敌人
   for(const e of G.enemies){
+    const T = ETYPES[e.type] || ETYPES.drone;
+    const col = e.flash > 0 ? '#ffffff' : T.col;
+    const R = e.r;
+
     ctx.save();
     ctx.translate(e.x, e.y);
-    ctx.rotate(e.angle);
-    const col = e.flash > 0 ? '#ffffff' : (e.heavy ? '#ff9a6b' : '#ff6b6b');
     ctx.fillStyle = col;
-    ctx.beginPath();
-    if(e.heavy){ ctx.moveTo(10,0); ctx.lineTo(0,9); ctx.lineTo(-10,0); ctx.lineTo(0,-9); }
-    else { ctx.moveTo(8,0); ctx.lineTo(0,6.5); ctx.lineTo(-8,0); ctx.lineTo(0,-6.5); }
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,190,190,.55)';
-    ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,200,200,.55)';
+    ctx.lineWidth = 1;
+
+    if(e.type === 'tank'){
+      ctx.beginPath();
+      for(let i=0;i<6;i++){
+        const a = i/6*Math.PI*2 - Math.PI/2;
+        ctx.lineTo(Math.cos(a)*R, Math.sin(a)*R);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,0,R*0.35,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill();
+    } else if(e.type === 'charger'){
+      ctx.rotate(e.angle);
+      ctx.beginPath();
+      ctx.moveTo(R+5,0); ctx.lineTo(-R*0.75, R*0.8); ctx.lineTo(-R*0.75, -R*0.8);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if(e.type === 'shooter'){
+      ctx.beginPath();
+      ctx.moveTo(R,0); ctx.lineTo(0,R); ctx.lineTo(-R,0); ctx.lineTo(0,-R);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,0,R+3.5,0,Math.PI*2);
+      ctx.strokeStyle = 'rgba(255,200,150,.35)'; ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(R,0); ctx.lineTo(0,R); ctx.lineTo(-R,0); ctx.lineTo(0,-R);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
     ctx.restore();
 
     if(e.maxHp > 1){
-      ctx.fillStyle = 'rgba(0,0,0,.5)';
-      ctx.fillRect(e.x-10, e.y-16, 20, 3);
-      ctx.fillStyle = '#ff6b6b';
-      ctx.fillRect(e.x-10, e.y-16, 20*(e.hp/e.maxHp), 3);
+      ctx.fillStyle = 'rgba(0,0,0,.55)';
+      ctx.fillRect(e.x-11, e.y-e.r-8, 22, 3);
+      ctx.fillStyle = T.col;
+      ctx.fillRect(e.x-11, e.y-e.r-8, 22*(e.hp/e.maxHp), 3);
     }
   }
 
@@ -877,6 +972,9 @@ function loop(ts){
 function updateHud(){
   const rate = G.base.hp / G.base.maxHp * 100;
   document.getElementById('hpBar').style.width = rate + '%';
+  const meRate = G.player ? (G.player.hp / G.player.maxHp * 100) : 100;
+  document.getElementById('meBar').style.width = meRate + '%';
+  document.getElementById('meTxt').textContent = G.player ? Math.round(G.player.hp) : 100;
   document.getElementById('hpTxt').textContent = Math.round(G.base.hp);
   document.getElementById('lvTxt').textContent = 'Lv' + (G.player ? G.player.lv : 1);
   document.getElementById('threatTxt').textContent = threatLevel();
@@ -900,6 +998,16 @@ let qIdx = 0, qLocked = true, wrongList = [];
 function nextQuestion(){
   qLocked = false;
   const q = BANK[qIdx % BANK.length];
+
+  // 本题的奖励预告
+  G.pendReward = pickReward();
+  const tag = document.getElementById('rewardTag');
+  if(tag && G.pendReward){
+    tag.textContent = '答对 ' + G.pendReward.name;
+    tag.style.color = G.pendReward.col;
+    tag.style.borderColor = G.pendReward.col;
+  }
+
   document.getElementById('qno').textContent = '第 ' + (qIdx+1) + ' 题';
   document.getElementById('qtext').innerHTML = q.q;
   document.getElementById('why').className = 'why';
@@ -940,7 +1048,7 @@ function answer(pick){
   if(right){
     G.okN++; G.streak++;
     G.score += 120 + G.streak * 30;
-    grantReward();
+    applyReward(G.pendReward);
     Sound.right();
   } else {
     G.noN++; G.streak = 0;
@@ -958,28 +1066,69 @@ function addFloat(x, y, text, color){
   G.floats.push({x, y, text, color, life: 75});
 }
 
-function grantReward(){
+const REWARDS = [
+  {id:'lv',     name:'火力 +1',  col:'#ffd166'},
+  {id:'shield', name:'护盾 6 秒', col:'#7fd6ff'},
+  {id:'heal',   name:'基地 +15', col:'#5fe08a'},
+  {id:'emp',    name:'EMP 清屏', col:'#ffe066'},
+  {id:'slow',   name:'时缓 5 秒', col:'#9bb7ff'},
+  {id:'rage',   name:'狂暴 8 秒', col:'#ff9f68'},
+  {id:'nuke',   name:'核弹',     col:'#ff5c5c'}
+];
+
+function pickReward(){
   const p = G.player;
   const pool = [];
-  if(p.lv < 3) pool.push('lv');
-  if(G.base.hp <= G.base.maxHp - 12) pool.push('heal');
-  pool.push('shield', 'shield', 'score', 'score');
-  const k = pool[Math.floor(Math.random()*pool.length)];
+  if(p.lv < 3) pool.push(REWARDS[0]);
+  if(G.base.hp < G.base.maxHp) pool.push(REWARDS[2]);
+  pool.push(REWARDS[1]);
+  if(G.enemies.length >= 3) pool.push(REWARDS[3]);
+  pool.push(REWARDS[4], REWARDS[5], REWARDS[6]);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
 
-  if(k === 'lv'){
-    p.lv++;
-    addFloat(p.x, p.y - 26, '火力 → Lv' + p.lv, '#ffd166');
-  } else if(k === 'heal'){
-    const add = Math.min(12, G.base.maxHp - G.base.hp);
-    G.base.hp += add;
-    addFloat(G.base.x, G.base.y - 40, '基地 +' + add, '#5fe08a');
-  } else if(k === 'shield'){
-    p.shield = Math.max(p.shield, 360);
-    addFloat(p.x, p.y - 26, '护盾 6 秒', '#7fd6ff');
-  } else {
-    const s = 150 + G.streak * 30;
-    G.score += s;
-    addFloat(p.x, p.y - 26, '+' + s, '#a8e6ff');
+function applyReward(r){
+  const p = G.player;
+  if(!r) return;
+  switch(r.id){
+    case 'lv':
+      p.lv++;
+      addFloat(p.x, p.y - 28, '火力 → Lv' + p.lv, r.col);
+      break;
+    case 'shield':
+      p.shield = Math.max(p.shield, 360);
+      addFloat(p.x, p.y - 28, '护盾 6 秒', r.col);
+      break;
+    case 'heal': {
+      const a = Math.min(15, G.base.maxHp - G.base.hp);
+      G.base.hp += a;
+      addFloat(G.base.x, G.base.y - 44, '基地 +' + a, r.col);
+      break;
+    }
+    case 'emp': {
+      const cnt = G.enemies.length;
+      G.enemies.forEach(e => { boom(e.x, e.y, '#ffe066'); G.score += 60; });
+      G.enemies = [];
+      addFloat(p.x, p.y - 28, 'EMP 清屏 ×' + cnt, r.col);
+      break;
+    }
+    case 'slow':
+      G.slowT = 300;
+      addFloat(p.x, p.y - 28, '时缓 5 秒', r.col);
+      break;
+    case 'rage':
+      G.rageT = 480;
+      addFloat(p.x, p.y - 28, '狂暴 8 秒', r.col);
+      break;
+    case 'nuke': {
+      for(let i=0;i<4;i++){
+        const a = Math.random()*Math.PI*2, d = 60 + Math.random()*180;
+        boom(p.x + Math.cos(a)*d, p.y + Math.sin(a)*d, '#ff5c5c');
+      }
+      G.enemies.forEach(e => { if(Math.hypot(e.x-p.x, e.y-p.y) < 250) e.hp -= 6; });
+      addFloat(p.x, p.y - 28, '核弹', r.col);
+      break;
+    }
   }
 }
 
@@ -1098,10 +1247,13 @@ if(new URLSearchParams(location.search).has('demo')){
       let x = p.x + Math.cos(a)*d, y = p.y + Math.sin(a)*d;
       x = Math.max(TILE*2, Math.min(G.worldW-TILE*2, x));
       y = Math.max(TILE*2, Math.min(G.worldH-TILE*2, y));
+      const types = ['drone','shooter','charger','tank','drone','shooter'];
+      const tp = types[i % types.length];
+      const TD = ETYPES[tp];
       G.enemies.push({
-        x, y, r: i%3===0?10:8, angle: a+Math.PI,
-        speed: 0.4, hp: i%3===0?3:1, maxHp: i%3===0?3:1,
-        heavy: i%3===0, flash: 0, target:'base',
+        x, y, type: tp, r: TD.r, angle: a+Math.PI,
+        speed: 0.4, hp: TD.hp, maxHp: TD.hp,
+        flash: 0, target:'base', keep: TD.keep, suicide: !!TD.suicide,
         cd: 9999, fireGap: 120
       });
     }
