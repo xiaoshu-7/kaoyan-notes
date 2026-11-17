@@ -1974,7 +1974,14 @@ function saveWrong(q, pick){
   try{
     const k = 'qz:wrong';
     const arr = JSON.parse(localStorage.getItem(k) || '[]');
-    arr.push({q, pick, t: Date.now()});
+    const hit = arr.filter(x => x.q === q)[0];
+    if(hit){
+      hit.count = (hit.count || 1) + 1;
+      hit.pick = pick;
+      hit.t = Date.now();
+    } else {
+      arr.push({q, pick, count: 1, t: Date.now()});
+    }
     localStorage.setItem(k, JSON.stringify(arr.slice(-300)));
   }catch(e){}
 }
@@ -2092,6 +2099,36 @@ cv.addEventListener('mousemove', e => {
 cv.addEventListener('mousedown', e => { mouse.down = true; e.preventDefault(); });
 window.addEventListener('mouseup', () => { mouse.down = false; });
 
+function saveSetting(k, v){
+  try{
+    const s = JSON.parse(localStorage.getItem('qz:settings') || '{}');
+    s[k] = v;
+    localStorage.setItem('qz:settings', JSON.stringify(s));
+  }catch(e){}
+}
+
+function syncSeg(id, v){
+  const box = document.getElementById(id);
+  if(!box) return;
+  box.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('on', b.dataset.v === v);
+  });
+}
+
+function loadSettings(){
+  try{
+    const s = JSON.parse(localStorage.getItem('qz:settings') || '{}');
+    if(s.fireMode) G.fireMode = s.fireMode;
+    if(s.qOrder) G.qOrder = s.qOrder;
+    if(s.size && SIZES[s.size]) G.size = s.size;
+    if(s.diff && DIFFS[s.diff]) G.diff = s.diff;
+  }catch(e){}
+  syncSeg('segSize', G.size);
+  syncSeg('segDiff', G.diff);
+  syncSeg('segFire', G.fireMode);
+  syncSeg('segOrder', G.qOrder);
+}
+
 function bindSeg(id, key){
   const box = document.getElementById(id);
   box.querySelectorAll('button').forEach(b => {
@@ -2099,6 +2136,7 @@ function bindSeg(id, key){
       box.querySelectorAll('button').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
       G[key] = b.dataset.v;
+      saveSetting(key, b.dataset.v);
     };
   });
 }
@@ -2121,6 +2159,7 @@ document.getElementById('startBtn').onclick = startGame;
    启动
    ============================================================ */
 fitCanvas();
+loadSettings();
 updateHud();
 requestAnimationFrame(loop);
 

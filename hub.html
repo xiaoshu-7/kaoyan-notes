@@ -280,6 +280,32 @@ body{
   border:1px solid currentColor;height:16px;line-height:16px;
 }
 .q-row .badge.w{color:#ff8f8f}
+
+.bank-nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(90,210,150,.08)}
+.bank-nav button{padding:4px 11px;background:#0a1710;color:#5f8172;border:1px solid rgba(90,210,150,.12);border-radius:2px;font-family:inherit;font-size:10.5px;cursor:pointer;transition:.14s}
+.bank-nav button:hover{color:#c9e8d8;border-color:rgba(95,224,138,.4)}
+.bank-nav button.on{background:rgba(95,224,138,.13);color:#5fe08a;border-color:#5fe08a}
+.bank-nav .sep{color:#2f4b3a;font-size:10px;margin:0 2px}
+
+.q-detail{padding:11px 13px;margin-bottom:8px;border-radius:4px;background:#0a1710;border:1px solid #16301f;cursor:pointer;transition:.15s}
+.q-detail:hover{border-color:#2a5a40}
+.q-detail.open{background:#0d1e15;border-color:#2a5a40}
+.q-detail .qh{display:flex;gap:8px;align-items:flex-start}
+.q-detail .qh .num{flex:0 0 20px;color:#3f5a4c;font-size:10px}
+.q-detail .qt{font-size:11.5px;line-height:1.75;color:#b6d2c2}
+.q-detail .qbody{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(90,210,150,.08)}
+.q-detail.open .qbody{display:block}
+.q-detail .oi{padding:3px 0;font-size:11px;color:#8fa99a;line-height:1.7}
+.q-detail .oi.right{color:#5fe08a}
+.q-detail .oi .tag{margin-left:6px;font-size:9.5px}
+.q-detail .why{margin-top:8px;padding:8px 10px;border-left:2px solid #7fd6ff;background:rgba(127,214,255,.05);font-size:10.5px;line-height:1.85;color:#9db5a6}
+
+.wrong-item{padding:11px 12px;margin-bottom:9px;border-radius:4px;background:rgba(255,107,107,.04);border:1px solid rgba(255,107,107,.2)}
+.wrong-item .wh{display:flex;gap:8px;align-items:baseline;margin-bottom:6px}
+.wrong-item .wt{font-size:11.5px;color:#d8c0c0;line-height:1.7;flex:1}
+.wrong-item .wc{flex:0 0 auto;font-size:9.5px;color:#ff8f8f;border:1px solid rgba(255,107,107,.4);border-radius:2px;padding:0 5px}
+.wrong-item .wa{font-size:10.5px;color:#5fe08a;margin-top:5px}
+.wrong-item .wy{font-size:10px;color:#7d9186;margin-top:5px;line-height:1.8}
 </style>
 </head>
 <body>
@@ -292,6 +318,7 @@ body{
     <div class="acts">
       <button data-panel="settings" title="设置">⚙</button>
       <button data-panel="bank" title="题库">▤</button>
+      <button data-panel="wrong" title="错题本">✗</button>
       <button data-panel="codex" title="图鉴">✦</button>
       <button data-panel="skin" title="外观">◈</button>
     </div>
@@ -365,6 +392,7 @@ body{
   <div class="box">
     <div class="hd">题 库 <span class="sp"></span><button data-close>✕</button></div>
     <div class="bd">
+      <div class="bank-nav" id="bankNav"></div>
       <div class="bank-stat">
         <span>共 <b id="bankTotal">0</b> 题</span>
         <span>已答 <b id="bankDone">0</b></span>
@@ -372,6 +400,14 @@ body{
       </div>
       <div id="bankList"></div>
     </div>
+  </div>
+</div>
+
+<!-- 错题本 -->
+<div class="panel" id="panel-wrong">
+  <div class="box">
+    <div class="hd">错 题 本 <span class="sp"></span><button data-close>✕</button></div>
+    <div class="bd" id="wrongBody"></div>
   </div>
 </div>
 
@@ -538,7 +574,107 @@ const ETYPES = [
 ];
 
 /* 题库（与 game.html 保持同步：只读展示用） */
-const BANK_LEN = 63;
+const BANK = [
+  {tag:'L1',q:'线性表是 n 个数据元素的有限序列。这里的「有限」指的是？',o:['表中的操作次数是有限的', '元素的个数 n 是有限的', '占用的存储空间是有限的', '每个元素的大小是有限的'],a:1,why:'线性表的定义强调「有限序列」——元素个数 n ≥ 0 且有限，n = 0 时是空表。元素大小、操作次数、存储空间都不在这个定义里。'},
+  {tag:'L1',q:'线性表是一种（　）结构。',o:['存储结构', '物理结构', '索引结构', '逻辑结构'],a:3,why:'线性表描述元素之间一对一的逻辑关系，属于逻辑结构。用数组或链表实现才是存储结构。'},
+  {tag:'L1',q:'长度为 0 的线性表称为？',o:['空表', '无表', '零表', '空序列'],a:0,why:'n = 0 的线性表就是空表。这是合法的线性表，不是错误状态。'},
+  {tag:'L1',q:'线性表中，除第一个元素外，每个元素有且仅有一个？',o:['直接后继', '直接前驱', '兄弟', '祖先'],a:1,why:'线性结构的特点是「一对一」：除第一个元素外每个元素有且仅有一个前驱，除最后一个外每个元素有且仅有一个后继。'},
+  {tag:'L1',q:'线性表的长度是指？',o:['表的字节数', '表中元素的个数', '表能容纳的最大元素数', '表占用的内存大小'],a:1,why:'长度 = 当前元素个数 n。注意和「容量」区分：容量是能容纳的最大数量，长度是实际有的数量。'},
+  {tag:'L1',q:'以下哪个不是线性表的基本操作？',o:['插入元素', '对表中元素排序', '按位置查找', '初始化'],a:1,why:'排序不是线性表的基本操作（那是排序算法的事）。基本操作是：初始化、求长度、按位置取值、查找、插入、删除、判空、清空。'},
+  {tag:'L1',q:'抽象数据类型（ADT）指的是？',o:['一种具体的数据存储方式', '一种算法', '一个数学模型及定义在该模型上的一组操作', '一种编程语言'],a:2,why:'ADT 只关心「能做什么」（逻辑特性），不关心「怎么做」（实现）。线性表就是一个 ADT：它规定了 insert、delete 等操作，但没说用数组还是链表实现。'},
+  {tag:'L1',q:'线性表中，最后一个元素？',o:['后继是第一个元素', '没有后继', '有一个后继', '有两个后继'],a:1,why:'线性表是有限序列，最后一个元素没有后继（除非是循环链表，那就跳出线性表的范畴了）。'},
+  {tag:'L2',q:'顺序表「逻辑上相邻的元素物理位置也相邻」，这个特点带来的主要缺点是？',o:['存储密度低', '插入删除要移动大量元素', '只能用指针访问', '不能随机访问'],a:1,why:'顺序表的优点正是随机访问 O(1)；缺点是插入删除平均要移动 n/2 个元素，且需要预先分配连续空间。存储密度高是它的优点。'},
+  {tag:'L2',q:'设顺序表首元素 a₁ 的存储地址是 1000，每个元素占 4 个字节，则 a₅ 的地址是？',o:['1012', '1016', '1004', '1020'],a:1,why:'LOC(aᵢ) = LOC(a₁) + (i−1) × L = 1000 + (5−1) × 4 = 1016。这个公式是顺序表随机访问的根据。'},
+  {tag:'L2',q:'顺序表的存储密度是？',o:['不确定', '大于 1', '小于 1', '1'],a:3,why:'顺序表只存数据本身，不存额外指针，所以存储密度 = 1（100%）。链表的存储密度 < 1（要存 next 指针）。'},
+  {tag:'L2',q:'顺序表要求内存空间？',o:['必须是链表的两倍', '必须在堆上', '连续', '可以不连续'],a:2,why:'顺序表用数组实现，必须占用一段连续的存储空间。这是它「扩容要整体搬迁」的根本原因。'},
+  {tag:'L2',q:'顺序表按位置访问第 i 个元素的时间复杂度是？',o:['O(1)', 'O(n²)', 'O(log n)', 'O(n)'],a:0,why:'通过 LOC(aᵢ) = LOC(a₁) + (i−1)×L 可以直接算出地址，一次访存就能取到，所以是 O(1)。这就是「随机存取」。'},
+  {tag:'L2',q:'顺序表采用静态分配和动态分配的区别是？',o:['静态分配容量固定，动态分配可扩容', '动态分配不能用数组', '静态分配占空间更大', '静态分配更快'],a:0,why:'静态分配：一开始就定死数组大小，满了不能再加。动态分配：用 malloc/realloc 在堆上分配，满了可以扩容（代价是整体搬迁）。'},
+  {tag:'L2',q:'线性表的顺序存储结构是一种（　）的存储结构。',o:['顺序存取', '散列存取', '随机存取', '索引存取'],a:2,why:'顺序表可以直接算出任意元素的地址，所以是随机存取。链表只能从头顺着走，是顺序存取。'},
+  {tag:'L2',q:'顺序表能随机访问的根本原因是？',o:['元素大小相同且连续存放，地址可由公式算出', '它的元素有序', '它用了索引', '它存在栈上'],a:0,why:'因为每个元素占同样大小的空间且连续排列，第 i 个元素的地址 = 首地址 + (i−1)×元素大小，一次计算就能定位。链表没有这个性质，因为结点分散在内存各处。'},
+  {tag:'L3',q:'在长度为 n 的顺序表中，删除第 i 个元素（1 ≤ i ≤ n），平均需要移动多少个元素？',o:['(n−1)/2', '(n+1)/2', 'n', 'n/2'],a:0,why:'删除第 i 个要移动第 i+1 到第 n 个，共 n−i 个。i 从 1 到 n 等概率，平均值 = (1/n)·Σ(n−i) = (n−1)/2。'},
+  {tag:'L3',q:'在长度为 n 的顺序表中，第 i 个位置插入一个元素，需要移动的元素个数是？',o:['n−i', 'n−i+1', 'i', 'n−i−1'],a:1,why:'在第 i 个位置插入，原来的第 i 到第 n 个都要后移一位，共 n−i+1 个。注意和删除的公式差一个 1，这两个最容易混。'},
+  {tag:'L3',q:'在长度为 n 的顺序表中插入元素，平均需要移动多少个元素？',o:['n/2', 'n', '(n+1)/2', '(n−1)/2'],a:0,why:'插入位置有 n+1 个可能（1 到 n+1），等概率时平均移动 = (1/(n+1))·Σ(n−i+1) = n/2。注意插入的分母是 n+1，删除的分母是 n。'},
+  {tag:'L3',q:'向长度为 n 的顺序表末尾追加一个元素，需要移动多少个元素？',o:['n 个', '0 个', '1 个', 'n/2 个'],a:1,why:'在末尾插入（第 n+1 个位置）时，n−i+1 = n−(n+1)+1 = 0，不需要移动任何元素。这是插入的最好情况。'},
+  {tag:'L3',q:'长度为 n 的顺序表，在第一个位置插入元素，需要移动多少个？',o:['0 个', '1 个', 'n 个', 'n−1 个'],a:2,why:'在第一个位置（i=1）插入，n−i+1 = n−1+1 = n，所有元素都要后移。这是插入的最坏情况。'},
+  {tag:'L3',q:'长度为 n 的顺序表，删除第一个元素需要移动多少个？',o:['n−1 个', '1 个', 'n 个', '0 个'],a:0,why:'删除第 1 个要移动第 2 到第 n 个，共 n−1 个。删除的最坏情况。'},
+  {tag:'L3',q:'长度为 n 的顺序表，插入位置有多少个可能？',o:['1 个', 'n−1 个', 'n 个', 'n+1 个'],a:3,why:'可以插在第 1 个之前、第 1 和第 2 之间……一直到第 n 个之后，共 n+1 个位置。这就是为什么插入的平均分母是 n+1。'},
+  {tag:'L3',q:'顺序表扩容时（容量不够，要换更大的数组），需要做什么？',o:['只修改容量标记', '不需要任何操作', '在末尾追加空间', '申请新数组并把所有元素复制过去'],a:3,why:'顺序表要求连续空间，扩容必须申请一块更大的新空间，把原数据全部复制过去，再释放旧空间。这就是顺序表「插入删除代价高」的另一面。'},
+  {tag:'L4',q:'单链表中，在指针 p 所指结点之后插入结点 s，正确的操作顺序是？',o:['s->next = p; p->next = s;', 'p->next = s->next; s->next = p;', 'p->next = s; s->next = p->next;', 's->next = p->next; p->next = s;'],a:3,why:'必须先让 s 接住 p 的后继，再让 p 指向 s。顺序反了会丢掉 p 原来的后继，链表断裂。这是链表操作最常见的错误。'},
+  {tag:'L4',q:'单链表中，若要在结点 p 之前插入结点 s（p 不是第一个结点），通常需要？',o:['需要额外的头结点才能实现', '无法实现', '直接修改 p 的指针，时间 O(1)', '从头遍历找到 p 的前驱，时间 O(n)'],a:3,why:'单链表只能单向遍历，要改 p 的前驱指针，必须先找到前驱。所以「在 p 前插入」平均要 O(n)。双向链表才有 O(1) 的解法。'},
+  {tag:'L4',q:'用头插法建立单链表，得到的链表元素顺序？',o:['随机', '与输入顺序相反', '与输入顺序相同', '有序'],a:1,why:'头插法每次都插在头结点之后，所以最后插入的在最前面。输入 1,2,3 得到 3,2,1。尾插法才能保持顺序，但要维护尾指针。'},
+  {tag:'L4',q:'用尾插法建立单链表，需要额外维护什么？',o:['中间指针', '不需要额外指针', '头指针', '尾指针'],a:3,why:'尾插法每次都要在末尾插入，如果每次都从头遍历找尾，就是 O(n²)。所以维护一个尾指针，插入就是 O(1)。'},
+  {tag:'L4',q:'在单链表中，已知指针 p 指向某结点，在其后插入一个结点的时间复杂度是？',o:['O(n)', 'O(n²)', 'O(log n)', 'O(1)'],a:3,why:'已经拿到 p 了，只需要改两个指针（s->next = p->next; p->next = s），不需要遍历，所以是 O(1)。这就是链表的优势。'},
+  {tag:'L4',q:'在单链表第 i 个位置插入元素，时间复杂度是？',o:['O(1)', 'O(log n)', 'O(n)', 'O(n²)'],a:2,why:'要先从头找到第 i−1 个结点（O(n)），再执行插入（O(1)）。总体是 O(n)。注意区分「已知前驱」和「按位置插入」两种情况。'},
+  {tag:'L4',q:'带头结点的单链表，在第一个位置插入元素时？',o:['不能插入', '需要遍历整个链表', '不需要修改头指针', '必须修改头指针'],a:2,why:'有头结点时，第一个位置就是头结点之后，插入逻辑和中间位置一样，不用特殊处理头指针。这就是头结点的价值。'},
+  {tag:'L4',q:'单链表中插入结点时，如果先执行 p->next = s 再执行 s->next = p->next，会发生什么？',o:['s 的 next 指向自己，链表断裂', 's 丢失', 'p 丢失', '正常插入'],a:0,why:'p->next 已经变成 s 了，再执行 s->next = p->next 就是 s->next = s，形成自环，原来的后继丢失。这就是「顺序不能反」的原因。'},
+  {tag:'L5',q:'单链表中，要删除指针 p 所指结点的后继结点，正确的操作是？',o:['q = p->next; p->next = q->next; free(q);', 'p->next = p->next->next; free(p);', 'p = p->next; free(p);', 'q = p->next; free(q); p->next = q->next;'],a:0,why:'必须先保存要删的结点 q，让 p 跳过 q，最后才 free(q)。先 free 再访问 q->next 是野指针错误。'},
+  {tag:'L5',q:'单链表中删除结点时，为什么通常需要知道前驱结点？',o:['因为要修改前驱的 next 指针', '因为要修改后继的 next 指针', '因为要更新头指针', '因为要释放前驱的内存'],a:0,why:'删除 p 结点，本质是让 p 的前驱跳过 p，所以要改前驱的 next。单链表只能单向走，因此要么先找到前驱，要么用「偷梁换柱」法。'},
+  {tag:'L5',q:'「偷梁换柱」法删除单链表结点 p（不给前驱）的做法是？',o:['把 p 移到链表尾部', '把 p 的数据复制给前驱', '直接 free(p)', '把 p 的后继的数据复制到 p，然后删除 p 的后继'],a:3,why:'把 p->next 的数据复制到 p，然后删掉 p->next。效果上等于删了 p。前提是 p 不是最后一个结点（否则没有后继可借）。'},
+  {tag:'L5',q:'在单链表中删除第 i 个结点，时间复杂度是？',o:['O(n)', 'O(n²)', 'O(log n)', 'O(1)'],a:0,why:'要先找到第 i−1 个结点（前驱），O(n)，再执行删除（O(1)）。总体 O(n)。'},
+  {tag:'L5',q:'单链表中删除结点后，为什么要 free 掉内存？',o:['防止指针失效', '保持链表有序', '避免内存泄漏', '加快链表访问'],a:2,why:'C 语言没有垃圾回收，free 掉的结点如果不释放，那块内存就永远占着但没人用，叫内存泄漏。在实际项目中，链表频繁增删时这个问题很严重。'},
+  {tag:'L5',q:'带头结点的单链表中，删除第一个元素结点（头结点之后的那个）？',o:['和删除其他结点完全一样', '不能删除', '需要遍历', '需要修改头指针'],a:0,why:'有头结点时，第一个元素结点的前驱就是头结点，删除逻辑和中间结点一致，不用特殊处理。没头结点就要改 head，还得判断是不是空表。'},
+  {tag:'L5',q:'单链表中，删除最后一个结点需要做什么？',o:['遍历到倒数第二个结点，把它的 next 置空', '直接 free 最后一个结点', '修改头指针', '不需要任何操作'],a:0,why:'单链表要删最后一个，得先找到倒数第二个（O(n)），把它的 next 置为 NULL，再 free 最后一个。这也是单链表不如双向链表方便的地方。'},
+  {tag:'L5',q:'以下哪段代码有野指针错误？',o:['p->next = p->next->next;', 'q = p->next; p->next = q->next; free(q);', 'q = p->next; free(q);', 'q = p->next; free(q); p->next = q->next;'],a:3,why:'先 free(q) 再访问 q->next，访问的是已释放的内存，属于野指针（use-after-free）。必须先取 next 再 free。'},
+  {tag:'L6',q:'单链表中设置头结点的主要目的是？',o:['统一空表和非空表的操作', '加快查找速度', '方便存储数据', '节省存储空间'],a:0,why:'有了头结点，在第一个位置插入/删除时不用特殊处理（不用改头指针），代码逻辑统一。代价是多占一个结点的空间。'},
+  {tag:'L6',q:'头指针和头结点的区别是？',o:['两者是同一个东西', '头指针是指向第一个结点的指针，头结点是链表开头的一个额外结点', '头指针只能为空，头结点不能为空', '头指针是结点，头结点是指针'],a:1,why:'头指针是必须的（否则找不到链表），头结点是可选的（为了简化操作）。头指针永远指向链表的第一个结点（如果有头结点，就指向头结点）。'},
+  {tag:'L6',q:'循环单链表判空的条件是？',o:['head->next == head', 'head->next == NULL', 'head == NULL', 'head->data == 0'],a:0,why:'循环链表的尾结点指回头结点，所以空表时头结点的 next 指向自己。注意和普通单链表（head == NULL 或 head->next == NULL）不同。'},
+  {tag:'L6',q:'循环单链表遍历结束的条件是？',o:['p->next == NULL', 'p == NULL', 'p->data == 0', 'p->next == head'],a:3,why:'循环链表没有 NULL 结尾，转一圈回到头结点就结束。如果条件写成 p == NULL 会死循环。'},
+  {tag:'L6',q:'静态链表是用什么实现的？',o:['队列', '数组', '栈', '指针'],a:1,why:'静态链表用数组模拟链表：数组的每个元素存数据和「下一个元素的下标」（游标）。适合不支持指针的语言，或需要预分配的场景。'},
+  {tag:'L6',q:'双向链表中，在结点 p 之后插入结点 s，需要修改几个指针？',o:['2 个', '3 个', '4 个', '1 个'],a:2,why:'s->prev = p; s->next = p->next; p->next->prev = s; p->next = s; 共四个指针。比单链表多两个，但换来双向遍历和 O(1) 的前插删除。'},
+  {tag:'L6',q:'双向链表中删除结点 p，需要怎么做？',o:['需要遍历找前驱', '无法删除', 'p->prev->next = p->next; p->next->prev = p->prev; free(p);', '只需要改一个指针'],a:2,why:'双向链表每个结点都有 prev 和 next，删除时两边都要接上，然后 free。因为能直接拿到前驱，所以是 O(1)。这是它比单链表强的地方。'},
+  {tag:'L6',q:'头指针为空（head == NULL）表示？',o:['链表有元素', '链表为空', '链表有头结点', '链表出错'],a:1,why:'头指针为 NULL 说明链表不存在或为空，没有任何结点。有头结点时，空表是 head->next == NULL 或 head->next == head（循环链表）。'},
+  {tag:'L7',q:'与顺序表相比，链表的主要优点是？',o:['插入删除不需要移动元素', '存储密度更高', '可以随机访问任意元素', '缓存命中率更高'],a:0,why:'链表插入删除只需改指针，O(1)（已定位的前提下）。但它不支持随机访问（要顺着走 O(n)），还要额外存指针导致存储密度低，结点分散在内存里缓存也不友好。'},
+  {tag:'L7',q:'顺序表的存储密度比链表高，原因是？',o:['顺序表不需要扩容', '顺序表的访问速度更快', '顺序表不需要额外存储指针', '顺序表的元素更小'],a:2,why:'存储密度 = 数据本身占的空间 / 结点总空间。链表每个结点要额外存 next 指针，所以密度 < 1；顺序表只存数据，密度 = 1。'},
+  {tag:'L7',q:'若某线性表最常用的操作是「取第 i 个元素」和「在第 i 个元素前插入」，采用（　）存储方式最节省时间。',o:['顺序表', '双向链表', '循环链表', '单链表'],a:0,why:'「取第 i 个」在顺序表是 O(1)，链表要 O(n)。虽然插入顺序表要移动元素，但取元素的高频操作更重要。这类题看「哪个操作更频繁」。'},
+  {tag:'L7',q:'若某线性表最常用的操作是在末尾插入和删除元素，采用（　）最节省时间。',o:['循环链表', '单链表', '顺序表', '双向链表'],a:2,why:'在末尾插入删除，顺序表不需要移动元素（直接在下标 n 处操作），是 O(1)；单链表要到末尾得遍历 O(n)。'},
+  {tag:'L7',q:'以下哪种场景最适合用链表而不是顺序表？',o:['需要节省内存空间', '需要频繁按位置随机访问', '频繁在中间插入删除，元素个数变化大', '数据量固定且很小'],a:2,why:'频繁插入删除 + 数量不定，正是链表的强项（不用移动、不用预分配）。反过来「频繁随机访问」应该用顺序表。'},
+  {tag:'L7',q:'链表相比顺序表，在「空间分配」上的优势是？',o:['分配速度更快', '占用空间更少', '不需要释放', '不需要预先分配连续的大块空间'],a:3,why:'链表按需分配结点，有多少元素就占多少空间，不需要一开始就申请一大块连续内存。这对「元素数量不确定」的场景很重要。'},
+  {tag:'L7',q:'链表相比顺序表，在「缓存友好」上的劣势是？',o:['链表必须用指针', '结点分散在内存各处，缓存命中率低', '链表不支持 CPU 缓存', '链表不能存大对象'],a:1,why:'顺序表元素连续存放，CPU 缓存一次加载能命中后面好几个元素；链表结点散落各处，每次跳转都可能缓存未命中。所以实际中顺序表往往比理论更快。'},
+  {tag:'L7',q:'对长度为 n 的顺序表和链表，各做一次「按值查找」，时间复杂度分别是？',o:['都是 O(1)', '都是 O(n)', 'O(1) 和 O(n)', 'O(n) 和 O(1)'],a:1,why:'按值查找只能逐个比较，两者都是 O(n)。区别在于「按位置访问」：顺序表 O(1)，链表 O(n)。别把「按值」和「按位置」搞混。'},
+  {tag:'L8',q:'将单链表逆置（反转）的时间复杂度是？',o:['O(n²)', 'O(log n)', 'O(n)', 'O(1)'],a:2,why:'从头到尾遍历一遍，边遍历边改指针方向，每个结点访问一次，所以是 O(n)。空间只需要几个临时指针，是 O(1)。'},
+  {tag:'L8',q:'用快慢指针找单链表的中间结点，快指针每次走几步？',o:['2 步', '3 步', '1 步', 'n 步'],a:0,why:'快指针每次走 2 步，慢指针每次走 1 步。快指针到尾时，慢指针正好在中间。这是链表题最常用的技巧之一。'},
+  {tag:'L8',q:'用快慢指针判断单链表是否有环，依据是什么？',o:['两者同时到 NULL', '慢指针先到 NULL', '快指针追上慢指针', '快指针先到 NULL'],a:2,why:'有环的话，快指针会一直绕圈，最终一定追上慢指针。如果没环，快指针会先走到 NULL。这是 Floyd 判圈算法。'},
+  {tag:'L8',q:'两个长度分别为 m 和 n 的有序表合并成一个有序表，时间复杂度是？',o:['O(m×n)', 'O(log(m+n))', 'O(max(m,n))', 'O(m+n)'],a:3,why:'双指针从头比较，每次取较小的放入结果，两个表各遍历一次，所以是 O(m+n)。这是归并排序的核心操作。'},
+  {tag:'L9',q:'约瑟夫环问题（n 个人围圈报数，报到 m 的出列）最适合用（　）实现。',o:['栈', '顺序表', '队列', '循环链表'],a:3,why:'循环链表天然适合围成圈，每次数到 m 就删除结点，然后从下一个人继续。用数组也能做，但要处理删除后的下标移动。'},
+  {tag:'L9',q:'LRU（最近最少使用）缓存的核心数据结构通常是？',o:['顺序表', '栈', '队列', '哈希表 + 双向链表'],a:3,why:'哈希表负责 O(1) 查找，双向链表负责 O(1) 移动到表头（表示刚用过）。淘汰时删链表尾。这是「哈希 + 链表」的经典组合。'},
+  {tag:'L9',q:'两个多项式相加（用链表存储），合并同类项的做法是？',o:['排序后相加', '双指针遍历，指数相等就系数相加，不等就取指数小的', '用栈', '用队列'],a:1,why:'两个多项式按指数递增排列，双指针比较：指数相同就系数相加，不同就把指数小的那项放入结果。思想和合并有序表一样。'},
+  {tag:'S1',q:'栈的特点是？',o:['后进先出（LIFO）', '随机存取', '按优先级存取', '先进先出（FIFO）'],a:0,why:'栈是后进先出（Last In First Out）。最后压入的元素最先弹出。队列才是先进先出。'},
+  {tag:'S1',q:'顺序栈中，栈顶指针 top 通常指向？',o:['栈顶元素的下标（初始为 −1）', '栈底元素的下标', '栈的中间位置', '栈顶元素的下一个位置（初始为 0）'],a:0,why:'常见写法有两种：top 指向栈顶元素（初始 −1，栈空条件 top == −1）；或 top 指向栈顶的下一个空位（初始 0）。两种都行，但入栈出栈的代码要配套。'},
+  {tag:'S1',q:'顺序栈（top 指向栈顶元素，初始为 −1）的入栈操作是？',o:['S[top] = x; top++;', 'top++; S[top] = x;', 'S[top+1] = x; top−−;', 'top−−; S[top] = x;'],a:1,why:'先让 top 加 1 指向新的空位，再放元素。出栈则相反：先取 S[top]，再 top−−。'},
+  {tag:'S1',q:'顺序栈（top 指向栈顶元素，初始为 −1）的栈空条件是？',o:['top == −1', 'top == 0', 'top == MAXSIZE', 'top == MAXSIZE−1'],a:0,why:'初始时 top = −1 表示没有元素。每压入一个 top 加 1，所以栈空时 top 回到 −1。栈满时 top == MAXSIZE−1。'},
+  {tag:'S1',q:'顺序栈（容量 MAXSIZE）的栈满条件是？',o:['top == MAXSIZE', 'top == 0', 'top == MAXSIZE − 1', 'top == MAXSIZE + 1'],a:2,why:'数组下标从 0 到 MAXSIZE−1，top 指向栈顶元素，所以 top == MAXSIZE−1 时满了。再压入就会越界。'},
+  {tag:'S1',q:'链栈的栈顶通常在链表的哪个位置？',o:['链表中间', '任意位置', '链表尾部', '链表头部'],a:3,why:'链栈用链表头部做栈顶，因为插入删除在头部是 O(1)，在尾部要遍历 O(n)。所以链栈的 push/pop 都在头结点之后操作。'},
+  {tag:'S1',q:'以下哪个操作不是栈的基本操作？',o:['读栈顶元素', '入栈', '出栈', '在栈中间插入元素'],a:3,why:'栈只能在栈顶操作，不能在中间插入。这就是「操作受限」的含义：插入删除只允许在端点进行。'},
+  {tag:'S1',q:'栈和队列的共同点是？',o:['都只能在端点处插入和删除', '都是先进先出', '都支持随机访问', '都是后进先出'],a:0,why:'栈和队列都是操作受限的线性表：只能在端点操作（栈在栈顶，队列在两端）。区别是栈后进先出、队列先进先出。'},
+  {tag:'S2',q:'若入栈顺序是 1、2、3，则以下哪个出栈序列是不可能的？',o:['3、2、1', '2、1、3', '1、2、3', '3、1、2'],a:3,why:'3 先出栈说明 1、2 都在栈里，此时栈顶是 2，下一个出栈的只能是 2，不可能是 1。所以 3、1、2 不可能。n 个元素出栈序列有 Catalan 数种。'},
+  {tag:'S2',q:'若入栈顺序是 1、2、3、4，出栈序列是 2、4、3、1，是否可能？',o:['不可能', '可能', '需要额外栈', '只能部分出栈'],a:1,why:'1 进、2 进、2 出（栈：1）、3 进、4 进、4 出、3 出、1 出。完全合法。判断方法：模拟一遍，出栈时看是否在栈顶。'},
+  {tag:'S2',q:'括号匹配检验最适合用（　）实现。',o:['队列', '栈', '数组', '树'],a:1,why:'左括号入栈，遇到右括号就看栈顶是不是对应的左括号。匹配就弹出，不匹配就报错。最后栈空说明全部匹配。'},
+  {tag:'S2',q:'中缀表达式转后缀表达式时，需要用（　）辅助。',o:['队列', '栈', '链表', '数组'],a:1,why:'中缀转后缀用栈暂存运算符，遇到优先级不高于栈顶的运算符就先弹出。后缀表达式求值也是用栈（操作数入栈，遇运算符弹两个算完再压回）。'},
+  {tag:'S2',q:'后缀表达式（逆波兰式）求值时，操作数应该？',o:['存数组', '放入队列', '直接输出', '压入栈'],a:3,why:'遇到操作数就压栈；遇到运算符就弹出两个操作数，计算后把结果压回栈。最后栈里剩一个数就是答案。'},
+  {tag:'S2',q:'递归函数调用时，系统用什么保存返回地址和局部变量？',o:['堆', '队列', '栈', '静态区'],a:2,why:'每次递归调用都会在栈上压入一个「栈帧」，保存参数、局部变量、返回地址。递归太深会导致栈溢出（Stack Overflow）。'},
+  {tag:'S2',q:'两个栈共享一个数组空间（共享栈）时，栈满的条件是？',o:['top1 == MAXSIZE', 'top2 == 0', 'top1 + 1 == top2', 'top1 == top2'],a:2,why:'两个栈分别从数组两端向中间生长，当两个栈顶指针相邻（top1 + 1 == top2）时，空间用完。共享栈能把空间利用率提到最高。'},
+  {tag:'S2',q:'栈在（　）中有应用。',o:['图的广度优先遍历', '文件压缩', '括号匹配、表达式求值、递归调用', '数据排序'],a:2,why:'栈的三大经典应用：括号匹配检验、表达式求值（中缀转后缀）、函数递归调用。数据排序和 BFS 用队列。'},
+  {tag:'Q1',q:'队列的特点是？',o:['随机存取', '按优先级存取', '后进先出（LIFO）', '先进先出（FIFO）'],a:3,why:'队列是先进先出（First In First Out）。从队尾入队，从队头出队。栈才是后进先出。'},
+  {tag:'Q1',q:'循环队列（容量 MAXSIZE）判空的条件是？',o:['(rear+1)%MAXSIZE == front', 'front == rear', 'front == 0', 'rear == MAXSIZE−1'],a:1,why:'循环队列用 front == rear 表示空。但这样满的时候也可能 front == rear，所以要用「少用一个空间」或其他方式区分。'},
+  {tag:'Q1',q:'循环队列（容量 MAXSIZE，少用一个空间）的队满条件是？',o:['(rear+1)%MAXSIZE == front', 'rear == front', '(front+1)%MAXSIZE == rear', 'rear == MAXSIZE−1'],a:0,why:'队满时 rear 的下一个位置就是 front，所以 (rear+1)%MAXSIZE == front。取模是为了让指针绕回数组开头。'},
+  {tag:'Q1',q:'循环队列中，当前元素个数（少用一个空间）的计算公式是？',o:['rear − front', 'rear + front', '(rear − front + MAXSIZE) % MAXSIZE', '(front − rear + MAXSIZE) % MAXSIZE'],a:2,why:'rear 可能小于 front（绕回了），所以要先加 MAXSIZE 再取模，保证结果非负。这个公式必考。'},
+  {tag:'Q1',q:'若循环队列的容量是 10（少用一个空间），实际最多能存多少个元素？',o:['8 个', '11 个', '9 个', '10 个'],a:2,why:'少用一个空间用于区分空和满，所以实际容量是 MAXSIZE−1 = 9。这是「浪费一个空间」的代价。'},
+  {tag:'Q1',q:'顺序队列（非循环）会出现「假溢出」，原因是？',o:['指针越界', '数组太小', '队列真的满了', '队头有空位但队尾已经到了数组末尾'],a:3,why:'出队后 front 后移，前面空出位置，但 rear 到了数组末尾就不能再入队了——明明还有空间却报满，这就是假溢出。解决办法是改成循环队列。'},
+  {tag:'Q1',q:'循环队列为了区分队空和队满，通常采用的方法是？',o:['多用一个存储单元', '用计数器以外的标记位', '少用一个存储单元', '用两个指针'],a:2,why:'常见做法是保留一个空位：队满条件是 (rear+1)%MAXSIZE == front。这样队空（front == rear）和队满不会混淆。也可以加一个 size 计数器。'},
+  {tag:'Q1',q:'队列的入队操作在（　）进行，出队操作在（　）进行。',o:['都在队尾', '队头、队尾', '都在队头', '队尾、队头'],a:3,why:'入队（enqueue）在队尾追加，出队（dequeue）从队头删除。这才符合先进先出。'},
+  {tag:'Q2',q:'链队列的队头和队尾分别在链表的？',o:['都在头部', '队头在尾部，队尾在头部', '队头在链表头部，队尾在链表尾部', '都在尾部'],a:2,why:'链队列用头指针指队头（出队 O(1)），用尾指针指队尾（入队 O(1)）。这样两个操作都是常数时间。'},
+  {tag:'Q2',q:'双端队列（Deque）的特点是？',o:['两端都可以入队和出队', '只能入不能出', '只能一端入队一端出队', '只能出不能入'],a:0,why:'双端队列两端都能插入和删除。如果限制某一端只能入或只能出，就退化成栈或普通队列。408 常考「输入受限」和「输出受限」两种变体。'},
+  {tag:'Q2',q:'二叉树的层次遍历需要用（　）辅助。',o:['队列', '数组', '栈', '链表'],a:0,why:'层次遍历是逐层访问，用队列：根入队，然后每次出队一个、访问它、把它的左右孩子入队。DFS（深度优先）才用栈。'},
+  {tag:'Q2',q:'操作系统中的打印缓冲区，本质上是（　）的应用。',o:['栈', '树', '数组', '队列'],a:3,why:'多个进程要打印，按提交顺序排队，先提交先打印——这就是队列。缓冲区、消息队列、任务调度都是队列的应用。'}
+];
+
+const TAG_NAMES = {
+  L1:'线性表概念', L2:'顺序表基础', L3:'顺序表增删', L4:'链表插入', L5:'链表删除',
+  L6:'链表结构', L7:'顺序 vs 链表', L8:'链表进阶', L9:'综合应用',
+  S1:'栈基础', S2:'栈应用', Q1:'队列基础', Q2:'队列应用'
+};
+
+const BANK_LEN = 91;
 
 /* ============================================================
    读写
@@ -660,6 +796,7 @@ function openPanel(id){
   if(el) el.classList.add('on');
   if(id === 'settings') renderSettings();
   if(id === 'bank') renderBank();
+  if(id === 'wrong') renderWrong();
   if(id === 'codex') renderCodex('trait');
   if(id === 'skin') renderSkins();
 }
@@ -711,24 +848,98 @@ document.getElementById('resetBtn').onclick = () => {
 };
 
 /* 题库 */
-function renderBank(){
-  const wrong = loadWrong();
-  document.getElementById('bankTotal').textContent = BANK_LEN;
-  document.getElementById('bankDone').textContent = wrong.length ? '—' : '0';
-  document.getElementById('bankWrong').textContent = wrong.length;
-
-  const body = document.getElementById('bankList');
-  if(!wrong.length){
-    body.innerHTML = '<div style="color:#4d6b5c;font-size:11px;padding:14px 0;line-height:2">还没有错题。答错的题会自动收进这里，附解析。</div>';
+function renderWrong(){
+  const arr = loadWrong();
+  const body = document.getElementById('wrongBody');
+  if(!body) return;
+  if(!arr.length){
+    body.innerHTML = '<div style="color:#4d6b5c;font-size:11px;padding:16px 0;line-height:2.2">还没有错题。<br>答错的题会自动记录，并累计错误次数。</div>';
     return;
   }
-  body.innerHTML = wrong.slice(-40).reverse().map((w, i) =>
-    '<div class="q-row">' +
-      '<span class="idx">' + String(i+1).padStart(2,'0') + '</span>' +
-      '<span class="tx">' + (w.q || '') + '</span>' +
-      '<span class="badge w">错</span>' +
-    '</div>'
-  ).join('');
+  arr.sort((a,b) => (b.count || 1) - (a.count || 1));
+  body.innerHTML = arr.map(w => {
+    const q = BANK.filter(x => x.q === w.q)[0];
+    return '<div class="wrong-item">' +
+      '<div class="wh">' +
+        '<span class="wt">' + w.q + '</span>' +
+        '<span class="wc">错 ' + (w.count || 1) + ' 次</span>' +
+      '</div>' +
+      (q ? '<div class="wa">正确答案：' + q.o[q.a] + '</div>' : '') +
+      (q ? '<div class="wy">' + q.why + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+var bankCh = 1;
+var bankTag = null;
+var BANK_CHAPS = [
+  {id:1, name:'第一章 线性表', tags:['L1','L2','L3','L4','L5','L6','L7','L8','L9']},
+  {id:2, name:'第二章 栈与队列', tags:['S1','S2','Q1','Q2']}
+];
+
+function renderBank(){
+  const wrong = loadWrong();
+  var bt = document.getElementById('bankTotal'); if(bt) bt.textContent = BANK_LEN;
+  var bw = document.getElementById('bankWrong'); if(bw) bw.textContent = wrong.length;
+
+  const chs = BANK_CHAPS;
+  const curCh = chs.filter(function(c){ return c.id === bankCh; })[0] || chs[0];
+
+  var nav = '<div class="lv1">';
+  chs.forEach(function(c){
+    nav += '<button class="' + (c.id === bankCh ? 'on' : '') + '" data-ch="' + c.id + '">' + c.name + '</button>';
+  });
+  nav += '</div><span class="sep">›</span><div class="lv2">';
+  curCh.tags.forEach(function(t){
+    nav += '<button class="' + (t === bankTag ? 'on' : '') + '" data-tag="' + t + '">' + (TAG_NAMES[t] || t) + '</button>';
+  });
+  nav += '</div>';
+
+  const navBox = document.getElementById('bankNav');
+  if(navBox){
+    navBox.innerHTML = nav;
+    navBox.querySelectorAll('[data-ch]').forEach(function(b){
+      b.onclick = function(){ bankCh = parseInt(b.dataset.ch); bankTag = null; renderBank(); };
+    });
+    navBox.querySelectorAll('[data-tag]').forEach(function(b){
+      b.onclick = function(){ bankTag = b.dataset.tag; renderBank(); };
+    });
+  }
+
+  var tags = bankTag ? [bankTag] : curCh.tags;
+  var items = BANK.filter(function(q){ return tags.indexOf(q.tag) >= 0; });
+  var bn = document.getElementById('bankNow');
+  if(bn) bn.textContent = bankTag ? (TAG_NAMES[bankTag] || bankTag) : '全部';
+
+  const list = document.getElementById('bankList');
+  if(!list) return;
+  if(!items.length){
+    list.innerHTML = '<div style="color:#4d6b5c;font-size:11px;padding:14px 0">这一节还没有题。</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(function(q, i){
+    var w = wrong.filter(function(x){ return x.q === q.q; })[0];
+    var opts = q.o.map(function(o, oi){
+      return '<div class="oi' + (oi === q.a ? ' right' : '') + '">' +
+        String.fromCharCode(65 + oi) + '. ' + o +
+        (oi === q.a ? '<span class="tag">正确</span>' : '') +
+      '</div>';
+    }).join('');
+    return '<div class="q-detail">' +
+      '<div class="qh">' +
+        '<span class="num">' + String(i+1).padStart(2,'0') + '</span>' +
+        '<span class="qt">' + q.q +
+          (w ? ' <span style="color:#ff8f8f;font-size:9.5px">✗' + (w.count||1) + '</span>' : '') +
+        '</span>' +
+      '</div>' +
+      '<div class="qbody">' + opts + '<div class="why">' + q.why + '</div></div>' +
+    '</div>';
+  }).join('');
+
+  list.querySelectorAll('.q-detail').forEach(function(el){
+    el.onclick = function(){ el.classList.toggle('open'); };
+  });
 }
 
 /* 图鉴 */
