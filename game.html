@@ -269,6 +269,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
         <span>基地 <span class="bar"><i id="hpBar" style="width:100%"></i></span> <b id="hpTxt">100</b></span>
         <span>火力 <b id="lvTxt">1</b></span>
         <span class="threat">威胁 <b id="threatTxt">1</b></span>
+        <span id="modsBox" style="font-size:10px"></span>
         <span>敌军 <b id="enemyTxt">0</b></span>
         <span class="sp"></span>
         <span>连对 <b id="streakTxt">0</b></span>
@@ -359,18 +360,46 @@ const DIFFS = {
 
 const TILE = 24;
 
+/* 地图模板 */
+const MAP_NAMES = {
+  fortress: '中央堡垒',
+  cross:    '十字通道',
+  rooms:    '四角房间',
+  ring:     '环形走廊',
+  arena:    '空旷竞技场'
+};
+
+/* 关卡修饰符 */
+const MODS = {
+  rush:   {icon:'⚡', name:'快攻', col:'#ff9f68', desc:'敌人速度 +30%'},
+  iron:   {icon:'🛡', name:'铁壁', col:'#9bb7ff', desc:'敌人血量 +1'},
+  elite:  {icon:'💀', name:'精英', col:'#c77dff', desc:'每波 1 个精英'},
+  frenzy: {icon:'🔥', name:'狂暴', col:'#ff6b6b', desc:'敌人射速 +50%'}
+};
+
+
 /* ============ 关卡：一章 10 关，逐关解锁敌人与特性 ============ */
 const LEVELS = [
-  {n:1,  waves:3, types:['drone'],                              traits:['multi','rapid','armor']},
-  {n:2,  waves:3, types:['drone'],                              traits:['multi','rapid','armor']},
-  {n:3,  waves:4, types:['drone'],                              traits:['multi','rapid','armor','pierce']},
-  {n:4,  waves:4, types:['drone','shooter'],                    traits:['multi','rapid','armor','pierce','regen'], newEnemy:'shooter'},
-  {n:5,  waves:4, types:['drone','shooter'],                    traits:['multi','rapid','armor','pierce','regen','speed']},
-  {n:6,  waves:5, types:['drone','shooter'],                    traits:['multi','rapid','armor','pierce','regen','speed','crit']},
-  {n:7,  waves:5, types:['drone','shooter','charger'],          traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce'], newEnemy:'charger'},
-  {n:8,  waves:5, types:['drone','shooter','charger'],          traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
-  {n:9,  waves:6, types:['drone','shooter','charger'],          traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
-  {n:10, waves:6, types:['drone','shooter','charger','tank'],   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'], newEnemy:'tank'}
+  {n:1,  waves:3, types:['drone'], map:'fortress', mods:[],
+   traits:['multi','rapid','armor']},
+  {n:2,  waves:3, types:['drone'], map:'fortress', mods:['rush'],
+   traits:['multi','rapid','armor']},
+  {n:3,  waves:4, types:['drone'], map:'cross', mods:[],
+   traits:['multi','rapid','armor','pierce']},
+  {n:4,  waves:4, types:['drone','shooter'], map:'fortress', mods:['elite'],
+   traits:['multi','rapid','armor','pierce','regen'], newEnemy:'shooter'},
+  {n:5,  waves:4, types:['drone','shooter'], map:'ring', mods:[],
+   traits:['multi','rapid','armor','pierce','regen','speed']},
+  {n:6,  waves:5, types:['drone','shooter'], map:'rooms', mods:['iron'],
+   traits:['multi','rapid','armor','pierce','regen','speed','crit']},
+  {n:7,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'],
+   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce'], newEnemy:'charger'},
+  {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[],
+   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
+  {n:9,  waves:6, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
+   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
+  {n:10, waves:6, types:['drone','shooter','charger','tank'], map:'fortress', mods:['elite'],
+   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'], newEnemy:'tank'}
 ];
 
 function levelCfg(n){
@@ -441,21 +470,60 @@ function genWorld(){
   G.worldW = cols * TILE;
   G.worldH = rows * TILE;
 
+  const cfg = levelCfg(G.level);
+  const tpl = cfg.map || 'fortress';
+
   const w = [];
   for(let r=0;r<rows;r++) w.push(new Array(cols).fill(0));
 
-  for(let c=0;c<cols;c++){ w[0][c]=1; w[rows-1][c]=1; }
-  for(let r=0;r<rows;r++){ w[r][0]=1; w[r][cols-1]=1; }
+  // 外边界
+  for(let c=0;c<cols;c++){ w[0][c]=2; w[rows-1][c]=2; }
+  for(let r=0;r<rows;r++){ w[r][0]=2; w[r][cols-1]=2; }
 
   const cx = Math.floor(cols/2), cy = Math.floor(rows/2);
+  const clearR = 4;
+  const isClear = (r,c) => Math.abs(c-cx) <= clearR && Math.abs(r-cy) <= clearR;
 
   for(let r=2;r<rows-2;r++){
     for(let c=2;c<cols-2;c++){
-      const dx = c-cx, dy = r-cy;
-      if(Math.abs(dx) <= 5 && Math.abs(dy) <= 5) continue;   // 基地周围留空
-      // 棋盘式：偶数行列才有机会成墙，保证奇数行列永远通行
-      if(r%2===0 && c%2===0 && Math.random() < 0.34) w[r][c] = 2;
-      else if(Math.random() < 0.018) w[r][c] = 2;
+      if(isClear(r,c)) continue;
+      const dx = Math.abs(c-cx), dy = Math.abs(r-cy);
+
+      if(tpl === 'cross'){
+        // 距中心 6 格处一圈墙，四个方向留 5 格缺口
+        if(dx === 6 || dy === 6){
+          const gapX = dx === 6 && dy <= 2;
+          const gapY = dy === 6 && dx <= 2;
+          if(!gapX && !gapY) w[r][c] = 2;
+        } else if(Math.random() < 0.10){
+          w[r][c] = 2;
+        }
+      }
+      else if(tpl === 'rooms'){
+        // 十字分隔墙，每 7 格留一个门
+        if(c === cx || r === cy){
+          const doorC = c === cx && (dy % 7 === 3);
+          const doorR = r === cy && (dx % 7 === 3);
+          if(!doorC && !doorR) w[r][c] = 2;
+        } else if(Math.random() < 0.07){
+          w[r][c] = 2;
+        }
+      }
+      else if(tpl === 'ring'){
+        // 中心半径 6~9 的环墙，外围散点
+        const d = Math.hypot(c-cx, r-cy);
+        if(d > 6 && d < 9) w[r][c] = 2;
+        else if(d > 13 && Math.random() < 0.18) w[r][c] = 2;
+      }
+      else if(tpl === 'arena'){
+        // 空旷：只有零星掩体
+        if(Math.random() < 0.042) w[r][c] = 2;
+      }
+      else {
+        // fortress：棋盘式
+        if(r%2===0 && c%2===0 && Math.random() < 0.34) w[r][c] = 2;
+        else if(Math.random() < 0.018) w[r][c] = 2;
+      }
     }
   }
   G.world = w;
@@ -976,9 +1044,8 @@ function startLevel(lv){
   G.traits = {}; G.orbitA = 0; G.chainCd = 0; G.regenCd = 0; G.arc = null;
   G.zoom = 1;
 
-  const spot = findFreeCell(Math.floor(G.cols/2) - 4, Math.floor(G.rows/2));
-  G.player.x = spot.c * TILE + TILE/2;
-  G.player.y = spot.r * TILE + TILE/2;
+  // 按本关模板重新生成地图（会重建 player）
+  genWorld();
   G.player.hp = G.player.maxHp;
   G.player.shield = 120;
 
@@ -994,6 +1061,8 @@ function startLevel(lv){
 function startWave(){
   G.wave++;
   G.waveState = 'fight';
+  const md = levelCfg(G.level).mods || [];
+  G.elitePending = md.indexOf('elite') >= 0 ? 1 : 0;
   const base = 3 + Math.floor(G.wave * 0.9) + Math.floor(G.level * 0.4);
   G.waveLeft = Math.max(2, Math.round(base * (G.waveBonus || 1)));
   G.spawnCd = 0;
@@ -1017,18 +1086,34 @@ function spawnEnemy(){
     if(y < TILE*2 || y > G.worldH-TILE*2) continue;
     if(hitsWall(x, y, 10)) continue;
 
-    const hp = T.hp + cfg.hpAdd;
+    const mods = levelCfg(G.level).mods || [];
+    let hp = T.hp + cfg.hpAdd;
+    let spd = T.spd * cfg.spd;
+    let fg = cfg.fireGap + Math.round(Math.random()*30);
+
+    if(mods.indexOf('rush') >= 0) spd *= 1.3;
+    if(mods.indexOf('iron') >= 0) hp += 1;
+    if(mods.indexOf('frenzy') >= 0) fg = Math.round(fg * 0.67);
+
+    let elite = false;
+    if(G.elitePending > 0){
+      G.elitePending--;
+      elite = true;
+      hp = Math.round(hp * 2);
+      spd *= 0.92;
+    }
+
     G.enemies.push({
       x, y, type,
-      r: T.r, angle: 0,
-      speed: T.spd * cfg.spd,
+      r: elite ? T.r + 3 : T.r, angle: 0,
+      speed: spd,
       hp, maxHp: hp,
-      flash: 0,
+      elit: elite, flash: 0,
       target: type === 'charger' ? 'player' : (Math.random() < 0.6 ? 'player' : 'base'),
       keep: T.keep || 0,
       suicide: !!T.suicide,
       cd: 40 + Math.random()*60,
-      fireGap: cfg.fireGap + Math.round(Math.random()*30)
+      fireGap: fg
     });
     return;
   }
@@ -1184,6 +1269,12 @@ function render(){
       ctx.closePath(); ctx.fill(); ctx.stroke();
     }
     ctx.restore();
+
+    if(e.elit){
+      ctx.strokeStyle = 'rgba(199,125,255,.65)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 5, 0, Math.PI*2); ctx.stroke();
+    }
 
     if(e.maxHp > 1){
       ctx.fillStyle = 'rgba(0,0,0,.55)';
@@ -1347,6 +1438,17 @@ function updateHud(){
   document.getElementById('noN').textContent = G.noN;
   document.getElementById('scoreN').textContent = G.score;
   document.getElementById('streakBox').textContent = '连对 ' + G.streak;
+
+  const mb = document.getElementById('modsBox');
+  if(mb){
+    const md = levelCfg(G.level).mods || [];
+    mb.innerHTML = md.map(k => {
+      const m = MODS[k];
+      if(!m) return '';
+      return '<span style="color:' + m.col + ';margin-right:6px" title="' + m.desc + '">' +
+             m.icon + ' ' + m.name + '</span>';
+    }).join('');
+  }
 }
 
 function threatLevel(){
@@ -1510,7 +1612,6 @@ function saveWrong(q, pick){
 function startGame(){
   Sound.unlock();
   fitCanvas();
-  genWorld();
 
   G.state = 'play';
   G.t = 0; G.score = 0; G.okN = 0; G.noN = 0; G.streak = 0;
