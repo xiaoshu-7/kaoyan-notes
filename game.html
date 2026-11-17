@@ -3,200 +3,946 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>坦克防线 · 知识突击</title>
+<title>刷题防线 · 考研笔记</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --paper:#F4EFE2; --ink:#282620; --ink-2:#4E4A42; --ink-3:#7A7466;
-  --red:#B4443A; --green:#4A7A52; --rule:#D8CFB8; --rule-2:#E6DFCA;
+  --bg:#07080d;
+  --panel:#0e131d;
+  --line:#232c40;
+  --ink:#cfd8e6;
+  --dim:#6b7a91;
+  --gold:#ffd166;
+  --cyan:#7fd6ff;
+  --red:#ff6b6b;
+  --green:#5fe08a;
 }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
 body{
-  min-height:100vh;
-  background:#EDE7D8;
-  background-image:
-    radial-gradient(circle at 20% 30%,rgba(255,255,255,.35),transparent 55%),
-    radial-gradient(circle at 80% 70%,rgba(255,255,255,.25),transparent 50%);
-  font-family:"Noto Serif SC","Source Han Serif SC","Songti SC",serif;
+  background:radial-gradient(1100px 700px at 50% -10%,#182034,#07080d 62%);
   color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
   display:flex;align-items:center;justify-content:center;
-  padding:24px 16px;
+  padding:18px;overflow:hidden;
 }
 
-.wrap{
-  display:grid;grid-template-columns:620px 420px;gap:0;
-  background:var(--paper);border-radius:3px;
-  box-shadow:0 14px 44px -14px rgba(90,74,40,.42),0 0 0 1px rgba(120,100,60,.14);
+/* 机柜 */
+.cabinet{
+  width:100%;max-width:1180px;
+  background:linear-gradient(180deg,#161d2b,#0b0f18);
+  border:1px solid var(--line);border-radius:6px;
+  box-shadow:0 24px 70px -20px #000, inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex;flex-direction:column;
   overflow:hidden;
 }
 
-/* ---------- 战场 ---------- */
-.field{position:relative;background:#EAE3D0;border-right:1px solid var(--rule)}
-#cv{display:block;width:620px;height:720px}
-
-.hud{
-  position:absolute;left:0;right:0;top:0;
+/* 顶栏 */
+.top{
   display:flex;align-items:center;gap:14px;
-  padding:12px 16px;
-  font-family:"Cascadia Code",Consolas,monospace;font-size:11px;
-  color:var(--ink-2);letter-spacing:.04em;
-  pointer-events:none;
+  padding:10px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#1a2234,#111722);
+  font-size:12px;
 }
-.hud .hpbar{
-  flex:1;height:6px;background:rgba(120,100,60,.16);border-radius:3px;overflow:hidden;
+.top a{
+  color:var(--dim);text-decoration:none;letter-spacing:.05em;
+  padding:4px 9px;border:1px solid transparent;border-radius:3px;transition:.15s;
 }
-.hud .hpbar i{display:block;height:100%;background:var(--green);transition:width .2s,background .2s}
-.hud .hpbar.low i{background:var(--red)}
-.hud .tag{
-  border:1px solid var(--rule);border-radius:2px;padding:2px 7px;
-  background:rgba(255,253,245,.7);
+.top a:hover{color:var(--gold);border-color:#33405c}
+.top .name{
+  font-size:14px;letter-spacing:.18em;color:var(--gold);
+  text-shadow:0 0 12px rgba(255,209,102,.35);
 }
-
-.overlay{
-  position:absolute;inset:0;display:none;
-  align-items:center;justify-content:center;flex-direction:column;gap:14px;
-  background:rgba(244,239,226,.93);backdrop-filter:blur(2px);
-  text-align:center;padding:40px;
-}
-.overlay.on{display:flex}
-.overlay h2{font-size:30px;font-weight:600;letter-spacing:.06em}
-.overlay .sub{font-size:13px;color:var(--ink-3);line-height:2}
-.overlay .big{
-  font-family:"Cascadia Code",Consolas,monospace;font-size:44px;color:var(--red);
-  letter-spacing:.04em;
-}
-.btn{
-  font-family:"Noto Serif SC",serif;font-size:14px;letter-spacing:.1em;
-  padding:11px 28px;border:1.5px solid var(--ink);border-radius:2px;
-  background:none;color:var(--ink);cursor:pointer;transition:.16s;
-}
-.btn:hover{background:var(--ink);color:var(--paper)}
-
-/* ---------- 题目区 ---------- */
-.panel{
-  padding:24px 26px 22px;display:flex;flex-direction:column;
-  background:linear-gradient(180deg,rgba(255,253,245,.6),transparent 200px);
-}
-.p-top{
-  display:flex;align-items:baseline;justify-content:space-between;
-  padding-bottom:10px;border-bottom:1.5px solid var(--ink);
+.top .sp{flex:1}
+.top .chip{
   font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;
-  color:var(--ink-3);letter-spacing:.08em;
+  color:var(--dim);padding:3px 8px;border:1px solid var(--line);border-radius:3px;
 }
-.p-top .combo{color:var(--red)}
 
-.p-subject{
-  margin-top:14px;font-size:10.5px;color:var(--ink-3);letter-spacing:.14em;
-  font-family:"Cascadia Code",Consolas,monospace;
-}
-.p-q{
-  margin-top:8px;font-size:17px;line-height:1.9;color:var(--ink);
-  min-height:86px;letter-spacing:.01em;
-}
-.p-q b{color:var(--red)}
+/* 主体 */
+.body{display:grid;grid-template-columns:1fr 420px;min-height:0}
 
-.opts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-.opt{
-  display:flex;gap:10px;align-items:flex-start;
-  padding:10px 12px;border:1px solid var(--rule);border-radius:2px;
-  background:rgba(255,255,255,.5);cursor:pointer;transition:.14s;
-  font-size:15px;line-height:1.7;color:var(--ink-2);text-align:left;
+/* 游戏区 */
+.stage{
+  position:relative;padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+  border-right:1px solid var(--line);
+  min-width:0;
 }
-.opt:hover{background:#fff;border-color:var(--ink-3)}
-.opt .k{
-  flex:0 0 auto;width:19px;height:19px;border-radius:50%;
-  border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;
-  font-family:"Cascadia Code",Consolas,monospace;font-size:10px;color:var(--ink-3);
-  margin-top:2px;
+.screen{
+  position:relative;background:#0b0e14;
+  border:1px solid #2a3550;border-radius:3px;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.8),0 0 0 1px rgba(120,160,220,.06);
+  overflow:hidden;align-self:center;
+  width:640px;max-width:100%;
 }
-.opt.right{border-color:var(--green);background:rgba(205,232,203,.45)}
-.opt.right .k{border-color:var(--green);color:var(--green)}
-.opt.wrong{border-color:var(--red);background:rgba(240,200,195,.4)}
-.opt.wrong .k{border-color:var(--red);color:var(--red)}
-.opt.dim{opacity:.45}
-
-.p-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--rule-2)}
-.exp{
-  font-size:12.5px;line-height:1.85;color:var(--ink-2);
-  min-height:64px;padding:9px 11px;
-  background:rgba(255,253,242,.7);border-left:2px solid var(--rule);
+.screen canvas{
+  display:block;width:100%;height:auto;
+  image-rendering:pixelated;image-rendering:crisp-edges;
 }
-.exp b{color:var(--red)}
-.exp .lb{color:var(--green);font-family:"Cascadia Code",Consolas,monospace;font-size:10px;letter-spacing:.1em}
-
-.stats{
-  display:flex;gap:18px;margin-top:12px;
-  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;color:var(--ink-3);
+/* 扫描线 + 暗角 */
+.grain{
+  position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.42) 0 1px,transparent 1px 3px);
+  opacity:.5;mix-blend-mode:multiply;
 }
-.stats b{color:var(--ink);font-weight:400}
-
-/* 浮动提示 */
+.vig{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.55) 100%);
+}
+/* 浮层提示 */
 .toast{
-  position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.8);
-  font-family:"Noto Serif SC",serif;font-size:26px;font-weight:600;
-  letter-spacing:.12em;pointer-events:none;opacity:0;
-  transition:opacity .18s,transform .3s cubic-bezier(.2,1.6,.4,1);
-  text-shadow:0 2px 12px rgba(244,239,226,.9);
+  position:absolute;left:50%;top:16%;transform:translate(-50%,0);
+  font-size:13px;letter-spacing:.14em;font-weight:600;
+  padding:6px 16px;border-radius:3px;
+  background:rgba(0,0,0,.72);border:1px solid currentColor;
+  opacity:0;transition:opacity .2s,transform .35s;pointer-events:none;
+  white-space:nowrap;
 }
-.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
-.toast.good{color:var(--green)}
-.toast.bad{color:var(--red)}
+.toast.on{opacity:1;transform:translate(-50%,-8px)}
+.toast.good{color:var(--green);text-shadow:0 0 14px rgba(95,224,138,.6)}
+.toast.bad{color:var(--red);text-shadow:0 0 14px rgba(255,107,107,.6)}
 
-@media(max-width:1100px){
-  .wrap{grid-template-columns:1fr;width:100%;max-width:620px}
-  #cv{width:100%;height:auto;aspect-ratio:620/720}
-  .field{border-right:none;border-bottom:1px solid var(--rule)}
-  .panel{padding:20px}
-  .p-q{min-height:0}
+/* HUD */
+.hud{
+  display:flex;align-items:center;gap:16px;
+  padding:8px 12px;background:#0d121c;border:1px solid var(--line);border-radius:3px;
+  font-family:"Cascadia Code",Consolas,monospace;font-size:11px;color:var(--dim);
+  flex-wrap:wrap;
+}
+.hud b{color:var(--ink);font-weight:600}
+.hud .bar{
+  width:96px;height:6px;background:#1b2436;border-radius:3px;overflow:hidden;
+}
+.hud .bar i{display:block;height:100%;background:var(--gold);transition:width .2s}
+.hud .bar.hp i{background:var(--green)}
+.hud .lv{color:var(--gold)}
+.hud .keys{margin-left:auto;color:#4d5a70;font-size:10px}
+
+/* 答题区 */
+.quiz{
+  display:flex;flex-direction:column;min-height:0;background:#0a0e17;
+}
+.qhead{
+  padding:10px 16px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+  font-size:11px;letter-spacing:.12em;color:var(--dim);
+  background:linear-gradient(180deg,#141b28,#0c1119);
+}
+.qhead .n{
+  font-family:"Cascadia Code",Consolas,monospace;
+  color:var(--gold);font-size:12px;
+}
+.qhead .tag{
+  padding:2px 8px;border:1px solid #2c3a55;border-radius:2px;
+  color:#8fa6c8;font-size:10px;
+}
+.qhead .sp{flex:1}
+.qhead .streak{
+  font-family:"Cascadia Code",Consolas,monospace;color:var(--cyan);font-size:11px;
+}
+
+.qbody{padding:18px 20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1}
+.qtext{
+  font-size:15px;line-height:1.85;color:#e6edf7;letter-spacing:.01em;
+}
+.qtext code{
+  font-family:"Cascadia Code",Consolas,monospace;font-size:13.5px;
+  background:#1b2436;padding:1px 5px;border-radius:2px;color:var(--cyan);
+}
+
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 13px;border:1px solid #263149;border-radius:4px;
+  background:#0e1420;cursor:pointer;transition:.14s;
+  font-size:13.5px;line-height:1.7;color:#c6d2e4;
+  text-align:left;font-family:inherit;
+}
+.opt:hover{border-color:#3d5175;background:#131c2b}
+.opt .k{
+  flex:0 0 auto;width:18px;height:18px;border-radius:2px;
+  background:#1d2740;color:#7d8fae;
+  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;
+  display:flex;align-items:center;justify-content:center;margin-top:2px;
+}
+.opt.right{border-color:#2f6b45;background:rgba(95,224,138,.09)}
+.opt.right .k{background:#2b6b45;color:#c9f5d9}
+.opt.wrong{border-color:#7a3030;background:rgba(255,107,107,.08)}
+.opt.wrong .k{background:#7a3030;color:#ffd9d9}
+.opt.miss{border-color:#2f6b45;background:rgba(95,224,138,.05);opacity:.85}
+.opt:disabled{cursor:default}
+
+/* 解析 */
+.why{
+  border-left:2px solid var(--cyan);
+  padding:10px 12px;background:rgba(127,214,255,.06);
+  font-size:12.5px;line-height:1.85;color:#a9bdd6;
+  display:none;
+}
+.why.on{display:block}
+.why b{color:var(--cyan);font-weight:600}
+
+/* 底部 */
+.foot{
+  padding:8px 16px;border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;
+  font-family:"Cascadia Code",Consolas,monospace;font-size:11px;color:var(--dim);
+  background:#0c1119;
+}
+.foot b{color:var(--ink)}
+.foot .ok{color:var(--green)}
+.foot .no{color:var(--red)}
+.foot .sp{flex:1}
+
+/* 开始遮罩 */
+.mask{
+  position:absolute;inset:0;z-index:9;
+  background:rgba(6,9,15,.92);backdrop-filter:blur(2px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;text-align:center;padding:24px;
+}
+.mask.off{display:none}
+.mask h1{
+  font-size:26px;letter-spacing:.3em;color:var(--gold);
+  text-shadow:0 0 24px rgba(255,209,102,.5);
+}
+.mask p{font-size:12.5px;color:var(--dim);line-height:2;letter-spacing:.06em}
+.mask .btn{
+  margin-top:6px;padding:10px 34px;
+  background:var(--gold);color:#1a1206;border:none;border-radius:3px;
+  font-size:14px;letter-spacing:.2em;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:.15s;
+}
+.mask .btn:hover{background:#ffe08a;transform:translateY(-1px)}
+.mask kbd{
+  display:inline-block;min-width:18px;padding:1px 5px;
+  background:#1b2436;border:1px solid #2f3d58;border-radius:2px;
+  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;color:#9db0cc;
+}
+
+/* 结算 */
+.over{color:var(--red);font-size:24px;letter-spacing:.3em;text-shadow:0 0 20px rgba(255,107,107,.5)}
+
+@media(max-width:1080px){
+  body{overflow:auto;align-items:flex-start}
+  .body{grid-template-columns:1fr}
+  .stage{border-right:none;border-bottom:1px solid var(--line)}
+  .screen{width:100%;max-width:640px}
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="field">
-    <canvas id="cv" width="620" height="720"></canvas>
-    <div class="hud">
-      <span class="tag">基地</span>
-      <div class="hpbar" id="hpbar"><i id="hpfill" style="width:100%"></i></div>
-      <span class="tag" id="scoreTag">0 分</span>
-    </div>
-    <div class="toast" id="toast"></div>
-    <div class="overlay on" id="ovStart">
-      <h2>坦克防线</h2>
-      <p class="sub">
-        坦克自动开火，你只管答题。<br>
-        答对一发重炮，答错敌人推进。<br>
-        守住基地，看能撑到第几题。
-      </p>
-      <button class="btn" id="btnStart">开始战斗</button>
-    </div>
-    <div class="overlay" id="ovOver">
-      <h2>基地失守</h2>
-      <div class="big" id="finalScore">0</div>
-      <p class="sub" id="finalStat">答对 0 题 / 共 0 题</p>
-      <button class="btn" id="btnAgain">再来一局</button>
-    </div>
+
+<div class="cabinet">
+  <div class="top">
+    <a href="index.html">← 返回笔记</a>
+    <span class="name">刷题防线</span>
+    <span class="chip">DATA STRUCTURE · 1.1 线性表</span>
+    <span class="sp"></span>
+    <span class="chip" id="hintKeys">方向键移动 · 空格开火 · 1-4 答题</span>
   </div>
 
-  <div class="panel">
-    <div class="p-top">
-      <span id="qno">第 1 题</span>
-      <span class="combo" id="comboTag"></span>
+  <div class="body">
+    <!-- 左：游戏 -->
+    <div class="stage">
+      <div class="screen" id="screen">
+        <canvas id="cv" width="320" height="256"></canvas>
+        <div class="grain"></div>
+        <div class="vig"></div>
+        <div class="toast" id="toast"></div>
+        <div class="mask" id="mask">
+          <h1>刷题防线</h1>
+          <p>
+            守住基地，同时答题。<br>
+            <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>空格</kbd> 开火 · <kbd>1</kbd>-<kbd>4</kbd> 选答案<br>
+            答对提升火力，答错敌人变强。
+          </p>
+          <button class="btn" id="startBtn">开 始</button>
+        </div>
+      </div>
+
+      <div class="hud">
+        <span>基地 <span class="bar hp"><i id="hpBar" style="width:100%"></i></span></span>
+        <span>火力 <b class="lv" id="lvTxt">Lv1</b></span>
+        <span>连击 <b id="streakTxt">0</b></span>
+        <span>敌军 <b id="enemyTxt">0</b></span>
+        <span class="keys">P 暂停 · M 静音</span>
+      </div>
     </div>
-    <div class="p-subject" id="subj">数据结构 · 408</div>
-    <div class="p-q" id="qtext">准备中…</div>
-    <div class="opts" id="opts"></div>
-    <div class="p-foot">
-      <div class="exp" id="exp"><span class="lb">解析</span>　答题后显示</div>
-      <div class="stats">
-        <span>答对 <b id="stRight">0</b></span>
-        <span>答错 <b id="stWrong">0</b></span>
-        <span>错题 <b id="stBank">0</b></span>
+
+    <!-- 右：答题 -->
+    <div class="quiz">
+      <div class="qhead">
+        <span class="n" id="qno">第 1 题</span>
+        <span class="tag">数据结构</span>
+        <span class="tag" id="qtag">线性表</span>
+        <span class="sp"></span>
+        <span class="streak" id="streakBox">连对 0</span>
+      </div>
+
+      <div class="qbody">
+        <div class="qtext" id="qtext">准备开始……</div>
+        <div class="opts" id="opts"></div>
+        <div class="why" id="why"></div>
+      </div>
+
+      <div class="foot">
+        <span>答对 <b class="ok" id="okN">0</b></span>
+        <span>答错 <b class="no" id="noN">0</b></span>
+        <span class="sp"></span>
+        <span>得分 <b id="scoreN">0</b></span>
       </div>
     </div>
   </div>
 </div>
 
-<script src="data/ds.js"></script>
-<script src="game.js"></script>
+<script>
+/* ============================================================
+   题库：数据结构 · 1.1 线性表
+   ============================================================ */
+const BANK = [
+  {
+    q:'线性表是 n 个数据元素的有限序列。这里的「有限」指的是？',
+    o:['元素的个数 n 是有限的','每个元素的大小有限','表中的操作次数有限','存储空间有限'],
+    a:0,
+    why:'线性表的定义强调「有限序列」——元素个数 n ≥ 0 且有限。n = 0 时是空表。元素大小、操作次数、存储空间都不在这个定义里。'
+  },
+  {
+    q:'线性表是一种（　）结构。',
+    o:['逻辑结构','存储结构','物理结构','索引结构'],
+    a:0,
+    why:'线性表描述的是元素之间的逻辑关系（一对一的前驱后继），属于逻辑结构。它可以用顺序存储（数组）或链式存储（链表）实现，那才是存储结构。'
+  },
+  {
+    q:'顺序表的特点是逻辑上相邻的元素在物理位置上也相邻。这个特点带来的主要缺点是？',
+    o:['插入删除要移动大量元素','不能随机访问','存储密度低','只能用指针访问'],
+    a:0,
+    why:'顺序表的优点正是随机访问 O(1)；缺点是插入删除平均要移动 n/2 个元素，且需要预先分配连续空间。存储密度高（不用存指针）是它的优点。'
+  },
+  {
+    q:'在长度为 n 的顺序表中，删除第 i 个元素（1 ≤ i ≤ n），平均需要移动多少个元素？',
+    o:['(n−1)/2','n/2','(n+1)/2','n'],
+    a:0,
+    why:'删除第 i 个元素要移动第 i+1 到第 n 个，共 n−i 个。i 从 1 到 n 等概率取值，平均值 = (1/n)·Σ(n−i) = (n−1)/2。'
+  },
+  {
+    q:'在长度为 n 的顺序表中，第 i 个位置插入一个元素，需要移动的元素个数是？',
+    o:['n−i+1','n−i','n−i−1','i'],
+    a:0,
+    why:'在第 i 个位置插入，原来的第 i 到第 n 个元素都要后移一位，共 n−i+1 个。注意和第 4 题的删除公式不同，这两个容易混。'
+  },
+  {
+    q:'单链表中，要在指针 p 所指结点之后插入结点 s，正确的操作是？',
+    o:['s->next = p->next; p->next = s;','p->next = s; s->next = p->next;','s->next = p; p->next = s;','p->next = s->next; s->next = p;'],
+    a:0,
+    why:'必须先让 s 接住 p 的后继，再让 p 指向 s。顺序反了会丢掉 p 原来的后继，链表断裂。这是链表操作最常见的错误。'
+  },
+  {
+    q:'与顺序表相比，链表的主要优点是？',
+    o:['插入删除不需要移动元素','可以随机访问任意元素','存储密度更高','缓存命中率更高'],
+    a:0,
+    why:'链表插入删除只需改指针，O(1)（已定位的前提下）。但它不支持随机访问（要顺着走 O(n)），还要额外存指针导致存储密度低，且结点分散在内存里，缓存不友好。'
+  },
+  {
+    q:'若某线性表最常用的操作是「取第 i 个元素」和「在第 i 个元素前插入」，采用（　）存储方式最节省时间。',
+    o:['顺序表','单链表','双向链表','循环链表'],
+    a:0,
+    why:'「取第 i 个」在顺序表是 O(1)，链表要 O(n)。虽然插入顺序表要移动元素，但取元素的高频操作更重要。这类题看「哪个操作更频繁」。'
+  },
+  {
+    q:'单链表中设置头结点的主要目的是？',
+    o:['统一空表和非空表的操作','节省存储空间','加快查找速度','方便存储数据'],
+    a:0,
+    why:'有了头结点，在第一个位置插入/删除时不用特殊处理（不用改头指针），代码逻辑统一。代价是多占一个结点的空间。'
+  },
+  {
+    q:'在单链表中，要删除指针 p 所指结点的后继结点，正确的操作是？',
+    o:['q = p->next; p->next = q->next; free(q);','p->next = p->next->next; free(p);','q = p->next; free(q); p->next = q->next;','p = p->next; free(p);'],
+    a:0,
+    why:'必须先保存要删的结点 q，让 p 跳过 q，最后才 free(q)。先 free 再访问 q->next 是野指针错误——这是链表题的高频陷阱。'
+  },
+  {
+    q:'顺序表的存储密度比链表高，原因是？',
+    o:['顺序表不需要额外存储指针','顺序表元素更小','顺序表不需要扩容','顺序表访问更快'],
+    a:0,
+    why:'存储密度 = 数据本身占的空间 / 结点总空间。链表每个结点要额外存 next 指针，所以密度 < 1；顺序表只存数据，密度 = 1。'
+  },
+  {
+    q:'长度为 n 的顺序表，在第 i 个位置插入元素的时间复杂度是？',
+    o:['O(n)','O(1)','O(log n)','O(n²)'],
+    a:0,
+    why:'插入要移动 n−i+1 个元素，最坏是 n 个，所以是 O(n)。只有「按位置访问」是 O(1)，插入删除都是 O(n)。'
+  }
+];
+
+/* ============================================================
+   游戏
+   ============================================================ */
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = 320, H = 256;
+
+const G = {
+  state:'title',       // title | play | pause | over
+  t:0,
+  hp:3, maxHp:3,
+  lv:1,                // 火力等级 1-3
+  score:0,
+  okN:0, noN:0, streak:0, bestStreak:0,
+  player:null,
+  enemies:[], bullets:[], parts:[],
+  spawnCd:60, killT:0,
+  shake:0
+};
+
+const keys = {};
+const TANK = 12, TILE = 16;
+
+/* 地图：简单掩体，ASCII */
+const MAP = [
+  '....................',
+  '....................',
+  '....................',
+  '....##........##....',
+  '....##........##....',
+  '....................',
+  '....................',
+  '......##....##......',
+  '......##....##......',
+  '....................',
+  '....................',
+  '..##............##..',
+  '..##............##..',
+  '....................',
+  '....................',
+  '....................'
+].map(r => r.split(''));
+
+const SPAWN = [[2,0],[9,0],[16,0]];
+const BASE = {x:144, y:232, w:32, h:16};
+
+/* ---------- 音效（Web Audio 合成） ---------- */
+const Sound = (() => {
+  let ac = null, muted = false;
+  function ensure(){
+    if(!ac){ try{ ac = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+    if(ac && ac.state === 'suspended') ac.resume();
+  }
+  function tone(freq, dur, type, vol, slideTo){
+    if(muted || !ac) return;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, ac.currentTime);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime + dur);
+    g.gain.setValueAtTime(vol || .08, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + dur);
+  }
+  function noise(dur, vol, lp){
+    if(muted || !ac) return;
+    const len = Math.floor(ac.sampleRate * dur);
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = ac.createBufferSource(); src.buffer = buf;
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp || 900;
+    const g = ac.createGain(); g.gain.value = vol || .12;
+    src.connect(f); f.connect(g); g.connect(ac.destination);
+    src.start();
+  }
+  return {
+    unlock: ensure,
+    shoot(){ tone(880, .06, 'square', .05, 260); },
+    boom(){ noise(.22, .16, 800); tone(140, .18, 'sawtooth', .06, 50); },
+    hit(){ noise(.06, .06, 1800); },
+    right(){ tone(520, .09, 'triangle', .1); setTimeout(()=>tone(780, .12, 'triangle', .1), 80); },
+    wrong(){ tone(220, .12, 'sawtooth', .09); setTimeout(()=>tone(160, .2, 'sawtooth', .09), 110); },
+    over(){ [440,392,330,262].forEach((f,i)=>setTimeout(()=>tone(f,.2,'triangle',.1), i*140)); },
+    toggle(){ muted = !muted; return muted; }
+  };
+})();
+
+/* ---------- 实体 ---------- */
+function makePlayer(){
+  return {x:150, y:220, dir:0, speed:2, cd:0, shield:90, alive:true};
+}
+
+function spawnEnemy(){
+  const p = SPAWN[Math.floor(Math.random()*SPAWN.length)];
+  const fast = Math.random() < .35;
+  G.enemies.push({
+    x:p[0]*TILE+2, y:p[1]*TILE,
+    dir:2, speed: fast?1.6:1,
+    hp: 1 + Math.floor(G.lv/3),     // 火力等级越高，敌人越硬
+    cd: 90, type: fast?'f':'n',
+    think: 40, flash:0
+  });
+}
+
+/* ---------- 碰撞 ---------- */
+function blocked(x, y){
+  const pts = [[x,y],[x+TANK-1,y],[x,y+TANK-1],[x+TANK-1,y+TANK-1]];
+  for(const [px,py] of pts){
+    const c = Math.floor(px/TILE), r = Math.floor(py/TILE);
+    if(r < 0 || r >= 16 || c < 0 || c >= 20) return true;
+    if(MAP[r][c] === '#') return true;
+  }
+  // 基地
+  if(x+TANK > BASE.x && x < BASE.x+BASE.w && y+TANK > BASE.y && y < BASE.y+BASE.h) return true;
+  return false;
+}
+
+/* ---------- 更新 ---------- */
+function update(){
+  if(G.state !== 'play') return;
+  G.t++;
+  if(G.shake > 0) G.shake--;
+
+  const p = G.player;
+  if(p && p.alive){
+    if(p.shield > 0) p.shield--;
+    let nx = p.x, ny = p.y, moved = false;
+    if(keys['ArrowUp'] && !keys['ArrowDown']){ p.dir = 0; ny -= p.speed; }
+    else if(keys['ArrowDown'] && !keys['ArrowUp']){ p.dir = 2; ny += p.speed; }
+    else if(keys['ArrowLeft'] && !keys['ArrowRight']){ p.dir = 3; nx -= p.speed; }
+    else if(keys['ArrowRight'] && !keys['ArrowLeft']){ p.dir = 1; nx += p.speed; }
+
+    if(nx !== p.x || ny !== p.y){
+      if(!blocked(nx, ny)){ p.x = nx; p.y = ny; moved = true; }
+      else {
+        // 转角吸附
+        if(nx !== p.x){
+          if(!blocked(nx, p.y-2)){ p.y -= 2; p.x = nx; moved = true; }
+          else if(!blocked(nx, p.y+2)){ p.y += 2; p.x = nx; moved = true; }
+        } else {
+          if(!blocked(p.x-2, ny)){ p.x -= 2; p.y = ny; moved = true; }
+          else if(!blocked(p.x+2, ny)){ p.x += 2; p.y = ny; moved = true; }
+        }
+      }
+    }
+    p.moved = moved;
+
+    // 开火
+    if(p.cd > 0) p.cd--;
+    if(keys[' '] && p.cd <= 0){
+      fire(p.x + TANK/2, p.y + TANK/2, p.dir, 'player');
+      p.cd = G.lv >= 2 ? 9 : 13;
+    }
+  }
+
+  // 敌军 AI
+  for(const e of G.enemies){
+    if(e.flash > 0) e.flash--;
+    e.think--;
+    if(e.think <= 0){
+      e.think = 40 + Math.floor(Math.random()*60);
+      // 朝玩家或基地
+      const tx = (Math.random() < .6 && p && p.alive) ? p.x : BASE.x + BASE.w/2;
+      const ty = (Math.random() < .6 && p && p.alive) ? p.y : BASE.y;
+      const dx = tx - e.x, dy = ty - e.y;
+      if(Math.abs(dx) > Math.abs(dy)) e.dir = dx > 0 ? 1 : 3;
+      else e.dir = dy > 0 ? 2 : 0;
+    }
+    const sp = e.speed;
+    let nx = e.x, ny = e.y;
+    if(e.dir === 0) ny -= sp;
+    else if(e.dir === 1) nx += sp;
+    else if(e.dir === 2) ny += sp;
+    else nx -= sp;
+    if(!blocked(nx, ny)){ e.x = nx; e.y = ny; }
+    else e.think = 0;
+
+    // 射击
+    if(e.cd > 0) e.cd--;
+    if(e.cd <= 0 && Math.random() < .02){
+      fire(e.x + TANK/2, e.y + TANK/2, e.dir, 'enemy');
+      e.cd = 100 + Math.floor(Math.random()*40);
+    }
+
+    // 到底部 → 扣血
+    if(e.y + TANK >= BASE.y && e.x + TANK > BASE.x - 8 && e.x < BASE.x + BASE.w + 8){
+      damage(1); e.hp = 0; boom(e.x+6, e.y+6, '#ff6b6b');
+    }
+  }
+
+  // 子弹
+  for(const b of G.bullets){
+    const step = Math.min(2, b.speed);
+    for(let s = 0; s < b.speed; s += step){
+      if(b.dir === 0) b.y -= step;
+      else if(b.dir === 1) b.x += step;
+      else if(b.dir === 2) b.y += step;
+      else b.x -= step;
+
+      if(b.x < -4 || b.x > W+4 || b.y < -4 || b.y > H+4){ b.dead = true; break; }
+      // 墙
+      const c = Math.floor(b.x/TILE), r = Math.floor(b.y/TILE);
+      if(r>=0 && r<16 && c>=0 && c<20 && MAP[r][c] === '#'){ b.dead = true; spark(b.x, b.y); break; }
+
+      // 命中
+      if(b.owner === 'player'){
+        let hit = false;
+        for(const e of G.enemies){
+          if(e.hp <= 0) continue;
+          if(b.x > e.x-2 && b.x < e.x+TANK+2 && b.y > e.y-2 && b.y < e.y+TANK+2){
+            e.hp--; e.flash = 6; hit = true;
+            if(e.hp <= 0){ boom(e.x+6, e.y+6, '#f0675f'); G.score += 100; G.killT++; }
+            else spark(b.x, b.y);
+            break;
+          }
+        }
+        if(hit){ b.dead = true; break; }
+        // 自家基地：弹火花不掉血
+        if(b.x > BASE.x && b.x < BASE.x+BASE.w && b.y > BASE.y && b.y < BASE.y+BASE.h){
+          b.dead = true; spark(b.x, b.y); break;
+        }
+      } else {
+        if(p && p.alive && p.shield <= 0 &&
+           b.x > p.x && b.x < p.x+TANK && b.y > p.y && b.y < p.y+TANK){
+          damage(1); b.dead = true; boom(p.x+6, p.y+6, '#ffd166');
+          p.x = 150; p.y = 220; p.shield = 90;
+          break;
+        }
+      }
+    }
+  }
+  G.bullets = G.bullets.filter(b => !b.dead);
+  G.enemies = G.enemies.filter(e => e.hp > 0);
+
+  // 粒子
+  for(const q of G.parts){ q.x += q.vx; q.y += q.vy; q.life--; }
+  G.parts = G.parts.filter(q => q.life > 0);
+
+  // 刷兵
+  G.spawnCd--;
+  if(G.spawnCd <= 0){
+    const cap = Math.min(2 + Math.floor(G.lv/2) + Math.floor(G.t/1800), 6);
+    if(G.enemies.length < cap) spawnEnemy();
+    G.spawnCd = Math.max(50, 130 - G.lv*12);
+  }
+
+  updateHud();
+}
+
+function fire(x, y, dir, owner){
+  const b = {x, y, dir, speed: owner === 'player' ? (G.lv >= 2 ? 5 : 4) : 3,
+             owner, dead:false};
+  // 同屏子弹限制
+  if(owner === 'player'){
+    const mine = G.bullets.filter(v => v.owner === 'player').length;
+    if(mine >= (G.lv >= 3 ? 2 : 1)) return;
+    Sound.shoot();
+  }
+  G.bullets.push(b);
+}
+
+function spark(x, y){
+  for(let i = 0; i < 3; i++){
+    G.parts.push({x, y, vx:(Math.random()-.5)*2.5, vy:(Math.random()-.5)*2.5,
+      life:8+Math.random()*6, col:'#ffd166', sz:1});
+  }
+  Sound.hit();
+}
+
+function boom(x, y, col){
+  for(let i = 0; i < 10; i++){
+    const a = Math.random()*Math.PI*2, s = 1+Math.random()*2;
+    G.parts.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s,
+      life:14+Math.random()*10, col, sz:1+Math.random()*2});
+  }
+  G.parts.push({ring:true, x, y, r:2, vr:1.6, life:12, col});
+  Sound.boom();
+}
+
+function damage(n){
+  G.hp -= n;
+  G.shake = 8;
+  if(G.hp <= 0){ G.hp = 0; gameOver(); }
+}
+
+/* ---------- 渲染 ---------- */
+function drawTank(x, y, dir, cfg){
+  ctx.save();
+  ctx.translate(x + TANK/2, y + TANK/2);
+  ctx.rotate(dir * Math.PI/2);
+  const h = TANK/2;
+  // 履带
+  ctx.fillStyle = cfg.dark;
+  ctx.fillRect(-h, -h, 3, TANK);
+  ctx.fillRect(h-3, -h, 3, TANK);
+  // 车身
+  ctx.fillStyle = cfg.body;
+  ctx.fillRect(-h+3, -h+1, TANK-6, TANK-2);
+  // 高光
+  ctx.fillStyle = cfg.hi;
+  ctx.fillRect(-h+3, -h+1, TANK-6, 1);
+  ctx.fillRect(-h+3, -h+1, 1, TANK-2);
+  // 炮管
+  ctx.fillStyle = cfg.light;
+  ctx.fillRect(-1, -h-3, 2, h+4);
+  ctx.restore();
+}
+
+function render(){
+  ctx.save();
+  if(G.shake > 0){
+    ctx.translate((Math.random()-.5)*3, (Math.random()-.5)*3);
+  }
+  ctx.fillStyle = '#0b0e14';
+  ctx.fillRect(-4, -4, W+8, H+8);
+
+  // 地图
+  for(let r = 0; r < 16; r++){
+    for(let c = 0; c < 20; c++){
+      if(MAP[r][c] === '#'){
+        const x = c*TILE, y = r*TILE;
+        ctx.fillStyle = '#5c2c11'; ctx.fillRect(x, y, TILE, TILE);
+        ctx.fillStyle = '#c06a2e';
+        ctx.fillRect(x+1, y+1, TILE-2, 6);
+        ctx.fillRect(x+1, y+9, TILE-2, 6);
+        ctx.fillStyle = '#e08c4a';
+        ctx.fillRect(x+1, y+1, TILE-2, 1);
+      }
+    }
+  }
+
+  // 基地
+  const bx = BASE.x, by = BASE.y;
+  ctx.fillStyle = G.hp > 1 ? '#c9a227' : '#b07a1e';
+  ctx.fillRect(bx, by, BASE.w, BASE.h);
+  ctx.fillStyle = G.hp > 1 ? '#ffe9a8' : '#e06a4a';
+  ctx.fillRect(bx+4, by+4, 6, 6);
+  ctx.fillRect(bx+BASE.w-10, by+4, 6, 6);
+  ctx.fillStyle = '#8a6a12';
+  ctx.fillRect(bx, by+BASE.h-3, BASE.w, 3);
+
+  // 敌军
+  for(const e of G.enemies){
+    const cfg = e.type === 'f'
+      ? {body:'#5fcbf0', light:'#a8e6ff', dark:'#1a6a86', hi:'#d8f4ff'}
+      : {body: e.flash > 0 ? '#ffffff' : '#c3ccd6', light:'#eef4fa', dark:'#5b6773', hi:'#ffffff'};
+    drawTank(e.x, e.y, e.dir, cfg);
+  }
+
+  // 玩家
+  const p = G.player;
+  if(p && p.alive){
+    if(p.shield > 0 && Math.floor(G.t/4) % 2 === 0){
+      ctx.strokeStyle = '#7fd6ff'; ctx.lineWidth = 1;
+      ctx.strokeRect(p.x-2.5, p.y-2.5, TANK+5, TANK+5);
+    }
+    drawTank(p.x, p.y, p.dir, {body:'#f0b83a', light:'#ffe08a', dark:'#8a5a00', hi:'#fff6cf'});
+  }
+
+  // 子弹
+  for(const b of G.bullets){
+    ctx.fillStyle = b.owner === 'player' ? '#ffe08a' : '#ff6b6b';
+    ctx.fillRect(Math.round(b.x)-1, Math.round(b.y)-1, 3, 3);
+  }
+
+  // 粒子
+  for(const q of G.parts){
+    if(q.ring){
+      ctx.strokeStyle = q.col; ctx.globalAlpha = q.life/12;
+      ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
+      q.r += q.vr;
+    } else {
+      ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life/10);
+      ctx.fillRect(Math.round(q.x), Math.round(q.y), q.sz, q.sz);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  ctx.restore();
+}
+
+/* ---------- 主循环（固定步长） ---------- */
+let last = 0, acc = 0;
+function loop(ts){
+  if(!last) last = ts;
+  let dt = ts - last; last = ts;
+  if(dt > 120) dt = 120;
+  acc += dt;
+  let guard = 0;
+  while(acc >= 16.667 && guard < 4){ update(); acc -= 16.667; guard++; }
+  render();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- HUD ---------- */
+function updateHud(){
+  document.getElementById('hpBar').style.width = (G.hp/G.maxHp*100) + '%';
+  document.getElementById('lvTxt').textContent = 'Lv' + G.lv;
+  document.getElementById('streakTxt').textContent = G.streak;
+  document.getElementById('enemyTxt').textContent = G.enemies.length;
+  document.getElementById('okN').textContent = G.okN;
+  document.getElementById('noN').textContent = G.noN;
+  document.getElementById('scoreN').textContent = G.score;
+  document.getElementById('streakBox').textContent = '连对 ' + G.streak;
+}
+
+function showToast(txt, good){
+  const el = document.getElementById('toast');
+  el.textContent = txt;
+  el.className = 'toast on ' + (good ? 'good' : 'bad');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.className = 'toast ' + (good?'good':'bad'); }, 1100);
+}
+
+/* ---------- 答题 ---------- */
+let qIdx = 0, qLocked = false, wrongList = [];
+
+function nextQuestion(){
+  qLocked = false;
+  const q = BANK[qIdx % BANK.length];
+  document.getElementById('qno').textContent = '第 ' + (qIdx+1) + ' 题';
+  document.getElementById('qtext').innerHTML = q.q;
+  document.getElementById('why').className = 'why';
+
+  const box = document.getElementById('opts');
+  box.innerHTML = '';
+  q.o.forEach((txt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<span class="k">' + (i+1) + '</span><span>' + txt + '</span>';
+    b.onclick = () => answer(i);
+    box.appendChild(b);
+  });
+  qIdx++;
+}
+
+function answer(pick){
+  if(qLocked) return;
+  qLocked = true;
+  const q = BANK[(qIdx-1) % BANK.length];
+  const btns = [...document.querySelectorAll('.opt')];
+  btns.forEach(b => b.disabled = true);
+
+  const right = pick === q.a;
+  if(right){
+    btns[pick].classList.add('right');
+  } else {
+    btns[pick].classList.add('wrong');
+    btns[q.a].classList.add('miss');
+  }
+
+  const why = document.getElementById('why');
+  why.innerHTML = '<b>' + (right ? '✓ 对了　' : '✗ 答错　') + '</b>' + q.why;
+  why.className = 'why on';
+
+  if(right){
+    G.okN++; G.streak++;
+    if(G.streak > G.bestStreak) G.bestStreak = G.streak;
+    G.score += 200 + G.streak * 50;
+    if(G.lv < 3 && G.streak % 3 === 0){
+      G.lv++;
+      showToast('火力提升 Lv' + G.lv, true);
+    } else {
+      showToast('答对 +' + (200 + G.streak*50), true);
+    }
+    Sound.right();
+  } else {
+    G.noN++; G.streak = 0;
+    G.score = Math.max(0, G.score - 80);
+    // 惩罚：全体敌人 +1 血
+    for(const e of G.enemies) e.hp++;
+    showToast('答错，敌军强化', false);
+    Sound.wrong();
+    wrongList.push({q:q.q, pick, right:q.a, why:q.why});
+    saveWrong(q.q, pick);
+  }
+
+  updateHud();
+  setTimeout(() => {
+    if(G.state === 'play') nextQuestion();
+  }, right ? 1200 : 2400);
+}
+
+/* ---------- 错题本地存储 ---------- */
+function saveWrong(q, pick){
+  try{
+    const k = 'qz:wrong';
+    const arr = JSON.parse(localStorage.getItem(k) || '[]');
+    arr.push({q, pick, t: Date.now()});
+    localStorage.setItem(k, JSON.stringify(arr.slice(-200)));
+  }catch(e){}
+}
+
+/* ---------- 流程 ---------- */
+function startGame(){
+  Sound.unlock();
+  G.state = 'play';
+  G.t = 0;
+  G.hp = 3; G.lv = 1; G.score = 0;
+  G.okN = 0; G.noN = 0; G.streak = 0;
+  G.enemies = []; G.bullets = []; G.parts = [];
+  G.spawnCd = 50;
+  G.player = makePlayer();
+  qIdx = 0;
+  document.getElementById('mask').classList.add('off');
+  updateHud();
+  nextQuestion();
+}
+
+function gameOver(){
+  G.state = 'over';
+  Sound.over();
+  const mask = document.getElementById('mask');
+  mask.classList.remove('off');
+  mask.innerHTML =
+    '<div class="over">防 线 失 守</div>' +
+    '<p style="font-size:13px;color:#cfd8e6;line-height:2.2">' +
+      '得分 <b style="color:#ffd166">' + G.score + '</b>　·　' +
+      '答对 <b style="color:#5fe08a">' + G.okN + '</b>　·　' +
+      '答错 <b style="color:#ff6b6b">' + G.noN + '</b>' +
+    '</p>' +
+    (wrongList.length
+      ? '<p style="font-size:11.5px;color:#6b7a91;line-height:1.9;max-width:420px">本局错题 ' +
+        wrongList.length + ' 道，已存入错题集</p>'
+      : '') +
+    '<button class="btn" id="againBtn">再 来 一 局</button>';
+  document.getElementById('againBtn').onclick = () => {
+    wrongList = [];
+    mask.innerHTML = '';
+    startGame();
+  };
+}
+
+/* ---------- 输入 ---------- */
+document.addEventListener('keydown', e => {
+  const k = e.key;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k)){
+    keys[k] = true;
+    e.preventDefault();
+  }
+  if(G.state === 'play'){
+    if(k >= '1' && k <= '4'){ answer(parseInt(k)-1); e.preventDefault(); }
+    if(k === 'p' || k === 'P'){
+      G.state = 'pause';
+      showToast('已暂停（按 P 继续）', true);
+    }
+  } else if(G.state === 'pause' && (k === 'p' || k === 'P')){
+    G.state = 'play';
+  }
+  if(k === 'm' || k === 'M'){ Sound.toggle(); }
+  if(k === 'Enter' && G.state === 'title'){ startGame(); }
+});
+document.addEventListener('keyup', e => {
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) keys[e.key] = false;
+});
+
+document.getElementById('startBtn').onclick = startGame;
+
+/* ---------- 启动 ---------- */
+updateHud();
+requestAnimationFrame(loop);
+
+// 调试/截图用：?auto 直接开局
+if(new URLSearchParams(location.search).has('auto')){
+  setTimeout(startGame, 200);
+}
+</script>
 </body>
 </html>
