@@ -6,290 +6,238 @@
 <title>刷题防线 · 考研笔记</title>
 <style>
 :root{
-  --bg:#07080d;
-  --panel:#0e131d;
-  --line:#232c40;
-  --ink:#cfd8e6;
-  --dim:#6b7a91;
-  --gold:#ffd166;
-  --cyan:#7fd6ff;
-  --red:#ff6b6b;
+  --bg:#060f0b;
+  --panel:#0b1a13;
+  --panel2:#0e2018;
+  --line:rgba(90,210,150,.22);
+  --line2:rgba(90,210,150,.12);
+  --ink:#c9e8d8;
+  --dim:#5f8172;
   --green:#5fe08a;
+  --cyan:#7fd6ff;
+  --gold:#ffd166;
+  --red:#ff6b6b;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
 body{
-  background:radial-gradient(1100px 700px at 50% -10%,#182034,#07080d 62%);
+  background:radial-gradient(1200px 760px at 50% -15%,#0d2018,#050a08 65%);
   color:var(--ink);
-  font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+  font-family:"Cascadia Code","Consolas","Microsoft YaHei",monospace;
   display:flex;align-items:center;justify-content:center;
-  padding:18px;overflow:hidden;
+  padding:16px;overflow:hidden;
 }
 
-/* 机柜 */
-.cabinet{
-  width:100%;max-width:1180px;
-  background:linear-gradient(180deg,#161d2b,#0b0f18);
-  border:1px solid var(--line);border-radius:6px;
-  box-shadow:0 24px 70px -20px #000, inset 0 1px 0 rgba(255,255,255,.05);
+.app{
+  width:100%;max-width:1240px;height:100%;max-height:820px;
   display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#0b1912,#070e0a);
+  border:1px solid var(--line);border-radius:5px;
+  box-shadow:0 28px 80px -24px #000, inset 0 1px 0 rgba(120,230,170,.06);
   overflow:hidden;
 }
 
-/* 顶栏 */
 .top{
   display:flex;align-items:center;gap:14px;
-  padding:10px 16px;border-bottom:1px solid var(--line);
-  background:linear-gradient(180deg,#1a2234,#111722);
-  font-size:12px;
+  padding:9px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#0e2018,#0a1510);
+  font-size:11.5px;flex:0 0 auto;
 }
-.top a{
-  color:var(--dim);text-decoration:none;letter-spacing:.05em;
-  padding:4px 9px;border:1px solid transparent;border-radius:3px;transition:.15s;
-}
-.top a:hover{color:var(--gold);border-color:#33405c}
-.top .name{
-  font-size:14px;letter-spacing:.18em;color:var(--gold);
-  text-shadow:0 0 12px rgba(255,209,102,.35);
-}
+.top a{color:var(--dim);text-decoration:none;padding:3px 8px;border:1px solid transparent;border-radius:2px;transition:.15s}
+.top a:hover{color:var(--green);border-color:var(--line)}
+.top .name{font-size:13px;letter-spacing:.2em;color:var(--green);text-shadow:0 0 14px rgba(95,224,138,.4)}
 .top .sp{flex:1}
-.top .chip{
-  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;
-  color:var(--dim);padding:3px 8px;border:1px solid var(--line);border-radius:3px;
-}
+.top .kv{color:var(--dim);font-size:10.5px}
+.top .kv b{color:var(--ink);font-weight:500}
 
-/* 主体 */
-.body{display:grid;grid-template-columns:1fr 420px;min-height:0}
+.main{display:flex;flex:1;min-height:0}
 
-/* 游戏区 */
+/* 左：战场 */
 .stage{
-  position:relative;padding:14px;
-  display:flex;flex-direction:column;gap:10px;
-  border-right:1px solid var(--line);
-  min-width:0;
+  flex:1;min-width:0;display:flex;flex-direction:column;
+  padding:12px;gap:9px;border-right:1px solid var(--line);
 }
 .screen{
-  position:relative;background:#0b0e14;
-  border:1px solid #2a3550;border-radius:3px;
-  box-shadow:inset 0 0 40px rgba(0,0,0,.8),0 0 0 1px rgba(120,160,220,.06);
-  overflow:hidden;align-self:center;
-  width:720px;max-width:100%;
+  position:relative;flex:1;min-height:0;
+  background:#040a07;border:1px solid var(--line);
+  border-radius:3px;overflow:hidden;
+  box-shadow:inset 0 0 60px rgba(0,0,0,.75);
 }
-.screen canvas{
-  display:block;width:100%;height:auto;
-  image-rendering:pixelated;image-rendering:crisp-edges;
-}
-/* 扫描线 + 暗角 */
-.grain{
-  position:absolute;inset:0;pointer-events:none;
-  background:repeating-linear-gradient(180deg,rgba(0,0,0,.42) 0 1px,transparent 1px 3px);
-  opacity:.5;mix-blend-mode:multiply;
-}
-.vig{
-  position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.55) 100%);
-}
-/* 浮层提示 */
-.toast{
-  position:absolute;left:50%;top:16%;transform:translate(-50%,0);
-  font-size:13px;letter-spacing:.14em;font-weight:600;
-  padding:6px 16px;border-radius:3px;
-  background:rgba(0,0,0,.72);border:1px solid currentColor;
-  opacity:0;transition:opacity .2s,transform .35s;pointer-events:none;
-  white-space:nowrap;
-}
-.toast.on{opacity:1;transform:translate(-50%,-8px)}
-.toast.good{color:var(--green);text-shadow:0 0 14px rgba(95,224,138,.6)}
-.toast.bad{color:var(--red);text-shadow:0 0 14px rgba(255,107,107,.6)}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
 
-/* HUD */
 .hud{
-  display:flex;align-items:center;gap:16px;
-  padding:8px 12px;background:#0d121c;border:1px solid var(--line);border-radius:3px;
-  font-family:"Cascadia Code",Consolas,monospace;font-size:11px;color:var(--dim);
-  flex-wrap:wrap;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:7px 12px;background:var(--panel2);border:1px solid var(--line2);
+  border-radius:3px;font-size:10.5px;color:var(--dim);flex:0 0 auto;
 }
-.hud b{color:var(--ink);font-weight:600}
-.hud .bar{
-  width:96px;height:6px;background:#1b2436;border-radius:3px;overflow:hidden;
-}
-.hud .bar i{display:block;height:100%;background:var(--gold);transition:width .2s}
-.hud .bar.hp i{background:var(--green)}
-.hud .lv{color:var(--gold)}
-.hud .keys{margin-left:auto;color:#4d5a70;font-size:10px}
+.hud b{color:var(--ink);font-weight:500}
+.hud .bar{width:82px;height:5px;background:#12281e;border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle}
+.hud .bar i{display:block;height:100%;background:var(--green);transition:width .18s}
+.hud .sp{flex:1}
+.hud .threat{color:var(--cyan)}
 
-/* 答题区 */
+/* 菜单 */
+.menu{
+  position:absolute;inset:0;z-index:8;
+  background:rgba(3,8,6,.94);backdrop-filter:blur(3px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;padding:24px;text-align:center;overflow-y:auto;
+}
+.menu.off{display:none}
+.menu h1{font-size:22px;letter-spacing:.32em;color:var(--green);text-shadow:0 0 26px rgba(95,224,138,.5)}
+.menu .hint{font-size:11px;color:var(--dim);line-height:2;letter-spacing:.03em}
+.opt-row{display:flex;flex-direction:column;gap:6px;align-items:center}
+.opt-row .lbl{font-size:10px;color:var(--dim);letter-spacing:.18em}
+.seg{display:flex;gap:6px}
+.seg button{
+  padding:6px 18px;background:#0c1b14;color:var(--dim);
+  border:1px solid var(--line);border-radius:2px;cursor:pointer;
+  font-family:inherit;font-size:11.5px;letter-spacing:.1em;transition:.14s;
+}
+.seg button:hover{color:var(--ink);border-color:rgba(90,210,150,.45)}
+.seg button.on{background:rgba(95,224,138,.14);color:var(--green);border-color:var(--green)}
+.btn-start{
+  margin-top:4px;padding:9px 40px;background:var(--green);color:#04140b;
+  border:none;border-radius:2px;font-family:inherit;font-size:13px;
+  letter-spacing:.24em;font-weight:700;cursor:pointer;transition:.15s;
+}
+.btn-start:hover{background:#7df0a4;transform:translateY(-1px)}
+
+/* 答题 */
 .quiz{
-  display:flex;flex-direction:column;min-height:0;background:#0a0e17;
+  width:400px;flex:0 0 400px;display:flex;flex-direction:column;
+  background:#071009;min-height:0;
 }
 .qhead{
-  padding:10px 16px;border-bottom:1px solid var(--line);
-  display:flex;align-items:center;gap:10px;
-  font-size:11px;letter-spacing:.12em;color:var(--dim);
-  background:linear-gradient(180deg,#141b28,#0c1119);
+  padding:9px 15px;border-bottom:1px solid var(--line2);
+  display:flex;align-items:center;gap:9px;font-size:10.5px;color:var(--dim);
+  flex:0 0 auto;
 }
-.qhead .n{
-  font-family:"Cascadia Code",Consolas,monospace;
-  color:var(--gold);font-size:12px;
-}
-.qhead .tag{
-  padding:2px 8px;border:1px solid #2c3a55;border-radius:2px;
-  color:#8fa6c8;font-size:10px;
-}
+.qhead .n{color:var(--gold);font-size:11.5px}
 .qhead .sp{flex:1}
-.qhead .streak{
-  font-family:"Cascadia Code",Consolas,monospace;color:var(--cyan);font-size:11px;
-}
+.qhead .st{color:var(--cyan)}
 
-.qbody{padding:18px 20px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1}
-.qtext{
-  font-size:15px;line-height:1.85;color:#e6edf7;letter-spacing:.01em;
-}
-.qtext code{
-  font-family:"Cascadia Code",Consolas,monospace;font-size:13.5px;
-  background:#1b2436;padding:1px 5px;border-radius:2px;color:var(--cyan);
-}
+.qbody{padding:16px 18px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1}
+.qtext{font-size:14px;line-height:1.9;color:#dcefe4}
+.qtext code{background:#12251b;padding:1px 5px;border-radius:2px;color:var(--cyan);font-size:12.5px}
 
-.opts{display:flex;flex-direction:column;gap:8px}
+.opts{display:flex;flex-direction:column;gap:7px}
 .opt{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:11px 13px;border:1px solid #263149;border-radius:4px;
-  background:#0e1420;cursor:pointer;transition:.14s;
-  font-size:13.5px;line-height:1.7;color:#c6d2e4;
-  text-align:left;font-family:inherit;
+  display:flex;gap:9px;align-items:flex-start;text-align:left;
+  padding:10px 12px;background:#0a1710;border:1px solid #16301f;
+  border-radius:3px;cursor:pointer;transition:.14s;
+  font-size:12.5px;line-height:1.7;color:#b6d2c2;font-family:inherit;
 }
-.opt:hover{border-color:#3d5175;background:#131c2b}
+.opt:hover{border-color:#2a5a40;background:#0d1e15}
 .opt .k{
-  flex:0 0 auto;width:18px;height:18px;border-radius:2px;
-  background:#1d2740;color:#7d8fae;
-  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;
-  display:flex;align-items:center;justify-content:center;margin-top:2px;
+  flex:0 0 auto;width:16px;height:16px;border-radius:2px;background:#16301f;
+  color:#7a9c8a;font-size:10px;display:flex;align-items:center;justify-content:center;
+  margin-top:2px;
 }
-.opt.right{border-color:#2f6b45;background:rgba(95,224,138,.09)}
-.opt.right .k{background:#2b6b45;color:#c9f5d9}
-.opt.wrong{border-color:#7a3030;background:rgba(255,107,107,.08)}
-.opt.wrong .k{background:#7a3030;color:#ffd9d9}
-.opt.miss{border-color:#2f6b45;background:rgba(95,224,138,.05);opacity:.85}
+.opt.right{border-color:#2f7a4e;background:rgba(95,224,138,.1)}
+.opt.right .k{background:#2f7a4e;color:#d6ffe6}
+.opt.wrong{border-color:#7a3232;background:rgba(255,107,107,.08)}
+.opt.wrong .k{background:#7a3232;color:#ffdcdc}
+.opt.miss{border-color:#2f7a4e;background:rgba(95,224,138,.05);opacity:.85}
 .opt:disabled{cursor:default}
 
-/* 解析 */
 .why{
-  border-left:2px solid var(--cyan);
-  padding:10px 12px;background:rgba(127,214,255,.06);
-  font-size:12.5px;line-height:1.85;color:#a9bdd6;
-  display:none;
+  border-left:2px solid var(--cyan);padding:9px 11px;
+  background:rgba(127,214,255,.06);font-size:11.5px;line-height:1.9;
+  color:#9dbfae;display:none;
 }
 .why.on{display:block}
-.why b{color:var(--cyan);font-weight:600}
+.why b{color:var(--cyan)}
 
-/* 底部 */
 .foot{
-  padding:8px 16px;border-top:1px solid var(--line);
-  display:flex;align-items:center;gap:16px;
-  font-family:"Cascadia Code",Consolas,monospace;font-size:11px;color:var(--dim);
-  background:#0c1119;
+  padding:7px 15px;border-top:1px solid var(--line2);
+  display:flex;gap:14px;font-size:10.5px;color:var(--dim);flex:0 0 auto;
 }
 .foot b{color:var(--ink)}
 .foot .ok{color:var(--green)}
 .foot .no{color:var(--red)}
 .foot .sp{flex:1}
 
-/* 开始遮罩 */
-.mask{
-  position:absolute;inset:0;z-index:9;
-  background:rgba(6,9,15,.92);backdrop-filter:blur(2px);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;text-align:center;padding:24px;
-}
-.mask.off{display:none}
-.mask h1{
-  font-size:26px;letter-spacing:.3em;color:var(--gold);
-  text-shadow:0 0 24px rgba(255,209,102,.5);
-}
-.mask p{font-size:12.5px;color:var(--dim);line-height:2;letter-spacing:.06em}
-.mask .btn{
-  margin-top:6px;padding:10px 34px;
-  background:var(--gold);color:#1a1206;border:none;border-radius:3px;
-  font-size:14px;letter-spacing:.2em;font-weight:600;cursor:pointer;
-  font-family:inherit;transition:.15s;
-}
-.mask .btn:hover{background:#ffe08a;transform:translateY(-1px)}
-.mask kbd{
-  display:inline-block;min-width:18px;padding:1px 5px;
-  background:#1b2436;border:1px solid #2f3d58;border-radius:2px;
-  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;color:#9db0cc;
-}
-
-/* 结算 */
-.over{color:var(--red);font-size:24px;letter-spacing:.3em;text-shadow:0 0 20px rgba(255,107,107,.5)}
-
-@media(max-width:1080px){
-  body{overflow:auto;align-items:flex-start}
-  .body{grid-template-columns:1fr}
-  .stage{border-right:none;border-bottom:1px solid var(--line)}
-  .screen{width:100%;max-width:640px}
+@media(max-width:1000px){
+  body{overflow:auto;align-items:flex-start;height:auto;padding:8px}
+  .app{height:auto;max-height:none}
+  .main{flex-direction:column}
+  .quiz{width:auto;flex:none;border-top:1px solid var(--line)}
+  .screen{min-height:320px}
 }
 </style>
 </head>
 <body>
 
-<div class="cabinet">
+<div class="app">
   <div class="top">
     <a href="index.html">← 返回笔记</a>
     <span class="name">刷题防线</span>
-    <span class="chip">DATA STRUCTURE · 1.1 线性表</span>
+    <span class="kv" id="topKv">—</span>
     <span class="sp"></span>
-    <span class="chip" id="hintKeys">WASD / 方向键 移动 · 空格开火 · 1-4 答题</span>
+    <span class="kv">WASD 移动 · 鼠标瞄准 · 自动开火 · 1-4 / 点击 答题</span>
   </div>
 
-  <div class="body">
-    <!-- 左：游戏 -->
+  <div class="main">
     <div class="stage">
       <div class="screen" id="screen">
-        <canvas id="cv" width="480" height="352"></canvas>
-        <div class="grain"></div>
-        <div class="vig"></div>
-        <div class="toast" id="toast"></div>
-        <div class="mask" id="mask">
-          <h1>刷题防线</h1>
-          <p>
-            守住基地，同时答题。<br>
-            <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或方向键 移动 · <kbd>空格</kbd> 开火 · <kbd>1</kbd>-<kbd>4</kbd> 选答案<br>
-            答对提升火力，答错敌人变强。
-          </p>
-          <button class="btn" id="startBtn">开 始</button>
+        <canvas id="cv"></canvas>
+
+        <div class="menu" id="menu">
+          <h1>刷 题 防 线</h1>
+          <div class="hint">
+            基地在中央，敌军从四面八方压来。<br>
+            左手 WASD 移动，右手鼠标瞄准，炮台自动开火。<br>
+            答对升火力，答错敌军变强。
+          </div>
+
+          <div class="opt-row">
+            <span class="lbl">地 图</span>
+            <div class="seg" id="segSize">
+              <button data-v="s">小</button>
+              <button data-v="m" class="on">中</button>
+              <button data-v="l">大</button>
+            </div>
+          </div>
+
+          <div class="opt-row">
+            <span class="lbl">难 度</span>
+            <div class="seg" id="segDiff">
+              <button data-v="easy">简单</button>
+              <button data-v="normal" class="on">普通</button>
+              <button data-v="hard">困难</button>
+            </div>
+          </div>
+
+          <button class="btn-start" id="startBtn">开 始</button>
         </div>
       </div>
 
       <div class="hud">
-        <span>基地 <span class="bar hp"><i id="hpBar" style="width:100%"></i></span></span>
-        <span>火力 <b class="lv" id="lvTxt">Lv1</b></span>
-        <span>威胁 <b id="threatTxt">1</b></span>
-        <span>连击 <b id="streakTxt">0</b></span>
+        <span>基地 <span class="bar"><i id="hpBar" style="width:100%"></i></span> <b id="hpTxt">100</b></span>
+        <span>火力 <b id="lvTxt">1</b></span>
+        <span class="threat">威胁 <b id="threatTxt">1</b></span>
         <span>敌军 <b id="enemyTxt">0</b></span>
-        <span class="keys">P 暂停 · M 静音</span>
+        <span class="sp"></span>
+        <span>连对 <b id="streakTxt">0</b></span>
       </div>
     </div>
 
-    <!-- 右：答题 -->
     <div class="quiz">
       <div class="qhead">
         <span class="n" id="qno">第 1 题</span>
-        <span class="tag">数据结构</span>
-        <span class="tag" id="qtag">线性表</span>
+        <span>数据结构 · 线性表</span>
         <span class="sp"></span>
-        <span class="streak" id="streakBox">连对 0</span>
+        <span class="st" id="streakBox">连对 0</span>
       </div>
-
       <div class="qbody">
-        <div class="qtext" id="qtext">准备开始……</div>
+        <div class="qtext" id="qtext">点「开始」进入防线……</div>
         <div class="opts" id="opts"></div>
         <div class="why" id="why"></div>
       </div>
-
       <div class="foot">
-        <span>答对 <b class="ok" id="okN">0</b></span>
-        <span>答错 <b class="no" id="noN">0</b></span>
+        <span>对 <b class="ok" id="okN">0</b></span>
+        <span>错 <b class="no" id="noN">0</b></span>
         <span class="sp"></span>
         <span>得分 <b id="scoreN">0</b></span>
       </div>
@@ -299,522 +247,570 @@ body{
 
 <script>
 /* ============================================================
-   题库：数据结构 · 1.1 线性表
+   题库
    ============================================================ */
 const BANK = [
-  {
-    q:'线性表是 n 个数据元素的有限序列。这里的「有限」指的是？',
-    o:['元素的个数 n 是有限的','每个元素的大小有限','表中的操作次数有限','存储空间有限'],
-    a:0,
-    why:'线性表的定义强调「有限序列」——元素个数 n ≥ 0 且有限。n = 0 时是空表。元素大小、操作次数、存储空间都不在这个定义里。'
-  },
-  {
-    q:'线性表是一种（　）结构。',
-    o:['逻辑结构','存储结构','物理结构','索引结构'],
-    a:0,
-    why:'线性表描述的是元素之间的逻辑关系（一对一的前驱后继），属于逻辑结构。它可以用顺序存储（数组）或链式存储（链表）实现，那才是存储结构。'
-  },
-  {
-    q:'顺序表的特点是逻辑上相邻的元素在物理位置上也相邻。这个特点带来的主要缺点是？',
-    o:['插入删除要移动大量元素','不能随机访问','存储密度低','只能用指针访问'],
-    a:0,
-    why:'顺序表的优点正是随机访问 O(1)；缺点是插入删除平均要移动 n/2 个元素，且需要预先分配连续空间。存储密度高（不用存指针）是它的优点。'
-  },
-  {
-    q:'在长度为 n 的顺序表中，删除第 i 个元素（1 ≤ i ≤ n），平均需要移动多少个元素？',
-    o:['(n−1)/2','n/2','(n+1)/2','n'],
-    a:0,
-    why:'删除第 i 个元素要移动第 i+1 到第 n 个，共 n−i 个。i 从 1 到 n 等概率取值，平均值 = (1/n)·Σ(n−i) = (n−1)/2。'
-  },
-  {
-    q:'在长度为 n 的顺序表中，第 i 个位置插入一个元素，需要移动的元素个数是？',
-    o:['n−i+1','n−i','n−i−1','i'],
-    a:0,
-    why:'在第 i 个位置插入，原来的第 i 到第 n 个元素都要后移一位，共 n−i+1 个。注意和第 4 题的删除公式不同，这两个容易混。'
-  },
-  {
-    q:'单链表中，要在指针 p 所指结点之后插入结点 s，正确的操作是？',
-    o:['s->next = p->next; p->next = s;','p->next = s; s->next = p->next;','s->next = p; p->next = s;','p->next = s->next; s->next = p;'],
-    a:0,
-    why:'必须先让 s 接住 p 的后继，再让 p 指向 s。顺序反了会丢掉 p 原来的后继，链表断裂。这是链表操作最常见的错误。'
-  },
-  {
-    q:'与顺序表相比，链表的主要优点是？',
-    o:['插入删除不需要移动元素','可以随机访问任意元素','存储密度更高','缓存命中率更高'],
-    a:0,
-    why:'链表插入删除只需改指针，O(1)（已定位的前提下）。但它不支持随机访问（要顺着走 O(n)），还要额外存指针导致存储密度低，且结点分散在内存里，缓存不友好。'
-  },
-  {
-    q:'若某线性表最常用的操作是「取第 i 个元素」和「在第 i 个元素前插入」，采用（　）存储方式最节省时间。',
-    o:['顺序表','单链表','双向链表','循环链表'],
-    a:0,
-    why:'「取第 i 个」在顺序表是 O(1)，链表要 O(n)。虽然插入顺序表要移动元素，但取元素的高频操作更重要。这类题看「哪个操作更频繁」。'
-  },
-  {
-    q:'单链表中设置头结点的主要目的是？',
-    o:['统一空表和非空表的操作','节省存储空间','加快查找速度','方便存储数据'],
-    a:0,
-    why:'有了头结点，在第一个位置插入/删除时不用特殊处理（不用改头指针），代码逻辑统一。代价是多占一个结点的空间。'
-  },
-  {
-    q:'在单链表中，要删除指针 p 所指结点的后继结点，正确的操作是？',
-    o:['q = p->next; p->next = q->next; free(q);','p->next = p->next->next; free(p);','q = p->next; free(q); p->next = q->next;','p = p->next; free(p);'],
-    a:0,
-    why:'必须先保存要删的结点 q，让 p 跳过 q，最后才 free(q)。先 free 再访问 q->next 是野指针错误——这是链表题的高频陷阱。'
-  },
-  {
-    q:'顺序表的存储密度比链表高，原因是？',
-    o:['顺序表不需要额外存储指针','顺序表元素更小','顺序表不需要扩容','顺序表访问更快'],
-    a:0,
-    why:'存储密度 = 数据本身占的空间 / 结点总空间。链表每个结点要额外存 next 指针，所以密度 < 1；顺序表只存数据，密度 = 1。'
-  },
-  {
-    q:'长度为 n 的顺序表，在第 i 个位置插入元素的时间复杂度是？',
-    o:['O(n)','O(1)','O(log n)','O(n²)'],
-    a:0,
-    why:'插入要移动 n−i+1 个元素，最坏是 n 个，所以是 O(n)。只有「按位置访问」是 O(1)，插入删除都是 O(n)。'
-  }
+  {q:'线性表是 n 个数据元素的有限序列。这里「有限」指的是？',o:['元素个数 n 有限','每个元素大小有限','操作次数有限','存储空间有限'],a:0,why:'线性表定义强调「有限序列」，n ≥ 0 且有限，n=0 是空表。元素大小、操作次数、存储空间都不属于定义。'},
+  {q:'线性表是一种（　）结构。',o:['逻辑结构','存储结构','物理结构','索引结构'],a:0,why:'线性表描述元素间一对一的逻辑关系，属逻辑结构。用数组或链表实现才是存储结构。'},
+  {q:'顺序表「逻辑相邻则物理相邻」这个特点带来的主要缺点是？',o:['插入删除要移动大量元素','不能随机访问','存储密度低','只能用指针访问'],a:0,why:'顺序表优点是随机访问 O(1)；缺点是插入删除平均移动 n/2 个元素，且需连续空间。存储密度高是它的优点。'},
+  {q:'长度为 n 的顺序表，删除第 i 个元素，平均移动多少个？',o:['(n−1)/2','n/2','(n+1)/2','n'],a:0,why:'删除第 i 个要移动后面 n−i 个元素，i 等概率取 1..n，平均 = (1/n)Σ(n−i) = (n−1)/2。'},
+  {q:'长度为 n 的顺序表，在第 i 个位置插入元素，需要移动多少个？',o:['n−i+1','n−i','n−i−1','i'],a:0,why:'插入时原来第 i 到第 n 个都要后移一位，共 n−i+1 个。注意与删除公式差一个 1，这两个最易混。'},
+  {q:'单链表中在 p 所指结点后插入 s，正确的操作顺序是？',o:['s->next=p->next; p->next=s;','p->next=s; s->next=p->next;','s->next=p; p->next=s;','p->next=s->next; s->next=p;'],a:0,why:'必须先让 s 接住 p 的后继，再让 p 指向 s。顺序反了会丢掉 p 原来的后继，链表断裂。'},
+  {q:'与顺序表相比，链表的主要优点是？',o:['插入删除不需移动元素','可随机访问任意元素','存储密度更高','缓存命中率更高'],a:0,why:'链表插入删除只改指针 O(1)（已定位时）。但它不支持随机访问，还要多存指针，缓存也不友好。'},
+  {q:'最常用操作是「取第 i 个元素」和「在第 i 个前插入」，选哪种存储最省时间？',o:['顺序表','单链表','双向链表','循环链表'],a:0,why:'「取第 i 个」在顺序表是 O(1)，链表是 O(n)。虽然插入要移动，但取元素更频繁，顺序表总体更快。'},
+  {q:'单链表设置头结点的主要目的是？',o:['统一空表与非空表的操作','节省空间','加快查找','方便存数据'],a:0,why:'有头结点后，在第一个位置插入删除不必特殊处理头指针，代码逻辑统一。代价是多占一个结点空间。'},
+  {q:'单链表中删除 p 所指结点的后继，正确操作是？',o:['q=p->next; p->next=q->next; free(q);','p->next=p->next->next; free(p);','q=p->next; free(q); p->next=q->next;','p=p->next; free(p);'],a:0,why:'必须先保存 q，让 p 跳过 q，最后才 free(q)。先 free 再访问 q->next 是野指针错误。'},
+  {q:'顺序表存储密度比链表高，原因是？',o:['不需要额外存指针','元素更小','不需要扩容','访问更快'],a:0,why:'存储密度 = 数据占空间 / 结点总空间。链表每结点要存 next 指针，密度 < 1；顺序表只存数据，密度 = 1。'},
+  {q:'长度为 n 的顺序表在第 i 个位置插入，时间复杂度是？',o:['O(n)','O(1)','O(log n)','O(n²)'],a:0,why:'插入要移动 n−i+1 个元素，最坏 n 个，所以 O(n)。只有「按位置访问」是 O(1)。'}
 ];
 
 /* ============================================================
-   游戏
+   配置
    ============================================================ */
-const cv = document.getElementById('cv');
-const ctx = cv.getContext('2d');
-const W = 480, H = 352;
-
-const G = {
-  state:'title',       // title | play | pause | over
-  t:0,
-  hp:3, maxHp:3,
-  lv:1,                // 火力等级 1-3
-  score:0,
-  okN:0, noN:0, streak:0, bestStreak:0,
-  player:null,
-  enemies:[], bullets:[], parts:[],
-  spawnCd:60, killT:0,
-  shake:0
+const SIZES = {
+  s: {cols:40, rows:30, name:'小'},
+  m: {cols:56, rows:42, name:'中'},
+  l: {cols:72, rows:54, name:'大'}
+};
+const DIFFS = {
+  easy:   {name:'简单', gap:[110,170], cap:4, hpAdd:0, spd:0.85, fireGap:160, baseDmg:9},
+  normal: {name:'普通', gap:[80,130],  cap:6, hpAdd:0, spd:1.0,  fireGap:120, baseDmg:12},
+  hard:   {name:'困难', gap:[55,95],   cap:8, hpAdd:1, spd:1.18, fireGap:85,  baseDmg:16}
 };
 
+const TILE = 24;
+
+/* ============================================================
+   状态
+   ============================================================ */
+const G = {
+  state:'menu',
+  t:0,
+  size:'m', diff:'normal',
+  world:null, cols:0, rows:0, worldW:0, worldH:0,
+  base:{x:0,y:0,r:28,hp:100,maxHp:100},
+  player:null,
+  enemies:[], bullets:[], parts:[],
+  cam:{x:0,y:0},
+  spawnCd:0, killed:0,
+  score:0, okN:0, noN:0, streak:0,
+  shake:0, zoom:1,
+  viewW:0, viewH:0
+};
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
 const keys = {};
-const TANK = 12, TILE = 16;
+let mouse = {x:0, y:0};
 
-/* 地图：30×22 格，五道防线层层收窄，逼出「边打边退」的节奏 */
-const MAP = [
-  '..............................',
-  '..............................',
-  '.....##................##.....',
-  '.....##................##.....',
-  '..............................',
-  '.......####........####.......',
-  '.......####........####.......',
-  '..............................',
-  '..............................',
-  '..###.....##......##.....###..',
-  '..###.....##......##.....###..',
-  '..............................',
-  '..............................',
-  '..##....####......####....##..',
-  '..##....####......####....##..',
-  '..............................',
-  '..............................',
-  '..####.....##....##....####..',
-  '..####.....##....##....####..',
-  '..............................',
-  '..............................',
-  '..............................'
-].map(r => r.split(''));
+/* ---------- 自适应 ---------- */
+function fitCanvas(){
+  const scr = document.getElementById('screen');
+  const r = scr.getBoundingClientRect();
+  const w = Math.max(320, Math.round(r.width));
+  const h = Math.max(240, Math.round(r.height));
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(w * dpr);
+  cv.height = Math.round(h * dpr);
+  cv.style.width = w + 'px';
+  cv.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  G.viewW = w;
+  G.viewH = h;
+}
+window.addEventListener('resize', () => {
+  fitCanvas();
+  if(G.state === 'play') clampCam();
+});
 
-const ROWS = 22, COLS = 30;
-const SPAWN = [[2,0],[14,0],[26,0]];
-const BASE = {x:224, y:320, w:32, h:16};
+/* ---------- 世界 ---------- */
+function genWorld(){
+  const {cols, rows} = SIZES[G.size];
+  G.cols = cols; G.rows = rows;
+  G.worldW = cols * TILE;
+  G.worldH = rows * TILE;
 
-/* ---------- 音效（Web Audio 合成） ---------- */
+  const w = [];
+  for(let r=0;r<rows;r++) w.push(new Array(cols).fill(0));
+
+  for(let c=0;c<cols;c++){ w[0][c]=1; w[rows-1][c]=1; }
+  for(let r=0;r<rows;r++){ w[r][0]=1; w[r][cols-1]=1; }
+
+  const cx = Math.floor(cols/2), cy = Math.floor(rows/2);
+
+  for(let r=2;r<rows-2;r++){
+    for(let c=2;c<cols-2;c++){
+      const dx = c-cx, dy = r-cy;
+      if(Math.abs(dx) <= 5 && Math.abs(dy) <= 5) continue;   // 基地周围留空
+      // 棋盘式：偶数行列才有机会成墙，保证奇数行列永远通行
+      if(r%2===0 && c%2===0 && Math.random() < 0.34) w[r][c] = 1;
+      else if(Math.random() < 0.018) w[r][c] = 1;
+    }
+  }
+  G.world = w;
+
+  G.base = {
+    x: cx*TILE + TILE/2,
+    y: cy*TILE + TILE/2,
+    r: TILE*1.15,
+    hp: 100, maxHp: 100
+  };
+
+  const spot = findFreeCell(cx - 4, cy);
+  G.player = {
+    x: spot.c*TILE + TILE/2,
+    y: spot.r*TILE + TILE/2,
+    r: 9, speed: 2.6,
+    angle: 0, cd: 0, lv: 1, shield: 90
+  };
+
+  G.cam.x = G.player.x - G.viewW/2;
+  G.cam.y = G.player.y - G.viewH/2;
+  clampCam();
+}
+
+function findFreeCell(c0, r0){
+  for(let d=0; d<14; d++){
+    for(let dr=-d; dr<=d; dr++){
+      for(let dc=-d; dc<=d; dc++){
+        const r = r0+dr, c = c0+dc;
+        if(r<2||r>=G.rows-2||c<2||c>=G.cols-2) continue;
+        // 要求周围一圈也空，避免卡在缝里
+        let ok = true;
+        for(let rr=r-1; rr<=r+1 && ok; rr++)
+          for(let cc=c-1; cc<=c+1; cc++)
+            if(G.world[rr][cc] === 1){ ok = false; break; }
+        if(ok) return {c, r};
+      }
+    }
+  }
+  return {c: Math.floor(G.cols/2), r: Math.floor(G.rows/2)-5};
+}
+
+function solidAt(px, py){
+  const c = Math.floor(px / TILE), r = Math.floor(py / TILE);
+  if(r<0||r>=G.rows||c<0||c>=G.cols) return true;
+  return G.world[r][c] === 1;
+}
+
+function hitsWall(x, y, rad){
+  for(let a=0; a<8; a++){
+    const ang = a * Math.PI/4;
+    if(solidAt(x + Math.cos(ang)*rad, y + Math.sin(ang)*rad)) return true;
+  }
+  return solidAt(x, y);
+}
+
+/* ---------- 音效 ---------- */
 const Sound = (() => {
-  let ac = null, muted = false;
+  let ac=null, muted=false;
   function ensure(){
-    if(!ac){ try{ ac = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
-    if(ac && ac.state === 'suspended') ac.resume();
+    if(!ac){ try{ ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    if(ac && ac.state==='suspended') ac.resume();
   }
-  function tone(freq, dur, type, vol, slideTo){
-    if(muted || !ac) return;
-    const o = ac.createOscillator(), g = ac.createGain();
-    o.type = type || 'square';
-    o.frequency.setValueAtTime(freq, ac.currentTime);
-    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ac.currentTime + dur);
-    g.gain.setValueAtTime(vol || .08, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + dur);
+  function tone(f,d,type,vol,to){
+    if(muted||!ac) return;
+    const o=ac.createOscillator(), g=ac.createGain();
+    o.type=type||'square';
+    o.frequency.setValueAtTime(f, ac.currentTime);
+    if(to) o.frequency.exponentialRampToValueAtTime(to, ac.currentTime+d);
+    g.gain.setValueAtTime(vol||.06, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+d);
     o.connect(g); g.connect(ac.destination);
-    o.start(); o.stop(ac.currentTime + dur);
+    o.start(); o.stop(ac.currentTime+d);
   }
-  function noise(dur, vol, lp){
-    if(muted || !ac) return;
-    const len = Math.floor(ac.sampleRate * dur);
-    const buf = ac.createBuffer(1, len, ac.sampleRate);
-    const d = buf.getChannelData(0);
-    for(let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    const src = ac.createBufferSource(); src.buffer = buf;
-    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp || 900;
-    const g = ac.createGain(); g.gain.value = vol || .12;
-    src.connect(f); f.connect(g); g.connect(ac.destination);
-    src.start();
+  function noise(d,vol,lp){
+    if(muted||!ac) return;
+    const len=Math.floor(ac.sampleRate*d);
+    const buf=ac.createBuffer(1,len,ac.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<len;i++) ch[i]=(Math.random()*2-1)*(1-i/len);
+    const s=ac.createBufferSource(); s.buffer=buf;
+    const f=ac.createBiquadFilter(); f.type='lowpass'; f.frequency.value=lp||900;
+    const g=ac.createGain(); g.gain.value=vol||.1;
+    s.connect(f); f.connect(g); g.connect(ac.destination);
+    s.start();
   }
   return {
     unlock: ensure,
-    shoot(){ tone(880, .06, 'square', .05, 260); },
-    boom(){ noise(.22, .16, 800); tone(140, .18, 'sawtooth', .06, 50); },
-    hit(){ noise(.06, .06, 1800); },
-    right(){ tone(520, .09, 'triangle', .1); setTimeout(()=>tone(780, .12, 'triangle', .1), 80); },
-    wrong(){ tone(220, .12, 'sawtooth', .09); setTimeout(()=>tone(160, .2, 'sawtooth', .09), 110); },
-    over(){ [440,392,330,262].forEach((f,i)=>setTimeout(()=>tone(f,.2,'triangle',.1), i*140)); },
-    toggle(){ muted = !muted; return muted; }
+    shoot(){ tone(720,.05,'square',.03,300); },
+    hitWall(){ noise(.04,.025,2400); },
+    boom(){ noise(.16,.09,700); tone(120,.13,'sawtooth',.045,50); },
+    right(){ tone(560,.08,'triangle',.075); setTimeout(()=>tone(820,.1,'triangle',.075),70); },
+    wrong(){ tone(200,.1,'sawtooth',.065); setTimeout(()=>tone(140,.16,'sawtooth',.065),90); },
+    over(){ [420,360,300,240].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.08), i*130)); },
+    toggle(){ muted=!muted; return muted; }
   };
 })();
 
-/* ---------- 实体 ---------- */
-function makePlayer(){
-  return {x:200, y:298, dir:0, speed:2, cd:0, shield:90, alive:true};
-}
-
-/* 威胁等级：每 20 秒升一档，最高 10 档 */
-function threatLevel(){
-  return Math.min(10, 1 + Math.floor(G.t / 1200));
-}
-
-const ENEMY_CFG = {
-  n: {sp:0.85, hp:1, cd:110, col:'#c3ccd6'},
-  f: {sp:1.70, hp:1, cd:120, col:'#5fcbf0'},
-  a: {sp:0.60, hp:3, cd:95,  col:'#7fe08a'}
-};
-
-function spawnEnemy(){
-  const p = SPAWN[Math.floor(Math.random()*SPAWN.length)];
-  const stage = threatLevel();
-
-  // 类型按阶段解锁
-  let type = 'n';
-  const r = Math.random();
-  if(stage >= 3 && r < .28) type = 'f';
-  else if(stage >= 5 && r < .14) type = 'a';
-
-  const cfg = ENEMY_CFG[type];
-  const hpBonus = Math.floor((stage - 1) / 3);        // 每 3 档 +1 血
-
-  G.enemies.push({
-    x: p[0]*TILE + 2, y: p[1]*TILE,
-    dir: 2,
-    speed: cfg.sp + (stage - 1) * 0.035,              // 速度缓慢递增
-    hp: cfg.hp + hpBonus,
-    maxHp: cfg.hp + hpBonus,
-    cd: cfg.cd,
-    type, think: 40, flash: 0, stuck: 0
-  });
-}
-
-/* ---------- 碰撞 ---------- */
-function blocked(x, y){
-  const pts = [[x,y],[x+TANK-1,y],[x,y+TANK-1],[x+TANK-1,y+TANK-1]];
-  for(const [px,py] of pts){
-    const c = Math.floor(px/TILE), r = Math.floor(py/TILE);
-    if(r < 0 || r >= ROWS || c < 0 || c >= COLS) return true;
-    if(MAP[r][c] === '#') return true;
-  }
-  // 基地
-  if(x+TANK > BASE.x && x < BASE.x+BASE.w && y+TANK > BASE.y && y < BASE.y+BASE.h) return true;
-  return false;
-}
-
-/* ---------- 更新 ---------- */
+/* ============================================================
+   更新
+   ============================================================ */
 function update(){
   if(G.state !== 'play') return;
   G.t++;
   if(G.shake > 0) G.shake--;
+  if(G.zoom > 1) G.zoom = Math.max(1, G.zoom - 0.028);
 
   const p = G.player;
-  if(p && p.alive){
-    if(p.shield > 0) p.shield--;
-    let nx = p.x, ny = p.y, moved = false;
-    const up = keys['arrowup'] || keys['w'];
-    const down = keys['arrowdown'] || keys['s'];
-    const left = keys['arrowleft'] || keys['a'];
-    const right = keys['arrowright'] || keys['d'];
-    if(up && !down){ p.dir = 0; ny -= p.speed; }
-    else if(down && !up){ p.dir = 2; ny += p.speed; }
-    else if(left && !right){ p.dir = 3; nx -= p.speed; }
-    else if(right && !left){ p.dir = 1; nx += p.speed; }
+  const cfg = DIFFS[G.diff];
 
-    if(nx !== p.x || ny !== p.y){
-      if(!blocked(nx, ny)){ p.x = nx; p.y = ny; moved = true; }
-      else {
-        // 转角吸附
-        if(nx !== p.x){
-          if(!blocked(nx, p.y-2)){ p.y -= 2; p.x = nx; moved = true; }
-          else if(!blocked(nx, p.y+2)){ p.y += 2; p.x = nx; moved = true; }
-        } else {
-          if(!blocked(p.x-2, ny)){ p.x -= 2; p.y = ny; moved = true; }
-          else if(!blocked(p.x+2, ny)){ p.x += 2; p.y = ny; moved = true; }
-        }
-      }
-    }
-    p.moved = moved;
+  // --- 移动 ---
+  const up = keys['w']||keys['arrowup'];
+  const dn = keys['s']||keys['arrowdown'];
+  const lf = keys['a']||keys['arrowleft'];
+  const rt = keys['d']||keys['arrowright'];
+  let dx = (rt?1:0) - (lf?1:0);
+  let dy = (dn?1:0) - (up?1:0);
+  if(dx && dy){ dx *= 0.7071; dy *= 0.7071; }
 
-    // 开火
-    if(p.cd > 0) p.cd--;
-    if(keys[' '] && p.cd <= 0){
-      fire(p.x + TANK/2, p.y + TANK/2, p.dir, 'player');
-      p.cd = G.lv >= 2 ? 9 : 13;
-    }
+  if(dx || dy){
+    const nx = p.x + dx*p.speed;
+    const ny = p.y + dy*p.speed;
+    if(!hitsWall(nx, p.y, p.r)) p.x = nx;
+    if(!hitsWall(p.x, ny, p.r)) p.y = ny;
+  }
+  p.x = Math.max(p.r, Math.min(G.worldW - p.r, p.x));
+  p.y = Math.max(p.r, Math.min(G.worldH - p.r, p.y));
+  if(p.shield > 0) p.shield--;
+
+  // --- 瞄准：鼠标位置转世界坐标 ---
+  const mwx = mouse.x + G.cam.x;
+  const mwy = mouse.y + G.cam.y;
+  p.angle = Math.atan2(mwy - p.y, mwx - p.x);
+
+  // --- 自动开火 ---
+  if(p.cd > 0) p.cd--;
+  if(p.cd <= 0){
+    fire(p.x + Math.cos(p.angle)*13, p.y + Math.sin(p.angle)*13, p.angle, 'player', p.lv);
+    p.cd = p.lv >= 3 ? 8 : (p.lv >= 2 ? 11 : 15);
   }
 
-  // 敌军 AI
+  // --- 敌人 ---
   for(const e of G.enemies){
     if(e.flash > 0) e.flash--;
-    e.think--;
-    if(e.think <= 0){
-      e.think = 40 + Math.floor(Math.random()*60);
-      // 朝玩家或基地
-      const tx = (Math.random() < .6 && p && p.alive) ? p.x : BASE.x + BASE.w/2;
-      const ty = (Math.random() < .6 && p && p.alive) ? p.y : BASE.y;
-      const dx = tx - e.x, dy = ty - e.y;
-      if(Math.abs(dx) > Math.abs(dy)) e.dir = dx > 0 ? 1 : 3;
-      else e.dir = dy > 0 ? 2 : 0;
-    }
-    const sp = e.speed;
-    let nx = e.x, ny = e.y;
-    if(e.dir === 0) ny -= sp;
-    else if(e.dir === 1) nx += sp;
-    else if(e.dir === 2) ny += sp;
-    else nx -= sp;
+    const tx = e.target === 'base' ? G.base.x : p.x;
+    const ty = e.target === 'base' ? G.base.y : p.y;
+    const ang = Math.atan2(ty - e.y, tx - e.x);
+    e.angle = ang;
 
-    if(!blocked(nx, ny)){
-      e.x = nx; e.y = ny;
-      e.stuck = 0;
-    } else {
-      // 避障：被挡就沿垂直方向滑，滑不动才重选方向
-      e.stuck = (e.stuck || 0) + 1;
-      if(e.dir === 0 || e.dir === 2){
-        if(!blocked(e.x - sp, e.y)) e.x -= sp;
-        else if(!blocked(e.x + sp, e.y)) e.x += sp;
-      } else {
-        if(!blocked(e.x, e.y - sp)) e.y -= sp;
-        else if(!blocked(e.x, e.y + sp)) e.y += sp;
-      }
-      if(e.stuck > 5) e.think = 0;
+    const nx = e.x + Math.cos(ang)*e.speed;
+    const ny = e.y + Math.sin(ang)*e.speed;
+    if(!hitsWall(nx, e.y, e.r)) e.x = nx;
+    if(!hitsWall(e.x, ny, e.r)) e.y = ny;
+
+    // 撞基地
+    if(Math.hypot(e.x-G.base.x, e.y-G.base.y) < G.base.r + e.r - 3){
+      damage(cfg.baseDmg); e.hp = 0; boom(e.x, e.y, '#ff6b6b'); continue;
+    }
+    // 撞玩家
+    if(p.shield <= 0 && Math.hypot(e.x-p.x, e.y-p.y) < e.r + p.r){
+      damage(8); e.hp = 0; boom(e.x, e.y, '#ffd166'); p.shield = 80; continue;
     }
 
-    // 射击
-    if(e.cd > 0) e.cd--;
-    if(e.cd <= 0 && Math.random() < .02){
-      fire(e.x + TANK/2, e.y + TANK/2, e.dir, 'enemy');
-      e.cd = 100 + Math.floor(Math.random()*40);
-    }
-
-    // 到底部 → 扣血
-    if(e.y + TANK >= BASE.y && e.x + TANK > BASE.x - 8 && e.x < BASE.x + BASE.w + 8){
-      damage(1); e.hp = 0; boom(e.x+6, e.y+6, '#ff6b6b');
+    // 敌人射击
+    e.cd--;
+    const dist = Math.hypot(e.x-p.x, e.y-p.y);
+    if(e.cd <= 0 && dist < 320 && dist > 40){
+      fire(e.x, e.y, ang, 'enemy', 1);
+      e.cd = e.fireGap;
     }
   }
+  G.enemies = G.enemies.filter(e => e.hp > 0);
 
-  // 子弹
+  // --- 子弹 ---
   for(const b of G.bullets){
-    const step = Math.min(2, b.speed);
-    for(let s = 0; s < b.speed; s += step){
-      if(b.dir === 0) b.y -= step;
-      else if(b.dir === 1) b.x += step;
-      else if(b.dir === 2) b.y += step;
-      else b.x -= step;
+    const steps = Math.ceil(b.speed / 4);
+    for(let i=0;i<steps && !b.dead;i++){
+      b.x += Math.cos(b.a) * (b.speed/steps);
+      b.y += Math.sin(b.a) * (b.speed/steps);
+      if(b.x<0||b.x>G.worldW||b.y<0||b.y>G.worldH){ b.dead=true; break; }
+      if(solidAt(b.x, b.y)){ b.dead=true; spark(b.x,b.y); break; }
 
-      if(b.x < -4 || b.x > W+4 || b.y < -4 || b.y > H+4){ b.dead = true; break; }
-      // 墙
-      const c = Math.floor(b.x/TILE), r = Math.floor(b.y/TILE);
-      if(r>=0 && r<ROWS && c>=0 && c<COLS && MAP[r][c] === '#'){ b.dead = true; spark(b.x, b.y); break; }
-
-      // 命中
       if(b.owner === 'player'){
-        let hit = false;
         for(const e of G.enemies){
-          if(e.hp <= 0) continue;
-          if(b.x > e.x-2 && b.x < e.x+TANK+2 && b.y > e.y-2 && b.y < e.y+TANK+2){
-            e.hp--; e.flash = 6; hit = true;
-            if(e.hp <= 0){ boom(e.x+6, e.y+6, '#f0675f'); G.score += 100; G.killT++; }
-            else spark(b.x, b.y);
+          if(e.hp<=0) continue;
+          if(Math.hypot(b.x-e.x, b.y-e.y) < e.r+3){
+            e.hp--; e.flash=5; b.dead=true;
+            if(e.hp<=0){ boom(e.x,e.y,'#ff8f8f'); G.killed++; G.score+=120; }
+            else spark(b.x,b.y);
             break;
           }
         }
-        if(hit){ b.dead = true; break; }
-        // 自家基地：弹火花不掉血
-        if(b.x > BASE.x && b.x < BASE.x+BASE.w && b.y > BASE.y && b.y < BASE.y+BASE.h){
-          b.dead = true; spark(b.x, b.y); break;
-        }
       } else {
-        if(p && p.alive && p.shield <= 0 &&
-           b.x > p.x && b.x < p.x+TANK && b.y > p.y && b.y < p.y+TANK){
-          damage(1); b.dead = true; boom(p.x+6, p.y+6, '#ffd166');
-          p.x = 200; p.y = 298; p.shield = 90;
-          break;
+        if(p.shield<=0 && Math.hypot(b.x-p.x, b.y-p.y) < p.r+3){
+          damage(6); b.dead=true; boom(b.x,b.y,'#ffd166'); p.shield=80;
         }
       }
     }
   }
   G.bullets = G.bullets.filter(b => !b.dead);
-  G.enemies = G.enemies.filter(e => e.hp > 0);
 
-  // 粒子
-  for(const q of G.parts){ q.x += q.vx; q.y += q.vy; q.life--; }
-  G.parts = G.parts.filter(q => q.life > 0);
+  // --- 粒子 ---
+  for(const q of G.parts){ q.x+=q.vx; q.y+=q.vy; q.vx*=.94; q.vy*=.94; q.life--; }
+  G.parts = G.parts.filter(q => q.life>0);
 
-  // 刷兵
+  // --- 刷兵 ---
   G.spawnCd--;
   if(G.spawnCd <= 0){
-    const stage = threatLevel();
-    const cap = Math.min(2 + Math.floor(stage * 0.6), 7);
+    const cap = Math.min(cfg.cap, 3 + Math.floor(G.t/900));
     if(G.enemies.length < cap) spawnEnemy();
-    G.spawnCd = Math.max(35, 140 - stage * 10);
+    G.spawnCd = Math.round(cfg.gap[0] + Math.random()*(cfg.gap[1]-cfg.gap[0]));
   }
+
+  // --- 镜头 ---
+  const camTX = p.x - G.viewW/(2*G.zoom);
+  const camTY = p.y - G.viewH/(2*G.zoom);
+  G.cam.x += (camTX - G.cam.x) * 0.14;
+  G.cam.y += (camTY - G.cam.y) * 0.14;
+  clampCam();
 
   updateHud();
 }
 
-function fire(x, y, dir, owner){
-  const b = {x, y, dir, speed: owner === 'player' ? (G.lv >= 2 ? 5 : 4) : 3,
-             owner, dead:false};
-  // 同屏子弹限制
+function clampCam(){
+  const vw = G.viewW / G.zoom, vh = G.viewH / G.zoom;
+  if(G.worldW <= vw) G.cam.x = (G.worldW - vw) / 2;
+  else G.cam.x = Math.max(0, Math.min(G.worldW - vw, G.cam.x));
+  if(G.worldH <= vh) G.cam.y = (G.worldH - vh) / 2;
+  else G.cam.y = Math.max(0, Math.min(G.worldH - vh, G.cam.y));
+}
+
+function fire(x, y, ang, owner, lv){
   if(owner === 'player'){
-    const mine = G.bullets.filter(v => v.owner === 'player').length;
-    if(mine >= (G.lv >= 3 ? 2 : 1)) return;
+    const mine = G.bullets.filter(b => b.owner==='player').length;
+    if(mine >= (lv>=3?3:2)) return;
     Sound.shoot();
   }
-  G.bullets.push(b);
+  G.bullets.push({
+    x, y, a:ang,
+    speed: owner==='player' ? (lv>=2?8:6.5) : 4.2,
+    owner, dead:false
+  });
 }
 
-function spark(x, y){
-  for(let i = 0; i < 3; i++){
-    G.parts.push({x, y, vx:(Math.random()-.5)*2.5, vy:(Math.random()-.5)*2.5,
-      life:8+Math.random()*6, col:'#ffd166', sz:1});
-  }
-  Sound.hit();
-}
+function spawnEnemy(){
+  const p = G.player;
+  const cfg = DIFFS[G.diff];
+  for(let tries=0; tries<30; tries++){
+    const ang = Math.random()*Math.PI*2;
+    const dist = 380 + Math.random()*140;
+    const x = p.x + Math.cos(ang)*dist;
+    const y = p.y + Math.sin(ang)*dist;
+    if(x < TILE*2 || x > G.worldW-TILE*2) continue;
+    if(y < TILE*2 || y > G.worldH-TILE*2) continue;
+    if(hitsWall(x, y, 10)) continue;
 
-function boom(x, y, col){
-  for(let i = 0; i < 10; i++){
-    const a = Math.random()*Math.PI*2, s = 1+Math.random()*2;
-    G.parts.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s,
-      life:14+Math.random()*10, col, sz:1+Math.random()*2});
+    const heavy = G.t > 720 && Math.random() < 0.25;
+    const hp = (heavy ? 3 : 1) + cfg.hpAdd;
+    G.enemies.push({
+      x, y,
+      r: heavy ? 10 : 8,
+      angle: 0,
+      speed: (heavy ? 0.75 : 1.15) * cfg.spd,
+      hp, maxHp: hp,
+      heavy, flash: 0,
+      target: Math.random() < 0.65 ? 'player' : 'base',
+      cd: 40 + Math.random()*60,
+      fireGap: cfg.fireGap + Math.round(Math.random()*30)
+    });
+    return;
   }
-  G.parts.push({ring:true, x, y, r:2, vr:1.6, life:12, col});
-  Sound.boom();
 }
 
 function damage(n){
-  G.hp -= n;
-  G.shake = 8;
-  if(G.hp <= 0){ G.hp = 0; gameOver(); }
+  G.base.hp -= n;
+  G.shake = 9;
+  G.zoom = 1.26;
+  if(G.base.hp <= 0){ G.base.hp = 0; gameOver(); }
 }
 
-/* ---------- 渲染 ---------- */
-function drawTank(x, y, dir, cfg){
-  ctx.save();
-  ctx.translate(x + TANK/2, y + TANK/2);
-  ctx.rotate(dir * Math.PI/2);
-  const h = TANK/2;
-  // 履带
-  ctx.fillStyle = cfg.dark;
-  ctx.fillRect(-h, -h, 3, TANK);
-  ctx.fillRect(h-3, -h, 3, TANK);
-  // 车身
-  ctx.fillStyle = cfg.body;
-  ctx.fillRect(-h+3, -h+1, TANK-6, TANK-2);
-  // 高光
-  ctx.fillStyle = cfg.hi;
-  ctx.fillRect(-h+3, -h+1, TANK-6, 1);
-  ctx.fillRect(-h+3, -h+1, 1, TANK-2);
-  // 炮管
-  ctx.fillStyle = cfg.light;
-  ctx.fillRect(-1, -h-3, 2, h+4);
-  ctx.restore();
+function spark(x,y){
+  for(let i=0;i<2;i++)
+    G.parts.push({x,y,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,life:7,col:'#ffd166',sz:1.5});
+  Sound.hitWall();
 }
-
-function render(){
-  ctx.save();
-  if(G.shake > 0){
-    ctx.translate((Math.random()-.5)*3, (Math.random()-.5)*3);
+function boom(x,y,col){
+  for(let i=0;i<12;i++){
+    const a=Math.random()*Math.PI*2, s=1+Math.random()*2.4;
+    G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:14+Math.random()*8,col,sz:1.6+Math.random()*2});
   }
-  ctx.fillStyle = '#0b0e14';
-  ctx.fillRect(-4, -4, W+8, H+8);
+  Sound.boom();
+}
 
-  // 地图
-  for(let r = 0; r < ROWS; r++){
-    for(let c = 0; c < COLS; c++){
-      if(MAP[r][c] === '#'){
-        const x = c*TILE, y = r*TILE;
-        ctx.fillStyle = '#5c2c11'; ctx.fillRect(x, y, TILE, TILE);
-        ctx.fillStyle = '#c06a2e';
-        ctx.fillRect(x+1, y+1, TILE-2, 6);
-        ctx.fillRect(x+1, y+9, TILE-2, 6);
-        ctx.fillStyle = '#e08c4a';
-        ctx.fillRect(x+1, y+1, TILE-2, 1);
-      }
+/* ============================================================
+   渲染
+   ============================================================ */
+function render(){
+  const vw = G.viewW, vh = G.viewH;
+  ctx.fillStyle = '#040a07';
+  ctx.fillRect(0,0,vw,vh);
+
+  ctx.save();
+  if(G.shake > 0) ctx.translate((Math.random()-.5)*4, (Math.random()-.5)*4);
+
+  const zoom = G.zoom, camX = G.cam.x, camY = G.cam.y;
+  ctx.save();
+  ctx.scale(zoom, zoom);
+  ctx.translate(-camX, -camY);
+
+  const viewL = camX, viewT = camY;
+  const viewR = camX + vw/zoom, viewB = camY + vh/zoom;
+
+  const c0 = Math.max(0, Math.floor(viewL/TILE)), c1 = Math.min(G.cols, Math.ceil(viewR/TILE)+1);
+  const r0 = Math.max(0, Math.floor(viewT/TILE)), r1 = Math.min(G.rows, Math.ceil(viewB/TILE)+1);
+
+  // 网格
+  ctx.strokeStyle = 'rgba(60,150,110,.07)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
+  for(let r=r0;r<=r1;r++){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); }
+  ctx.stroke();
+
+  // 墙
+  for(let r=r0;r<r1;r++){
+    for(let c=c0;c<c1;c++){
+      if(G.world[r][c] !== 1) continue;
+      const x = c*TILE, y = r*TILE;
+      const pad = 2.5;
+      ctx.fillStyle = 'rgba(22,52,40,.72)';
+      ctx.fillRect(x+pad, y+pad, TILE-pad*2, TILE-pad*2);
+      ctx.strokeStyle = 'rgba(90,200,145,.26)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x+pad+.5, y+pad+.5, TILE-pad*2-1, TILE-pad*2-1);
+      ctx.fillStyle = 'rgba(120,230,170,.05)';
+      ctx.fillRect(x+pad+1, y+pad+1, TILE-pad*2-2, 2);
     }
   }
 
   // 基地
-  const bx = BASE.x, by = BASE.y;
-  ctx.fillStyle = G.hp > 1 ? '#c9a227' : '#b07a1e';
-  ctx.fillRect(bx, by, BASE.w, BASE.h);
-  ctx.fillStyle = G.hp > 1 ? '#ffe9a8' : '#e06a4a';
-  ctx.fillRect(bx+4, by+4, 6, 6);
-  ctx.fillRect(bx+BASE.w-10, by+4, 6, 6);
-  ctx.fillStyle = '#8a6a12';
-  ctx.fillRect(bx, by+BASE.h-3, BASE.w, 3);
+  const b = G.base;
+  const pulse = 1 + Math.sin(G.t*0.06) * 0.04;
+  const hpRate = b.hp / b.maxHp;
+  ctx.save();
+  ctx.translate(b.x, b.y);
+  ctx.strokeStyle = 'rgba(255,214,102,.22)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0,0,b.r*1.6*pulse,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,214,102,.11)';
+  ctx.beginPath(); ctx.arc(0,0,b.r*2.15*pulse,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = hpRate > .5 ? 'rgba(255,214,102,.15)' : 'rgba(255,120,90,.18)';
+  ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = hpRate > .5 ? 'rgba(255,214,102,.85)' : 'rgba(255,120,90,.9)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = hpRate > .5 ? 'rgba(255,232,160,.9)' : 'rgba(255,150,120,.9)';
+  ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
 
-  // 敌军
-  const EC = {
-    n: {body:'#c3ccd6', light:'#eef4fa', dark:'#5b6773', hi:'#ffffff'},
-    f: {body:'#5fcbf0', light:'#a8e6ff', dark:'#1a6a86', hi:'#d8f4ff'},
-    a: {body:'#7fe08a', light:'#c8f5cf', dark:'#2f6b3f', hi:'#eaffee'}
-  };
+  // 敌人
   for(const e of G.enemies){
-    const base = EC[e.type] || EC.n;
-    const cfg = e.flash > 0
-      ? {body:'#ffffff', light:'#ffffff', dark:'#aaaaaa', hi:'#ffffff'}
-      : base;
-    drawTank(e.x, e.y, e.dir, cfg);
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(e.angle);
+    const col = e.flash > 0 ? '#ffffff' : (e.heavy ? '#ff9a6b' : '#ff6b6b');
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    if(e.heavy){ ctx.moveTo(10,0); ctx.lineTo(0,9); ctx.lineTo(-10,0); ctx.lineTo(0,-9); }
+    else { ctx.moveTo(8,0); ctx.lineTo(0,6.5); ctx.lineTo(-8,0); ctx.lineTo(0,-6.5); }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,190,190,.55)';
+    ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+
+    if(e.maxHp > 1){
+      ctx.fillStyle = 'rgba(0,0,0,.5)';
+      ctx.fillRect(e.x-10, e.y-16, 20, 3);
+      ctx.fillStyle = '#ff6b6b';
+      ctx.fillRect(e.x-10, e.y-16, 20*(e.hp/e.maxHp), 3);
+    }
   }
 
   // 玩家
   const p = G.player;
-  if(p && p.alive){
-    if(p.shield > 0 && Math.floor(G.t/4) % 2 === 0){
-      ctx.strokeStyle = '#7fd6ff'; ctx.lineWidth = 1;
-      ctx.strokeRect(p.x-2.5, p.y-2.5, TANK+5, TANK+5);
+  if(p){
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    if(p.shield > 0){
+      ctx.strokeStyle = 'rgba(127,214,255,' + (0.3 + Math.sin(G.t*0.25)*0.18) + ')';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0,0,p.r+5,0,Math.PI*2); ctx.stroke();
     }
-    drawTank(p.x, p.y, p.dir, {body:'#f0b83a', light:'#ffe08a', dark:'#8a5a00', hi:'#fff6cf'});
+    ctx.rotate(p.angle);
+    ctx.fillStyle = 'rgba(127,214,255,.8)';
+    ctx.fillRect(4, -2, 14, 4);
+    ctx.fillStyle = '#7fd6ff';
+    ctx.beginPath();
+    ctx.moveTo(10,0); ctx.lineTo(-7,7); ctx.lineTo(-4,0); ctx.lineTo(-7,-7);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(200,245,255,.85)';
+    ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
   }
 
   // 子弹
   for(const b of G.bullets){
-    ctx.fillStyle = b.owner === 'player' ? '#ffe08a' : '#ff6b6b';
-    ctx.fillRect(Math.round(b.x)-1, Math.round(b.y)-1, 3, 3);
+    ctx.strokeStyle = b.owner==='player' ? 'rgba(168,230,255,.3)' : 'rgba(255,154,154,.28)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y);
+    ctx.lineTo(b.x - Math.cos(b.a)*7, b.y - Math.sin(b.a)*7);
+    ctx.stroke();
+    ctx.fillStyle = b.owner==='player' ? '#a8e6ff' : '#ff9a9a';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.owner==='player'?2.6:2.2, 0, Math.PI*2);
+    ctx.fill();
   }
 
   // 粒子
   for(const q of G.parts){
-    if(q.ring){
-      ctx.strokeStyle = q.col; ctx.globalAlpha = q.life/12;
-      ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI*2); ctx.stroke();
-      ctx.globalAlpha = 1;
-      q.r += q.vr;
-    } else {
-      ctx.fillStyle = q.col; ctx.globalAlpha = Math.min(1, q.life/10);
-      ctx.fillRect(Math.round(q.x), Math.round(q.y), q.sz, q.sz);
-      ctx.globalAlpha = 1;
-    }
+    ctx.globalAlpha = Math.min(1, q.life/10);
+    ctx.fillStyle = q.col;
+    ctx.fillRect(q.x, q.y, q.sz, q.sz);
+    ctx.globalAlpha = 1;
   }
 
+  ctx.restore();   // 世界变换结束
+
+  drawMinimap();
   ctx.restore();
 }
 
-/* ---------- 主循环（固定步长） ---------- */
+function drawMinimap(){
+  const mw = 104, mh = Math.round(mw * (G.rows/G.cols));
+  const mx = G.viewW - mw - 10, my = G.viewH - mh - 10;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(3,10,7,.8)';
+  ctx.fillRect(mx, my, mw, mh);
+  ctx.strokeStyle = 'rgba(90,200,145,.28)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mx+.5, my+.5, mw-1, mh-1);
+
+  const sx = mw / G.worldW, sy = mh / G.worldH;
+
+  ctx.fillStyle = 'rgba(90,200,145,.2)';
+  for(let r=0;r<G.rows;r+=2)
+    for(let c=0;c<G.cols;c+=2)
+      if(G.world[r][c]===1) ctx.fillRect(mx + c*TILE*sx, my + r*TILE*sy, 1.6, 1.6);
+
+  ctx.fillStyle = 'rgba(255,214,102,.9)';
+  ctx.fillRect(mx + G.base.x*sx - 1.5, my + G.base.y*sy - 1.5, 3, 3);
+
+  ctx.fillStyle = 'rgba(255,107,107,.85)';
+  for(const e of G.enemies) ctx.fillRect(mx + e.x*sx - 1, my + e.y*sy - 1, 2, 2);
+
+  ctx.fillStyle = '#7fd6ff';
+  ctx.beginPath();
+  ctx.arc(mx + G.player.x*sx, my + G.player.y*sy, 2.2, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ============================================================
+   主循环
+   ============================================================ */
 let last = 0, acc = 0;
 function loop(ts){
   if(!last) last = ts;
@@ -823,36 +819,35 @@ function loop(ts){
   acc += dt;
   let guard = 0;
   while(acc >= 16.667 && guard < 4){ update(); acc -= 16.667; guard++; }
-  render();
+  if(G.state === 'play' || G.state === 'over') render();
   requestAnimationFrame(loop);
 }
 
-/* ---------- HUD ---------- */
+/* ============================================================
+   HUD
+   ============================================================ */
 function updateHud(){
-  document.getElementById('hpBar').style.width = (G.hp/G.maxHp*100) + '%';
-  document.getElementById('lvTxt').textContent = 'Lv' + G.lv;
-  document.getElementById('streakTxt').textContent = G.streak;
+  const rate = G.base.hp / G.base.maxHp * 100;
+  document.getElementById('hpBar').style.width = rate + '%';
+  document.getElementById('hpTxt').textContent = Math.round(G.base.hp);
+  document.getElementById('lvTxt').textContent = 'Lv' + (G.player ? G.player.lv : 1);
+  document.getElementById('threatTxt').textContent = threatLevel();
   document.getElementById('enemyTxt').textContent = G.enemies.length;
+  document.getElementById('streakTxt').textContent = G.streak;
   document.getElementById('okN').textContent = G.okN;
   document.getElementById('noN').textContent = G.noN;
   document.getElementById('scoreN').textContent = G.score;
   document.getElementById('streakBox').textContent = '连对 ' + G.streak;
-  const th = threatLevel();
-  const el = document.getElementById('threatTxt');
-  el.textContent = th;
-  el.style.color = th >= 7 ? '#ff6b6b' : (th >= 4 ? '#ffd166' : '#7fd6ff');
 }
 
-function showToast(txt, good){
-  const el = document.getElementById('toast');
-  el.textContent = txt;
-  el.className = 'toast on ' + (good ? 'good' : 'bad');
-  clearTimeout(el._t);
-  el._t = setTimeout(()=>{ el.className = 'toast ' + (good?'good':'bad'); }, 1100);
+function threatLevel(){
+  return Math.min(10, 1 + Math.floor(G.t / 1080));
 }
 
-/* ---------- 答题 ---------- */
-let qIdx = 0, qLocked = false, wrongList = [];
+/* ============================================================
+   答题
+   ============================================================ */
+let qIdx = 0, qLocked = true, wrongList = [];
 
 function nextQuestion(){
   qLocked = false;
@@ -860,88 +855,79 @@ function nextQuestion(){
   document.getElementById('qno').textContent = '第 ' + (qIdx+1) + ' 题';
   document.getElementById('qtext').innerHTML = q.q;
   document.getElementById('why').className = 'why';
-
   const box = document.getElementById('opts');
   box.innerHTML = '';
   q.o.forEach((txt, i) => {
     const b = document.createElement('button');
     b.className = 'opt';
     b.innerHTML = '<span class="k">' + (i+1) + '</span><span>' + txt + '</span>';
-    b.onclick = () => answer(i);
+    b.onclick = (ev) => { ev.stopPropagation(); answer(i); };
     box.appendChild(b);
   });
   qIdx++;
 }
 
 function answer(pick){
-  if(qLocked) return;
+  if(qLocked || G.state !== 'play') return;
   qLocked = true;
   const q = BANK[(qIdx-1) % BANK.length];
   const btns = [...document.querySelectorAll('.opt')];
   btns.forEach(b => b.disabled = true);
 
   const right = pick === q.a;
-  if(right){
-    btns[pick].classList.add('right');
-  } else {
-    btns[pick].classList.add('wrong');
-    btns[q.a].classList.add('miss');
-  }
+  if(right) btns[pick].classList.add('right');
+  else { btns[pick].classList.add('wrong'); btns[q.a].classList.add('miss'); }
 
   const why = document.getElementById('why');
-  why.innerHTML = '<b>' + (right ? '✓ 对了　' : '✗ 答错　') + '</b>' + q.why;
+  why.innerHTML = '<b>' + (right?'✓ 正确　':'✗ 答错　') + '</b>' + q.why;
   why.className = 'why on';
 
   if(right){
     G.okN++; G.streak++;
-    if(G.streak > G.bestStreak) G.bestStreak = G.streak;
-    G.score += 200 + G.streak * 50;
-    if(G.lv < 3 && G.streak % 3 === 0){
-      G.lv++;
-      showToast('火力提升 Lv' + G.lv, true);
-    } else {
-      showToast('答对 +' + (200 + G.streak*50), true);
-    }
+    G.score += 180 + G.streak * 40;
+    if(G.player.lv < 3 && G.streak % 3 === 0) G.player.lv++;
     Sound.right();
   } else {
     G.noN++; G.streak = 0;
-    G.score = Math.max(0, G.score - 80);
-    // 惩罚：全体敌人 +1 血
+    G.score = Math.max(0, G.score - 60);
     for(const e of G.enemies) e.hp++;
-    showToast('答错，敌军强化', false);
+    if(G.noN % 2 === 0){ for(let i=0;i<2;i++) spawnEnemy(); }
     Sound.wrong();
     wrongList.push({q:q.q, pick, right:q.a, why:q.why});
     saveWrong(q.q, pick);
   }
-
   updateHud();
-  setTimeout(() => {
-    if(G.state === 'play') nextQuestion();
-  }, right ? 1200 : 2400);
+
+  setTimeout(() => { if(G.state==='play') nextQuestion(); }, right ? 1300 : 2500);
 }
 
-/* ---------- 错题本地存储 ---------- */
 function saveWrong(q, pick){
   try{
     const k = 'qz:wrong';
     const arr = JSON.parse(localStorage.getItem(k) || '[]');
     arr.push({q, pick, t: Date.now()});
-    localStorage.setItem(k, JSON.stringify(arr.slice(-200)));
+    localStorage.setItem(k, JSON.stringify(arr.slice(-300)));
   }catch(e){}
 }
 
-/* ---------- 流程 ---------- */
+/* ============================================================
+   流程
+   ============================================================ */
 function startGame(){
   Sound.unlock();
+  fitCanvas();
+  genWorld();
+
   G.state = 'play';
-  G.t = 0;
-  G.hp = 3; G.lv = 1; G.score = 0;
-  G.okN = 0; G.noN = 0; G.streak = 0;
+  G.t = 0; G.score = 0; G.okN = 0; G.noN = 0; G.streak = 0;
   G.enemies = []; G.bullets = []; G.parts = [];
-  G.spawnCd = 50;
-  G.player = makePlayer();
-  qIdx = 0;
-  document.getElementById('mask').classList.add('off');
+  G.spawnCd = 70; G.killed = 0; G.shake = 0; G.zoom = 1;
+  wrongList = []; qIdx = 0; qLocked = true;
+
+  document.getElementById('menu').classList.add('off');
+  document.getElementById('topKv').textContent =
+    SIZES[G.size].name + '地图 · ' + DIFFS[G.diff].name;
+
   updateHud();
   nextQuestion();
 }
@@ -949,75 +935,94 @@ function startGame(){
 function gameOver(){
   G.state = 'over';
   Sound.over();
-  const mask = document.getElementById('mask');
-  mask.classList.remove('off');
-  mask.innerHTML =
-    '<div class="over">防 线 失 守</div>' +
-    '<p style="font-size:13px;color:#cfd8e6;line-height:2.2">' +
-      '得分 <b style="color:#ffd166">' + G.score + '</b>　·　' +
-      '答对 <b style="color:#5fe08a">' + G.okN + '</b>　·　' +
-      '答错 <b style="color:#ff6b6b">' + G.noN + '</b>' +
-    '</p>' +
-    (wrongList.length
-      ? '<p style="font-size:11.5px;color:#6b7a91;line-height:1.9;max-width:420px">本局错题 ' +
-        wrongList.length + ' 道，已存入错题集</p>'
-      : '') +
-    '<button class="btn" id="againBtn">再 来 一 局</button>';
+  const m = document.getElementById('menu');
+  m.classList.remove('off');
+  m.innerHTML =
+    '<h1 style="color:#ff6b6b;text-shadow:0 0 26px rgba(255,107,107,.5)">防 线 失 守</h1>' +
+    '<div class="hint">得分 <b style="color:#ffd166">' + G.score + '</b> ｜ ' +
+    '答对 <b style="color:#5fe08a">' + G.okN + '</b> ｜ ' +
+    '答错 <b style="color:#ff6b6b">' + G.noN + '</b> ｜ ' +
+    '击杀 <b>' + G.killed + '</b>' +
+    (wrongList.length ? '<br>本局错题 ' + wrongList.length + ' 道，已存入错题集' : '') +
+    '</div>' +
+    '<button class="btn-start" id="againBtn">再 来 一 局</button>';
   document.getElementById('againBtn').onclick = () => {
-    wrongList = [];
-    mask.innerHTML = '';
+    m.innerHTML = '';
+    m.classList.add('off');
     startGame();
   };
 }
 
-/* ---------- 输入 ---------- */
-const MOVE_KEYS = ['arrowup','arrowdown','arrowleft','arrowright',' ','w','a','s','d'];
+/* ============================================================
+   输入
+   ============================================================ */
+const MOVE = ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
+
 document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
-  if(MOVE_KEYS.includes(k)){
-    keys[k] = true;
-    e.preventDefault();
-  }
+  if(MOVE.includes(k)){ keys[k] = true; e.preventDefault(); }
   if(G.state === 'play'){
-    if(k >= '1' && k <= '4'){ answer(parseInt(k)-1); e.preventDefault(); }
-    if(k === 'p'){
-      G.state = 'pause';
-      showToast('已暂停（按 P 继续）', true);
-    }
-  } else if(G.state === 'pause' && k === 'p'){
-    G.state = 'play';
+    if(k>='1' && k<='4'){ answer(parseInt(k)-1); e.preventDefault(); }
   }
-  if(k === 'm'){ Sound.toggle(); }
-  if(k === 'Enter' && G.state === 'title'){ startGame(); }
+  if(k === 'm') Sound.toggle();
 });
 document.addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
-  if(MOVE_KEYS.includes(k)) keys[k] = false;
+  if(MOVE.includes(k)) keys[k] = false;
 });
+
+cv.addEventListener('mousemove', e => {
+  const r = cv.getBoundingClientRect();
+  mouse.x = e.clientX - r.left;
+  mouse.y = e.clientY - r.top;
+});
+
+function bindSeg(id, key){
+  const box = document.getElementById(id);
+  box.querySelectorAll('button').forEach(b => {
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      G[key] = b.dataset.v;
+    };
+  });
+}
+bindSeg('segSize', 'size');
+bindSeg('segDiff', 'diff');
 
 document.getElementById('startBtn').onclick = startGame;
 
-/* ---------- 启动 ---------- */
+/* ============================================================
+   启动
+   ============================================================ */
+fitCanvas();
 updateHud();
 requestAnimationFrame(loop);
 
-// 调试/截图用
-const QS = new URLSearchParams(location.search);
-if(QS.has('auto')){
-  setTimeout(startGame, 200);
-}
-if(QS.has('demo')){
+/* 调试：?demo=1 直接开局并放几个敌人，用于截图验收 */
+if(new URLSearchParams(location.search).has('demo')){
   setTimeout(() => {
-    if(G.state !== 'play') startGame();
-    G.t = 2600;
-    G.enemies.push(
-      {x:40,  y:60,  dir:2, speed:1,   hp:1, maxHp:1, cd:90, type:'n', think:40, flash:0, stuck:0},
-      {x:200, y:100, dir:2, speed:1,   hp:2, maxHp:2, cd:90, type:'f', think:40, flash:0, stuck:0},
-      {x:380, y:150, dir:2, speed:1,   hp:3, maxHp:3, cd:90, type:'a', think:40, flash:0, stuck:0},
-      {x:120, y:200, dir:2, speed:1,   hp:1, maxHp:1, cd:90, type:'n', think:40, flash:0, stuck:0}
-    );
+    startGame();
+    G.t = 1400;
+    const p = G.player;
+    for(let i=0;i<6;i++){
+      const a = i/6 * Math.PI * 2 + 0.3;
+      const d = 210 + (i%3)*60;
+      let x = p.x + Math.cos(a)*d, y = p.y + Math.sin(a)*d;
+      x = Math.max(TILE*2, Math.min(G.worldW-TILE*2, x));
+      y = Math.max(TILE*2, Math.min(G.worldH-TILE*2, y));
+      G.enemies.push({
+        x, y, r: i%3===0?10:8, angle: a+Math.PI,
+        speed: 0.4, hp: i%3===0?3:1, maxHp: i%3===0?3:1,
+        heavy: i%3===0, flash: 0, target:'base',
+        cd: 9999, fireGap: 120
+      });
+    }
+    G.cam.x = p.x - G.viewW/2;
+    G.cam.y = p.y - G.viewH/2;
     updateHud();
-  }, 300);
+    render();
+  }, 260);
 }
 </script>
 </body>

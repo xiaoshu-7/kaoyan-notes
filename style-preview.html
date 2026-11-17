@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>刷题防线 · 画风方案</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0b0d12;color:#cfd8e6;
+  font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+  padding:30px 24px 60px;
+}
+h1{
+  font-size:19px;letter-spacing:.22em;color:#ffd166;text-align:center;
+  margin-bottom:6px;text-shadow:0 0 18px rgba(255,209,102,.35);
+}
+.sub{text-align:center;font-size:12px;color:#5d6b82;margin-bottom:28px;letter-spacing:.05em}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;max-width:1180px;margin:0 auto}
+.card{
+  background:#111722;border:1px solid #232c40;border-radius:5px;overflow:hidden;
+  transition:.2s;
+}
+.card:hover{border-color:#3d5175;transform:translateY(-2px)}
+.card .hd{
+  padding:12px 16px;border-bottom:1px solid #1d2637;
+  display:flex;align-items:baseline;gap:10px;
+}
+.card .hd b{font-size:14px;letter-spacing:.1em}
+.card .hd span{font-size:10.5px;color:#5d6b82;letter-spacing:.06em}
+.card .cv{display:block;width:100%;height:auto;image-rendering:pixelated}
+.card .ft{
+  padding:12px 16px;font-size:11.5px;line-height:1.9;color:#7e8da6;
+}
+.card .ft em{color:#a9bdd6;font-style:normal}
+.card .ft .pro{color:#5fe08a}
+.card .ft .con{color:#ff8f8f}
+</style>
+</head>
+<body>
+
+<h1>刷题防线 · 三种画风</h1>
+<div class="sub">同一场景（掩体 + 己方坦克 + 三种敌人 + 基地），只换画法和配色</div>
+
+<div class="grid">
+
+  <div class="card">
+    <div class="hd"><b>A · 街机像素</b><span>ARCADE</span></div>
+    <canvas class="cv" id="a" width="280" height="210"></canvas>
+    <div class="ft">
+      深色底 + 硬边像素 + 扫描线。墙是橙红砖块，坦克是黄铜色。<br>
+      <em class="pro">优点</em>：经典、有街机质感，开发最快。<br>
+      <em class="con">缺点</em>：和笔记站的纸本风完全割裂。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><b>B · 战术指挥屏</b><span>TACTICAL</span></div>
+    <canvas class="cv" id="b" width="280" height="210"></canvas>
+    <div class="ft">
+      军绿底 + 网格 + 雷达扫描。己方是青色箭头，敌方是红色菱形，墙是暗色块。<br>
+      <em class="pro">优点</em>：和「防线」「战术」主题最贴，高级感强，自适应性好做。<br>
+      <em class="con">缺点</em>：偏冷，少了点娱乐性。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><b>C · 纸本作战图</b><span>PAPER</span></div>
+    <canvas class="cv" id="c" width="280" height="210"></canvas>
+    <div class="ft">
+      米色纸底 + 铅笔排线 + 手绘线条。像作战参谋在笔记本上画的推演图。<br>
+      <em class="pro">优点</em>：和笔记站视觉统一，从笔记点进游戏不会「跳戏」。<br>
+      <em class="con">缺点</em>：动效空间小，快速移动时不如像素清晰。
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- 公共场景数据 ---------- */
+const WALLS = [
+  [40,30,28,24], [90,30,20,24],
+  [36,80,36,20], [110,78,44,20], [186,80,22,20],
+  [52,128,26,22], [150,126,30,22],
+];
+const BASE = {x:120, y:178, w:30, h:14};
+const PLAYER = {x:74, y:150};
+const ENEMIES = [
+  {x:60,  y:66,  t:'n'},
+  {x:150, y:52,  t:'f'},
+  {x:210, y:140, t:'a'},
+];
+
+/* ============================================================
+   A · 街机像素
+   ============================================================ */
+(function(){
+  const c = document.getElementById('a'), g = c.getContext('2d');
+  const W = 280, H = 210;
+
+  g.fillStyle = '#0b0e14'; g.fillRect(0,0,W,H);
+  // 底纹
+  g.fillStyle = 'rgba(80,110,160,.03)';
+  for(let y=0;y<H;y+=4) g.fillRect(0,y,W,1);
+
+  // 墙
+  for(const [x,y,w,h] of WALLS){
+    g.fillStyle = '#5c2c11'; g.fillRect(x,y,w,h);
+    for(let by=y+1; by<y+h-1; by+=6){
+      g.fillStyle = '#c06a2e'; g.fillRect(x+1,by,w-2,5);
+      g.fillStyle = '#e08c4a'; g.fillRect(x+1,by,w-2,1);
+      g.fillStyle = '#8a4420';
+      for(let bx=x+1; bx<x+w-1; bx+=8) g.fillRect(bx,by,1,5);
+    }
+  }
+
+  // 基地
+  g.fillStyle = '#c9a227'; g.fillRect(BASE.x,BASE.y,BASE.w,BASE.h);
+  g.fillStyle = '#ffe9a8';
+  g.fillRect(BASE.x+4,BASE.y+4,5,5); g.fillRect(BASE.x+BASE.w-9,BASE.y+4,5,5);
+  g.fillStyle = '#8a6a12'; g.fillRect(BASE.x,BASE.y+BASE.h-3,BASE.w,3);
+
+  // 坦克绘制
+  function tank(x,y,body,light,dark,hi){
+    const T = 13;
+    g.fillStyle = dark; g.fillRect(x-6,y-6,3,T); g.fillRect(x+3,y-6,3,T);
+    g.fillStyle = body; g.fillRect(x-4,y-5,T-4,T-2);
+    g.fillStyle = hi;   g.fillRect(x-4,y-5,T-4,1); g.fillRect(x-4,y-5,1,T-2);
+    g.fillStyle = light; g.fillRect(x-1,y-10,2,6);
+  }
+
+  // 敌人
+  const EC = {
+    n:['#c3ccd6','#eef4fa','#5b6773','#ffffff'],
+    f:['#5fcbf0','#a8e6ff','#1a6a86','#d8f4ff'],
+    a:['#7fe08a','#c8f5cf','#2f6b3f','#eaffee'],
+  };
+  ENEMIES.forEach(e => tank(e.x, e.y, ...EC[e.t]));
+
+  // 玩家 + 护盾
+  g.strokeStyle = '#7fd6ff'; g.strokeRect(PLAYER.x-8, PLAYER.y-8, 17, 17);
+  tank(PLAYER.x, PLAYER.y, '#f0b83a','#ffe08a','#8a5a00','#fff6cf');
+
+  // 子弹
+  g.fillStyle = '#ffe08a'; g.fillRect(73,128,3,3);
+  g.fillStyle = '#ff6b6b'; g.fillRect(150,80,3,3); g.fillRect(60,92,3,3);
+
+  // 扫描线 + 暗角
+  g.fillStyle = 'rgba(0,0,0,.28)';
+  for(let y=0;y<H;y+=3) g.fillRect(0,y,W,1);
+  const vg = g.createRadialGradient(W/2,H/2,60, W/2,H/2,190);
+  vg.addColorStop(0,'transparent'); vg.addColorStop(1,'rgba(0,0,0,.55)');
+  g.fillStyle = vg; g.fillRect(0,0,W,H);
+})();
+
+/* ============================================================
+   B · 战术指挥屏
+   ============================================================ */
+(function(){
+  const c = document.getElementById('b'), g = c.getContext('2d');
+  const W = 280, H = 210;
+
+  g.fillStyle = '#08120e'; g.fillRect(0,0,W,H);
+
+  // 网格
+  g.strokeStyle = 'rgba(60,140,100,.13)'; g.lineWidth = 1;
+  for(let x=0;x<W;x+=20){ g.beginPath(); g.moveTo(x+.5,0); g.lineTo(x+.5,H); g.stroke(); }
+  for(let y=0;y<H;y+=20){ g.beginPath(); g.moveTo(0,y+.5); g.lineTo(W,y+.5); g.stroke(); }
+  // 主网格
+  g.strokeStyle = 'rgba(60,160,110,.22)';
+  for(let x=0;x<W;x+=60){ g.beginPath(); g.moveTo(x+.5,0); g.lineTo(x+.5,H); g.stroke(); }
+  for(let y=0;y<H;y+=60){ g.beginPath(); g.moveTo(0,y+.5); g.lineTo(W,y+.5); g.stroke(); }
+
+  // 雷达扫描
+  const cx=140, cy=105;
+  const rg = g.createRadialGradient(cx,cy,0,cx,cy,150);
+  rg.addColorStop(0,'rgba(80,220,150,.10)');
+  rg.addColorStop(1,'rgba(80,220,150,0)');
+  g.fillStyle = rg; g.beginPath(); g.arc(cx,cy,150,0,Math.PI*2); g.fill();
+  g.strokeStyle = 'rgba(90,230,160,.18)'; g.lineWidth = 1;
+  [50,95,140].forEach(r=>{ g.beginPath(); g.arc(cx,cy,r,0,Math.PI*2); g.stroke(); });
+
+  // 墙：暗色块 + 发光边
+  for(const [x,y,w,h] of WALLS){
+    g.fillStyle = 'rgba(30,70,55,.85)'; g.fillRect(x,y,w,h);
+    g.strokeStyle = 'rgba(90,210,150,.42)'; g.lineWidth = 1;
+    g.strokeRect(x+.5,y+.5,w-1,h-1);
+    g.fillStyle = 'rgba(120,230,170,.10)'; g.fillRect(x+1,y+1,w-2,2);
+  }
+
+  // 基地：方框 + 扫描
+  g.strokeStyle = 'rgba(255,214,102,.75)'; g.lineWidth = 1.5;
+  g.strokeRect(BASE.x+.5, BASE.y+.5, BASE.w-1, BASE.h-1);
+  g.fillStyle = 'rgba(255,214,102,.12)'; g.fillRect(BASE.x,BASE.y,BASE.w,BASE.h);
+  g.fillStyle = 'rgba(255,214,102,.9)';
+  g.fillRect(BASE.x+BASE.w/2-1, BASE.y+3, 2, BASE.h-6);
+
+  // 己方：青色箭头（三角 + 短尾）
+  function friendly(x,y,ang){
+    g.save(); g.translate(x,y); g.rotate(ang);
+    g.fillStyle = 'rgba(110,220,255,.95)';
+    g.beginPath(); g.moveTo(0,-8); g.lineTo(6,6); g.lineTo(0,3); g.lineTo(-6,6); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(160,240,255,.5)'; g.lineWidth = 1; g.stroke();
+    g.restore();
+  }
+  // 敌方：红色菱形
+  function hostile(x,y,big){
+    const r = big ? 7 : 5;
+    g.save(); g.translate(x,y);
+    g.fillStyle = 'rgba(255,90,90,.9)';
+    g.beginPath(); g.moveTo(0,-r); g.lineTo(r,0); g.lineTo(0,r); g.lineTo(-r,0); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(255,150,150,.55)'; g.lineWidth = 1; g.stroke();
+    g.restore();
+  }
+
+  ENEMIES.forEach(e => hostile(e.x, e.y, e.t==='a'));
+  friendly(PLAYER.x, PLAYER.y, 0);
+
+  // 弹道
+  g.strokeStyle = 'rgba(110,220,255,.7)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(PLAYER.x, PLAYER.y-8); g.lineTo(PLAYER.x+2, PLAYER.y-46); g.stroke();
+  g.strokeStyle = 'rgba(255,120,120,.6)';
+  g.beginPath(); g.moveTo(150,60); g.lineTo(146,96); g.stroke();
+
+  // 四角刻度
+  g.strokeStyle = 'rgba(90,210,150,.35)'; g.lineWidth = 1;
+  [[6,6,1,1],[W-6,6,-1,1],[6,H-6,1,-1],[W-6,H-6,-1,-1]].forEach(([x,y,dx,dy])=>{
+    g.beginPath(); g.moveTo(x,y+dy*10); g.lineTo(x,y); g.lineTo(x+dx*10,y); g.stroke();
+  });
+
+  // 文字读数
+  g.font = '9px Consolas, monospace';
+  g.fillStyle = 'rgba(120,220,170,.65)';
+  g.fillText('THREAT 03', 8, 18);
+  g.fillText('HOSTILE 3', 8, 30);
+  g.fillStyle = 'rgba(255,120,120,.75)';
+  g.fillText('WARN', W-42, 18);
+})();
+
+/* ============================================================
+   C · 纸本作战图
+   ============================================================ */
+(function(){
+  const c = document.getElementById('c'), g = c.getContext('2d');
+  const W = 280, H = 210;
+
+  // 纸底
+  g.fillStyle = '#f2ead6'; g.fillRect(0,0,W,H);
+  // 纸纹
+  for(let i=0;i<900;i++){
+    g.fillStyle = 'rgba(160,140,100,' + (Math.random()*0.05) + ')';
+    g.fillRect(Math.random()*W, Math.random()*H, 1, 1);
+  }
+  // 淡格线
+  g.strokeStyle = 'rgba(150,130,95,.14)'; g.lineWidth = 1;
+  for(let x=0;x<W;x+=20){ g.beginPath(); g.moveTo(x+.5,0); g.lineTo(x+.5,H); g.stroke(); }
+  for(let y=0;y<H;y+=20){ g.beginPath(); g.moveTo(0,y+.5); g.lineTo(W,y+.5); g.stroke(); }
+
+  // 墙：铅笔排线
+  function hatch(x,y,w,h){
+    g.save();
+    g.beginPath(); g.rect(x,y,w,h); g.clip();
+    g.strokeStyle = 'rgba(120,90,50,.55)'; g.lineWidth = 1;
+    for(let i=-h; i<w; i+=4){
+      g.beginPath(); g.moveTo(x+i, y+h); g.lineTo(x+i+h, y); g.stroke();
+    }
+    g.restore();
+    g.strokeStyle = 'rgba(90,65,35,.8)'; g.lineWidth = 1.4;
+    g.strokeRect(x+.5,y+.5,w-1,h-1);
+  }
+  for(const [x,y,w,h] of WALLS) hatch(x,y,w,h);
+
+  // 基地：方框 + 星
+  g.strokeStyle = '#8a3a2a'; g.lineWidth = 1.8;
+  g.strokeRect(BASE.x+.5, BASE.y+.5, BASE.w-1, BASE.h-1);
+  g.fillStyle = 'rgba(180,80,60,.12)'; g.fillRect(BASE.x,BASE.y,BASE.w,BASE.h);
+  g.fillStyle = '#a04030';
+  for(let i=0;i<2;i++) g.fillRect(BASE.x+6+i*12, BASE.y+5, 4, 4);
+
+  // 己方：深褐手绘坦克
+  function tank(x,y){
+    g.strokeStyle = '#4a3820'; g.lineWidth = 1.6;
+    g.strokeRect(x-6, y-4, 12, 9);
+    g.beginPath(); g.moveTo(x, y-4); g.lineTo(x, y-11); g.stroke();
+    g.fillStyle = 'rgba(200,160,80,.35)'; g.fillRect(x-6, y-4, 12, 9);
+    g.fillStyle = '#6a5028'; g.fillRect(x-5, y-3, 2, 7); g.fillRect(x+3, y-3, 2, 7);
+  }
+  // 敌方：红圈 + 叉
+  function enemy(x,y,big){
+    const r = big ? 7 : 5;
+    g.strokeStyle = '#b8342a'; g.lineWidth = 1.7;
+    g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.stroke();
+    g.beginPath(); g.moveTo(x-r*0.6,y-r*0.6); g.lineTo(x+r*0.6,y+r*0.6);
+    g.moveTo(x+r*0.6,y-r*0.6); g.lineTo(x-r*0.6,y+r*0.6); g.stroke();
+  }
+
+  ENEMIES.forEach(e => enemy(e.x, e.y, e.t==='a'));
+  tank(PLAYER.x, PLAYER.y);
+
+  // 手绘箭头（表示己方朝向）
+  g.strokeStyle = 'rgba(74,56,32,.75)'; g.lineWidth = 1.4;
+  g.beginPath(); g.moveTo(PLAYER.x, PLAYER.y-14);
+  g.lineTo(PLAYER.x-3, PLAYER.y-19); g.moveTo(PLAYER.x, PLAYER.y-14);
+  g.lineTo(PLAYER.x+3, PLAYER.y-19); g.stroke();
+
+  // 红色铅笔圈注（敌人方向）
+  g.strokeStyle = 'rgba(190,60,45,.32)'; g.lineWidth = 2;
+  g.beginPath(); g.ellipse(148, 60, 26, 16, -0.2, 0, Math.PI*2); g.stroke();
+
+  // 角落标注
+  g.font = '10px Georgia, serif';
+  g.fillStyle = 'rgba(90,70,40,.65)';
+  g.fillText('第 3 波 · 威胁 III', 8, 16);
+  g.fillStyle = 'rgba(160,60,45,.75)';
+  g.fillText('敌 3', W-40, 16);
+})();
+</script>
+</body>
+</html>
