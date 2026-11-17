@@ -444,7 +444,7 @@ body{
         <div class="skin-row" id="skinField"></div>
       </div>
       <div style="font-size:10.5px;color:#4d6b5c;margin-top:6px;line-height:1.9">
-        皮肤在后续版本开放，解锁条件为「通关指定关卡」或「累计星数」。
+        通关指定关卡或累计星数即可解锁，点击色块切换。机体影响你的颜色，弹丸影响子弹，场地影响战场底色。
       </div>
     </div>
   </div>
@@ -1013,6 +1013,11 @@ function renderSkins(){
     return true;
   };
 
+  const set = loadSet();
+  const curBody = set.skinBody || '#7fd6ff';
+  const curBullet = set.skinBullet || '#a8e6ff';
+  const curField = set.skinField || '040a07';
+
   const bodySkins = [
     {name:'默认', col:'#7fd6ff', ok:true},
     {name:'翠绿', col:'#5fe08a', ok:cleared(3), need:'通关第 3 关'},
@@ -1025,23 +1030,36 @@ function renderSkins(){
     {name:'血弹', col:'#ff8fa3', ok:stars >= 26, need:'累计 26 星'}
   ];
   const fieldSkins = [
-    {name:'深林', col:'#0b1a13', ok:true},
-    {name:'深海', col:'#0a1524', ok:stars >= 15, need:'累计 15 星'}
+    {name:'深林', col:'040a07', ok:true},
+    {name:'深海', col:'040914', ok:stars >= 15, need:'累计 15 星'},
+    {name:'深紫', col:'0a0614', ok:stars >= 30, need:'累计 30 星'}
   ];
 
-  const draw = (arr) => arr.map(s =>
-    '<div class="skin' + (s.ok ? ' on' : ' lock') + '">' +
-      (s.ok
-        ? '<span class="dot" style="background:' + s.col + '"></span>'
+  const draw = (arr, key, cur) => arr.map(sk => {
+    const on = sk.ok && (sk.col === cur);
+    return '<div class="skin' + (sk.ok ? '' : ' lock') + (on ? ' on' : '') + '"' +
+      (sk.ok ? ' data-key="' + key + '" data-val="' + sk.col + '"' : '') + '>' +
+      (sk.ok
+        ? '<span class="dot" style="background:#' + sk.col + '"></span>'
         : '<span class="dash">🔒</span>') +
-      '<span>' + s.name + '</span>' +
-      (s.ok ? '' : '<span style="font-size:8px;color:#3a5346">' + s.need + '</span>') +
-    '</div>'
-  ).join('');
+      '<span>' + sk.name + '</span>' +
+      (sk.ok ? '' : '<span style="font-size:8px;color:#3a5346">' + sk.need + '</span>') +
+      (on ? '<span style="font-size:8px;color:#5fe08a">使用中</span>' : '') +
+    '</div>';
+  }).join('');
 
-  document.getElementById('skinBody').innerHTML = draw(bodySkins);
-  document.getElementById('skinBullet').innerHTML = draw(bulletSkins);
-  document.getElementById('skinField').innerHTML = draw(fieldSkins);
+  document.getElementById('skinBody').innerHTML = draw(bodySkins, 'skinBody', curBody);
+  document.getElementById('skinBullet').innerHTML = draw(bulletSkins, 'skinBullet', curBullet);
+  document.getElementById('skinField').innerHTML = draw(fieldSkins, 'skinField', curField);
+
+  document.querySelectorAll('#panel-skin .skin[data-key]').forEach(el => {
+    el.onclick = () => {
+      const st = loadSet();
+      st[el.dataset.key] = el.dataset.val;
+      saveSet(st);
+      renderSkins();
+    };
+  });
 }
 
 /* ============================================================

@@ -574,6 +574,7 @@ const G = {
   shake:0, zoom:1,
   viewW:0, viewH:0,
   fireMode:'manual', floats:[],
+  skin:{ body:'#7fd6ff', bullet:'#a8e6ff', field:'040a07' },
   slowT:0, rageT:0, pendReward:null,
   traits:{}, orbitA:0, chainCd:0, regenCd:0,
   qOrder:'random', qPool:[], curQ:null,
@@ -1480,7 +1481,7 @@ function boom(x,y,col){
    ============================================================ */
 function render(){
   const vw = G.viewW, vh = G.viewH;
-  ctx.fillStyle = '#040a07';
+  ctx.fillStyle = '#' + G.skin.field;
   ctx.fillRect(0,0,vw,vh);
 
   ctx.save();
@@ -1659,14 +1660,18 @@ function render(){
     ctx.save();
     ctx.translate(p.x, p.y);
     if(p.shield > 0){
-      ctx.strokeStyle = 'rgba(127,214,255,' + (0.3 + Math.sin(G.t*0.25)*0.18) + ')';
+      ctx.strokeStyle = G.skin.body;
+      ctx.globalAlpha = 0.3 + Math.sin(G.t*0.25)*0.18;
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(0,0,p.r+5,0,Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
     }
     ctx.rotate(p.angle);
-    ctx.fillStyle = 'rgba(127,214,255,.8)';
+    ctx.fillStyle = G.skin.body;
+    ctx.globalAlpha = .8;
     ctx.fillRect(4, -2, 14, 4);
-    ctx.fillStyle = '#7fd6ff';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = G.skin.body;
     ctx.beginPath();
     ctx.moveTo(10,0); ctx.lineTo(-7,7); ctx.lineTo(-4,0); ctx.lineTo(-7,-7);
     ctx.closePath(); ctx.fill();
@@ -1706,13 +1711,15 @@ function render(){
 
   // 子弹
   for(const b of G.bullets){
-    ctx.strokeStyle = b.owner==='player' ? 'rgba(168,230,255,.3)' : 'rgba(255,154,154,.28)';
+    ctx.strokeStyle = b.owner==='player' ? G.skin.bullet : 'rgba(255,154,154,.28)';
+    ctx.globalAlpha = b.owner==='player' ? .3 : 1;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(b.x, b.y);
     ctx.lineTo(b.x - Math.cos(b.a)*7, b.y - Math.sin(b.a)*7);
     ctx.stroke();
-    ctx.fillStyle = b.owner==='player' ? '#a8e6ff' : '#ff9a9a';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = b.owner==='player' ? G.skin.bullet : '#ff9a9a';
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.owner==='player'?2.6:2.2, 0, Math.PI*2);
     ctx.fill();
@@ -2166,6 +2173,9 @@ function loadSettings(){
     if(s.size && SIZES[s.size]) G.size = s.size;
     if(s.diff && DIFFS[s.diff]) G.diff = s.diff;
     if(s.sound === 'off') Sound.setMuted(true);
+    if(s.skinBody) G.skin.body = s.skinBody;
+    if(s.skinBullet) G.skin.bullet = s.skinBullet;
+    if(s.skinField) G.skin.field = s.skinField;
   }catch(e){}
   syncSeg('segSize', G.size);
   syncSeg('segDiff', G.diff);
