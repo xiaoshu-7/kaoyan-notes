@@ -765,7 +765,7 @@ function renderCodex(tab){
       return '<div class="card-item' + (has ? '' : ' locked') + '">' +
         '<div class="cd-h">' +
           '<span class="cd-t">' + (has ? c.title : '???' ) + '</span>' +
-          '<span class="cd-s">' + (has ? c.src + ' 线性表' : '第 ' + c.lv + ' 关掉落') + '</span>' +
+          '<span class="cd-s">' + (has ? c.src : '第 ' + c.lv + ' 关掉落') + '</span>' +
         '</div>' +
         (has ? '<div class="cd-b">' + c.body + '</div>' : '') +
       '</div>';
