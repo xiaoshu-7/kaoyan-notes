@@ -88,6 +88,22 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 }
 .traits .tr b{font-weight:700;margin-left:3px}
 
+.wavebar{
+  position:absolute;left:50%;top:14px;transform:translateX(-50%);
+  z-index:6;display:none;
+  padding:7px 18px;border-radius:20px;
+  background:rgba(6,18,13,.88);border:1px solid rgba(90,210,150,.3);
+  font-size:11.5px;color:#a8dcc0;letter-spacing:.05em;
+  cursor:pointer;transition:.16s;white-space:nowrap;
+  backdrop-filter:blur(2px);
+}
+.wavebar.on{display:block}
+.wavebar:hover{border-color:#5fe08a;color:#e8fff2;background:rgba(10,28,20,.94)}
+.wavebar b{color:#ffd166;font-size:13px;margin:0 2px}
+.wavebar .go{opacity:.72;margin-left:8px;font-size:10.5px}
+.wavebar.tip{color:#ffd166;border-color:rgba(255,209,102,.5);cursor:default}
+.wavebar.tip:hover{border-color:rgba(255,209,102,.5);color:#ffd166;background:rgba(6,18,13,.88)}
+
 /* 菜单 */
 .menu{
   position:absolute;inset:0;z-index:8;
@@ -200,6 +216,8 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
       <div class="screen" id="screen">
         <canvas id="cv"></canvas>
 
+        <div class="wavebar" id="wavebar"></div>
+
         <div class="menu" id="menu">
           <h1>刷 题 防 线</h1>
           <div class="hint">
@@ -231,6 +249,14 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
             <div class="seg" id="segFire">
               <button data-v="manual" class="on">手动</button>
               <button data-v="auto">自动</button>
+            </div>
+          </div>
+
+          <div class="opt-row">
+            <span class="lbl">题 目</span>
+            <div class="seg" id="segOrder">
+              <button data-v="random" class="on">随机</button>
+              <button data-v="seq">顺序</button>
             </div>
           </div>
 
@@ -309,6 +335,24 @@ const DIFFS = {
 
 const TILE = 24;
 
+/* ============ 关卡：一章 10 关，逐关解锁敌人与特性 ============ */
+const LEVELS = [
+  {n:1,  waves:3, types:['drone'],                              traits:['multi','rapid','armor']},
+  {n:2,  waves:3, types:['drone'],                              traits:['multi','rapid','armor']},
+  {n:3,  waves:4, types:['drone'],                              traits:['multi','rapid','armor','pierce']},
+  {n:4,  waves:4, types:['drone','shooter'],                    traits:['multi','rapid','armor','pierce','regen'], newEnemy:'shooter'},
+  {n:5,  waves:4, types:['drone','shooter'],                    traits:['multi','rapid','armor','pierce','regen','speed']},
+  {n:6,  waves:5, types:['drone','shooter'],                    traits:['multi','rapid','armor','pierce','regen','speed','crit']},
+  {n:7,  waves:5, types:['drone','shooter','charger'],          traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce'], newEnemy:'charger'},
+  {n:8,  waves:5, types:['drone','shooter','charger'],          traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
+  {n:9,  waves:6, types:['drone','shooter','charger'],          traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
+  {n:10, waves:6, types:['drone','shooter','charger','tank'],   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'], newEnemy:'tank'}
+];
+
+function levelCfg(n){
+  return LEVELS[Math.min(n, LEVELS.length) - 1];
+}
+
 /* 敌人类型 */
 const ETYPES = {
   drone:   {name:'游荡', hp:1, spd:1.00, fire:0, r:8,  col:'#ff6b6b', score:80,  keep:0},
@@ -335,7 +379,10 @@ const G = {
   viewW:0, viewH:0,
   fireMode:'manual', floats:[],
   slowT:0, rageT:0, pendReward:null,
-  traits:{}, orbitA:0, chainCd:0, regenCd:0
+  traits:{}, orbitA:0, chainCd:0, regenCd:0,
+  qOrder:'random', qPool:[], curQ:null,
+  level:1, wave:0, totalWaves:3, waveState:'gap', waveTimer:240,
+  waveLeft:0, waveGap:480, waveBonus:1, settled:false, newTip:null
 };
 
 const cv = document.getElementById('cv');
@@ -494,6 +541,7 @@ function update(){
   if(G.zoom > 1) G.zoom = Math.max(1, G.zoom - 0.028);
   if(G.slowT > 0) G.slowT--;
   if(G.rageT > 0) G.rageT--;
+  if(G.newTip && G.newTip.t > 0) G.newTip.t--;
 
   const p = G.player;
   const cfg = DIFFS[G.diff];
@@ -662,13 +710,8 @@ function update(){
   for(const f of G.floats){ f.y -= 0.55; f.life--; }
   G.floats = G.floats.filter(f => f.life > 0);
 
-  // --- 刷兵 ---
-  G.spawnCd--;
-  if(G.spawnCd <= 0){
-    const cap = Math.min(cfg.cap, 3 + Math.floor(G.t/900));
-    if(G.enemies.length < cap) spawnEnemy();
-    G.spawnCd = Math.round(cfg.gap[0] + Math.random()*(cfg.gap[1]-cfg.gap[0]));
-  }
+  // --- 波次 ---
+  updateWaves();
 
   // --- 镜头 ---
   const camTX = p.x - G.viewW/(2*G.zoom);
@@ -760,13 +803,151 @@ function fire(x, y, ang, owner, lv){
   G.bullets.push({x, y, a:ang, speed:4.2, owner, dead:false, pierce:0, bounce:0, crit:0});
 }
 
-function pickType(stage){
-  const pool = ['drone','drone'];
-  if(stage >= 3) pool.push('shooter');
-  if(stage >= 5) pool.push('charger');
-  if(stage >= 7) pool.push('tank');
-  if(stage >= 6) pool.push('shooter');
+function pickType(){
+  const cfg = levelCfg(G.level);
+  const pool = cfg.types;
   return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function updateWaves(){
+  const cfg = DIFFS[G.diff];
+
+  if(G.waveState === 'gap'){
+    G.waveTimer--;
+    if(G.waveTimer <= 0) startWave();
+    if(G.t % 8 === 0) updateWaveUI();
+    return;
+  }
+
+  if(G.waveState === 'fight'){
+    G.spawnCd--;
+    if(G.waveLeft > 0 && G.spawnCd <= 0){
+      spawnEnemy();
+      G.waveLeft--;
+      G.spawnCd = Math.round(cfg.gap[0] * 0.5);
+    }
+    if(G.waveLeft === 0 && G.enemies.length === 0){
+      if(G.wave >= G.totalWaves){
+        victory();
+      } else {
+        G.waveState = 'gap';
+        G.waveTimer = G.waveGap;
+        checkSettle();
+      }
+    }
+    if(G.t % 8 === 0) updateWaveUI();
+  }
+}
+
+function updateWaveUI(){
+  const el = document.getElementById('wavebar');
+  if(!el) return;
+
+  if(G.newTip && G.newTip.t > 0){
+    el.className = 'wavebar on tip';
+    el.innerHTML = '⚠ 新敌人出现：<b style="color:' + G.newTip.col + '">' + G.newTip.name + '</b>';
+    return;
+  }
+
+  if(G.waveState === 'gap'){
+    const sec = Math.ceil(G.waveTimer / 60);
+    el.className = 'wavebar on';
+    el.innerHTML = '第 ' + (G.wave + 1) + ' / ' + G.totalWaves + ' 波　<b>' + sec + '</b>秒' +
+                   '<span class="go">点击提前</span>';
+  } else if(G.waveState === 'fight'){
+    const left = G.waveLeft + G.enemies.length;
+    el.className = 'wavebar on';
+    el.innerHTML = '第 ' + G.wave + ' / ' + G.totalWaves + ' 波　剩余 <b>' + left + '</b> 个';
+  } else {
+    el.className = 'wavebar';
+  }
+}
+
+function checkSettle(){
+  if(G.settled) return;
+  const total = G.okN + G.noN;
+  if(total < 6) return;
+  const rate = G.okN / total;
+  const need = G.diff === 'easy' ? 0.6 : (G.diff === 'normal' ? 0.7 : 0.8);
+  if(rate >= need && G.wave >= Math.ceil(G.totalWaves * 0.5)){
+    G.settled = true;
+    showSettle(false);
+  }
+}
+
+function victory(){
+  G.state = 'win';
+  Sound.right();
+  showSettle(true);
+}
+
+function showSettle(final){
+  G.state = final ? 'win' : 'settle';
+  const m = document.getElementById('menu');
+  m.classList.remove('off');
+  const total = G.okN + G.noN;
+  const rate = total ? Math.round(G.okN / total * 100) : 0;
+
+  m.innerHTML =
+    '<h1 style="color:' + (final ? '#5fe08a' : '#7fd6ff') + '">' +
+      (final ? '关 卡 完 成' : '可 以 结 算') + '</h1>' +
+    '<div class="hint">' +
+      '第 ' + G.level + ' 关 · 第 ' + G.wave + ' / ' + G.totalWaves + ' 波<br>' +
+      '答对 <b style="color:#5fe08a">' + G.okN + '</b> / ' + total + '（' + rate + '%）' +
+      '　得分 <b style="color:#ffd166">' + G.score + '</b>' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;margin-top:6px">' +
+      '<button class="btn-start" id="endBtn">结束本关</button>' +
+      '<button class="btn-start" id="contBtn" style="background:#22402f;color:#a8dcc0">继续挑战</button>' +
+    '</div>';
+
+  document.getElementById('endBtn').onclick = () => { m.innerHTML = ''; m.classList.add('off'); startLevel(G.level + 1); };
+  document.getElementById('contBtn').onclick = () => {
+    m.innerHTML = ''; m.classList.add('off');
+    G.state = 'play';
+    if(G.waveState === 'gap') G.waveTimer = 180;
+  };
+}
+
+function startLevel(lv){
+  if(lv > LEVELS.length){ lv = LEVELS.length; }
+  const cfg = levelCfg(lv);
+  G.level = lv;
+  G.totalWaves = cfg.waves;
+  G.wave = 0;
+  G.waveState = 'gap';
+  G.waveTimer = 240;
+  G.waveGap = 480;
+  G.waveLeft = 0;
+  G.waveBonus = 1;
+  G.settled = false;
+  G.enemies = []; G.bullets = []; G.parts = []; G.floats = [];
+  G.traits = {}; G.orbitA = 0; G.chainCd = 0; G.regenCd = 0; G.arc = null;
+  G.zoom = 1;
+
+  const spot = findFreeCell(Math.floor(G.cols/2) - 4, Math.floor(G.rows/2));
+  G.player.x = spot.c * TILE + TILE/2;
+  G.player.y = spot.r * TILE + TILE/2;
+  G.player.hp = G.player.maxHp;
+  G.player.shield = 120;
+
+  G.newTip = cfg.newEnemy
+    ? {name: ETYPES[cfg.newEnemy].name, col: ETYPES[cfg.newEnemy].col, t: 200}
+    : null;
+
+  updateTraitsUI();
+  updateHud();
+  updateWaveUI();
+}
+
+function startWave(){
+  G.wave++;
+  G.waveState = 'fight';
+  const base = 3 + Math.floor(G.wave * 0.9) + Math.floor(G.level * 0.4);
+  G.waveLeft = Math.max(2, Math.round(base * (G.waveBonus || 1)));
+  G.spawnCd = 0;
+  G.waveBonus = 1;
+  updateWaveUI();
 }
 
 function spawnEnemy(){
@@ -1093,7 +1274,7 @@ function loop(ts){
   acc += dt;
   let guard = 0;
   while(acc >= 16.667 && guard < 4){ update(); acc -= 16.667; guard++; }
-  if(G.state === 'play' || G.state === 'over') render();
+  if(G.player && G.state !== 'menu') render();
   requestAnimationFrame(loop);
 }
 
@@ -1126,9 +1307,25 @@ function threatLevel(){
    ============================================================ */
 let qIdx = 0, qLocked = true, wrongList = [];
 
+function buildQuestionPool(){
+  G.qPool = BANK.map((_, i) => i);
+  if(G.qOrder === 'seq'){
+    G.qPool.sort((a,b) => a-b);
+  } else {
+    for(let i=G.qPool.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      const t = G.qPool[i]; G.qPool[i] = G.qPool[j]; G.qPool[j] = t;
+    }
+  }
+  qIdx = 0;
+}
+
 function nextQuestion(){
   qLocked = false;
-  const q = BANK[qIdx % BANK.length];
+  if(!G.qPool.length) buildQuestionPool();
+  const qi = G.qPool[qIdx % G.qPool.length];
+  const q = BANK[qi];
+  G.curQ = q;
 
   // 本题的奖励预告
   G.pendReward = pickReward();
@@ -1157,7 +1354,7 @@ function nextQuestion(){
 function answer(pick){
   if(qLocked || G.state !== 'play') return;
   qLocked = true;
-  const q = BANK[(qIdx-1) % BANK.length];
+  const q = G.curQ;
   const btns = [...document.querySelectorAll('.opt')];
   btns.forEach(b => b.disabled = true);
 
@@ -1214,7 +1411,10 @@ const TRAITS = [
 ];
 
 function pickReward(){
-  const pool = TRAITS.filter(t => (G.traits[t.id] || 0) < t.max);
+  const cfg = levelCfg(G.level);
+  const pool = TRAITS.filter(t =>
+    cfg.traits.includes(t.id) && (G.traits[t.id] || 0) < t.max
+  );
   if(!pool.length) return null;
   return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -1263,17 +1463,15 @@ function startGame(){
 
   G.state = 'play';
   G.t = 0; G.score = 0; G.okN = 0; G.noN = 0; G.streak = 0;
-  G.enemies = []; G.bullets = []; G.parts = []; G.floats = [];
-  G.traits = {}; G.orbitA = 0; G.chainCd = 0; G.regenCd = 0; G.arc = null;
-  updateTraitsUI();
-  G.spawnCd = 70; G.killed = 0; G.shake = 0; G.zoom = 1;
-  wrongList = []; qIdx = 0; qLocked = true;
+  G.killed = 0; G.shake = 0; G.zoom = 1;
+  wrongList = []; qLocked = true;
+  buildQuestionPool();
 
   document.getElementById('menu').classList.add('off');
   document.getElementById('topKv').textContent =
     SIZES[G.size].name + '地图 · ' + DIFFS[G.diff].name;
 
-  updateHud();
+  startLevel(1);
   nextQuestion();
 }
 
@@ -1339,6 +1537,15 @@ function bindSeg(id, key){
 bindSeg('segSize', 'size');
 bindSeg('segDiff', 'diff');
 bindSeg('segFire', 'fireMode');
+bindSeg('segOrder', 'qOrder');
+
+document.getElementById('wavebar').onclick = () => {
+  if(G.state === 'play' && G.waveState === 'gap'){
+    G.waveTimer = 0;
+    G.waveBonus = 1.25;
+    updateWaveUI();
+  }
+};
 
 document.getElementById('startBtn').onclick = startGame;
 
