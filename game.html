@@ -73,7 +73,7 @@ body{
   border:1px solid #2a3550;border-radius:3px;
   box-shadow:inset 0 0 40px rgba(0,0,0,.8),0 0 0 1px rgba(120,160,220,.06);
   overflow:hidden;align-self:center;
-  width:640px;max-width:100%;
+  width:720px;max-width:100%;
 }
 .screen canvas{
   display:block;width:100%;height:auto;
@@ -239,14 +239,14 @@ body{
     <span class="name">刷题防线</span>
     <span class="chip">DATA STRUCTURE · 1.1 线性表</span>
     <span class="sp"></span>
-    <span class="chip" id="hintKeys">方向键移动 · 空格开火 · 1-4 答题</span>
+    <span class="chip" id="hintKeys">WASD / 方向键 移动 · 空格开火 · 1-4 答题</span>
   </div>
 
   <div class="body">
     <!-- 左：游戏 -->
     <div class="stage">
       <div class="screen" id="screen">
-        <canvas id="cv" width="320" height="256"></canvas>
+        <canvas id="cv" width="480" height="352"></canvas>
         <div class="grain"></div>
         <div class="vig"></div>
         <div class="toast" id="toast"></div>
@@ -254,7 +254,7 @@ body{
           <h1>刷题防线</h1>
           <p>
             守住基地，同时答题。<br>
-            <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>空格</kbd> 开火 · <kbd>1</kbd>-<kbd>4</kbd> 选答案<br>
+            <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或方向键 移动 · <kbd>空格</kbd> 开火 · <kbd>1</kbd>-<kbd>4</kbd> 选答案<br>
             答对提升火力，答错敌人变强。
           </p>
           <button class="btn" id="startBtn">开 始</button>
@@ -264,6 +264,7 @@ body{
       <div class="hud">
         <span>基地 <span class="bar hp"><i id="hpBar" style="width:100%"></i></span></span>
         <span>火力 <b class="lv" id="lvTxt">Lv1</b></span>
+        <span>威胁 <b id="threatTxt">1</b></span>
         <span>连击 <b id="streakTxt">0</b></span>
         <span>敌军 <b id="enemyTxt">0</b></span>
         <span class="keys">P 暂停 · M 静音</span>
@@ -380,7 +381,7 @@ const BANK = [
    ============================================================ */
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
-const W = 320, H = 256;
+const W = 480, H = 352;
 
 const G = {
   state:'title',       // title | play | pause | over
@@ -398,28 +399,35 @@ const G = {
 const keys = {};
 const TANK = 12, TILE = 16;
 
-/* 地图：简单掩体，ASCII */
+/* 地图：30×22 格，五道防线层层收窄，逼出「边打边退」的节奏 */
 const MAP = [
-  '....................',
-  '....................',
-  '....................',
-  '....##........##....',
-  '....##........##....',
-  '....................',
-  '....................',
-  '......##....##......',
-  '......##....##......',
-  '....................',
-  '....................',
-  '..##............##..',
-  '..##............##..',
-  '....................',
-  '....................',
-  '....................'
+  '..............................',
+  '..............................',
+  '.....##................##.....',
+  '.....##................##.....',
+  '..............................',
+  '.......####........####.......',
+  '.......####........####.......',
+  '..............................',
+  '..............................',
+  '..###.....##......##.....###..',
+  '..###.....##......##.....###..',
+  '..............................',
+  '..............................',
+  '..##....####......####....##..',
+  '..##....####......####....##..',
+  '..............................',
+  '..............................',
+  '..####.....##....##....####..',
+  '..####.....##....##....####..',
+  '..............................',
+  '..............................',
+  '..............................'
 ].map(r => r.split(''));
 
-const SPAWN = [[2,0],[9,0],[16,0]];
-const BASE = {x:144, y:232, w:32, h:16};
+const ROWS = 22, COLS = 30;
+const SPAWN = [[2,0],[14,0],[26,0]];
+const BASE = {x:224, y:320, w:32, h:16};
 
 /* ---------- 音效（Web Audio 合成） ---------- */
 const Sound = (() => {
@@ -465,18 +473,41 @@ const Sound = (() => {
 
 /* ---------- 实体 ---------- */
 function makePlayer(){
-  return {x:150, y:220, dir:0, speed:2, cd:0, shield:90, alive:true};
+  return {x:200, y:298, dir:0, speed:2, cd:0, shield:90, alive:true};
 }
+
+/* 威胁等级：每 20 秒升一档，最高 10 档 */
+function threatLevel(){
+  return Math.min(10, 1 + Math.floor(G.t / 1200));
+}
+
+const ENEMY_CFG = {
+  n: {sp:0.85, hp:1, cd:110, col:'#c3ccd6'},
+  f: {sp:1.70, hp:1, cd:120, col:'#5fcbf0'},
+  a: {sp:0.60, hp:3, cd:95,  col:'#7fe08a'}
+};
 
 function spawnEnemy(){
   const p = SPAWN[Math.floor(Math.random()*SPAWN.length)];
-  const fast = Math.random() < .35;
+  const stage = threatLevel();
+
+  // 类型按阶段解锁
+  let type = 'n';
+  const r = Math.random();
+  if(stage >= 3 && r < .28) type = 'f';
+  else if(stage >= 5 && r < .14) type = 'a';
+
+  const cfg = ENEMY_CFG[type];
+  const hpBonus = Math.floor((stage - 1) / 3);        // 每 3 档 +1 血
+
   G.enemies.push({
-    x:p[0]*TILE+2, y:p[1]*TILE,
-    dir:2, speed: fast?1.6:1,
-    hp: 1 + Math.floor(G.lv/3),     // 火力等级越高，敌人越硬
-    cd: 90, type: fast?'f':'n',
-    think: 40, flash:0
+    x: p[0]*TILE + 2, y: p[1]*TILE,
+    dir: 2,
+    speed: cfg.sp + (stage - 1) * 0.035,              // 速度缓慢递增
+    hp: cfg.hp + hpBonus,
+    maxHp: cfg.hp + hpBonus,
+    cd: cfg.cd,
+    type, think: 40, flash: 0, stuck: 0
   });
 }
 
@@ -485,7 +516,7 @@ function blocked(x, y){
   const pts = [[x,y],[x+TANK-1,y],[x,y+TANK-1],[x+TANK-1,y+TANK-1]];
   for(const [px,py] of pts){
     const c = Math.floor(px/TILE), r = Math.floor(py/TILE);
-    if(r < 0 || r >= 16 || c < 0 || c >= 20) return true;
+    if(r < 0 || r >= ROWS || c < 0 || c >= COLS) return true;
     if(MAP[r][c] === '#') return true;
   }
   // 基地
@@ -503,10 +534,14 @@ function update(){
   if(p && p.alive){
     if(p.shield > 0) p.shield--;
     let nx = p.x, ny = p.y, moved = false;
-    if(keys['ArrowUp'] && !keys['ArrowDown']){ p.dir = 0; ny -= p.speed; }
-    else if(keys['ArrowDown'] && !keys['ArrowUp']){ p.dir = 2; ny += p.speed; }
-    else if(keys['ArrowLeft'] && !keys['ArrowRight']){ p.dir = 3; nx -= p.speed; }
-    else if(keys['ArrowRight'] && !keys['ArrowLeft']){ p.dir = 1; nx += p.speed; }
+    const up = keys['arrowup'] || keys['w'];
+    const down = keys['arrowdown'] || keys['s'];
+    const left = keys['arrowleft'] || keys['a'];
+    const right = keys['arrowright'] || keys['d'];
+    if(up && !down){ p.dir = 0; ny -= p.speed; }
+    else if(down && !up){ p.dir = 2; ny += p.speed; }
+    else if(left && !right){ p.dir = 3; nx -= p.speed; }
+    else if(right && !left){ p.dir = 1; nx += p.speed; }
 
     if(nx !== p.x || ny !== p.y){
       if(!blocked(nx, ny)){ p.x = nx; p.y = ny; moved = true; }
@@ -550,8 +585,22 @@ function update(){
     else if(e.dir === 1) nx += sp;
     else if(e.dir === 2) ny += sp;
     else nx -= sp;
-    if(!blocked(nx, ny)){ e.x = nx; e.y = ny; }
-    else e.think = 0;
+
+    if(!blocked(nx, ny)){
+      e.x = nx; e.y = ny;
+      e.stuck = 0;
+    } else {
+      // 避障：被挡就沿垂直方向滑，滑不动才重选方向
+      e.stuck = (e.stuck || 0) + 1;
+      if(e.dir === 0 || e.dir === 2){
+        if(!blocked(e.x - sp, e.y)) e.x -= sp;
+        else if(!blocked(e.x + sp, e.y)) e.x += sp;
+      } else {
+        if(!blocked(e.x, e.y - sp)) e.y -= sp;
+        else if(!blocked(e.x, e.y + sp)) e.y += sp;
+      }
+      if(e.stuck > 5) e.think = 0;
+    }
 
     // 射击
     if(e.cd > 0) e.cd--;
@@ -578,7 +627,7 @@ function update(){
       if(b.x < -4 || b.x > W+4 || b.y < -4 || b.y > H+4){ b.dead = true; break; }
       // 墙
       const c = Math.floor(b.x/TILE), r = Math.floor(b.y/TILE);
-      if(r>=0 && r<16 && c>=0 && c<20 && MAP[r][c] === '#'){ b.dead = true; spark(b.x, b.y); break; }
+      if(r>=0 && r<ROWS && c>=0 && c<COLS && MAP[r][c] === '#'){ b.dead = true; spark(b.x, b.y); break; }
 
       // 命中
       if(b.owner === 'player'){
@@ -601,7 +650,7 @@ function update(){
         if(p && p.alive && p.shield <= 0 &&
            b.x > p.x && b.x < p.x+TANK && b.y > p.y && b.y < p.y+TANK){
           damage(1); b.dead = true; boom(p.x+6, p.y+6, '#ffd166');
-          p.x = 150; p.y = 220; p.shield = 90;
+          p.x = 200; p.y = 298; p.shield = 90;
           break;
         }
       }
@@ -617,9 +666,10 @@ function update(){
   // 刷兵
   G.spawnCd--;
   if(G.spawnCd <= 0){
-    const cap = Math.min(2 + Math.floor(G.lv/2) + Math.floor(G.t/1800), 6);
+    const stage = threatLevel();
+    const cap = Math.min(2 + Math.floor(stage * 0.6), 7);
     if(G.enemies.length < cap) spawnEnemy();
-    G.spawnCd = Math.max(50, 130 - G.lv*12);
+    G.spawnCd = Math.max(35, 140 - stage * 10);
   }
 
   updateHud();
@@ -693,8 +743,8 @@ function render(){
   ctx.fillRect(-4, -4, W+8, H+8);
 
   // 地图
-  for(let r = 0; r < 16; r++){
-    for(let c = 0; c < 20; c++){
+  for(let r = 0; r < ROWS; r++){
+    for(let c = 0; c < COLS; c++){
       if(MAP[r][c] === '#'){
         const x = c*TILE, y = r*TILE;
         ctx.fillStyle = '#5c2c11'; ctx.fillRect(x, y, TILE, TILE);
@@ -718,10 +768,16 @@ function render(){
   ctx.fillRect(bx, by+BASE.h-3, BASE.w, 3);
 
   // 敌军
+  const EC = {
+    n: {body:'#c3ccd6', light:'#eef4fa', dark:'#5b6773', hi:'#ffffff'},
+    f: {body:'#5fcbf0', light:'#a8e6ff', dark:'#1a6a86', hi:'#d8f4ff'},
+    a: {body:'#7fe08a', light:'#c8f5cf', dark:'#2f6b3f', hi:'#eaffee'}
+  };
   for(const e of G.enemies){
-    const cfg = e.type === 'f'
-      ? {body:'#5fcbf0', light:'#a8e6ff', dark:'#1a6a86', hi:'#d8f4ff'}
-      : {body: e.flash > 0 ? '#ffffff' : '#c3ccd6', light:'#eef4fa', dark:'#5b6773', hi:'#ffffff'};
+    const base = EC[e.type] || EC.n;
+    const cfg = e.flash > 0
+      ? {body:'#ffffff', light:'#ffffff', dark:'#aaaaaa', hi:'#ffffff'}
+      : base;
     drawTank(e.x, e.y, e.dir, cfg);
   }
 
@@ -781,6 +837,10 @@ function updateHud(){
   document.getElementById('noN').textContent = G.noN;
   document.getElementById('scoreN').textContent = G.score;
   document.getElementById('streakBox').textContent = '连对 ' + G.streak;
+  const th = threatLevel();
+  const el = document.getElementById('threatTxt');
+  el.textContent = th;
+  el.style.color = th >= 7 ? '#ff6b6b' : (th >= 4 ? '#ffd166' : '#7fd6ff');
 }
 
 function showToast(txt, good){
@@ -911,26 +971,28 @@ function gameOver(){
 }
 
 /* ---------- 输入 ---------- */
+const MOVE_KEYS = ['arrowup','arrowdown','arrowleft','arrowright',' ','w','a','s','d'];
 document.addEventListener('keydown', e => {
-  const k = e.key;
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(k)){
+  const k = e.key.toLowerCase();
+  if(MOVE_KEYS.includes(k)){
     keys[k] = true;
     e.preventDefault();
   }
   if(G.state === 'play'){
     if(k >= '1' && k <= '4'){ answer(parseInt(k)-1); e.preventDefault(); }
-    if(k === 'p' || k === 'P'){
+    if(k === 'p'){
       G.state = 'pause';
       showToast('已暂停（按 P 继续）', true);
     }
-  } else if(G.state === 'pause' && (k === 'p' || k === 'P')){
+  } else if(G.state === 'pause' && k === 'p'){
     G.state = 'play';
   }
-  if(k === 'm' || k === 'M'){ Sound.toggle(); }
+  if(k === 'm'){ Sound.toggle(); }
   if(k === 'Enter' && G.state === 'title'){ startGame(); }
 });
 document.addEventListener('keyup', e => {
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) keys[e.key] = false;
+  const k = e.key.toLowerCase();
+  if(MOVE_KEYS.includes(k)) keys[k] = false;
 });
 
 document.getElementById('startBtn').onclick = startGame;
@@ -939,9 +1001,23 @@ document.getElementById('startBtn').onclick = startGame;
 updateHud();
 requestAnimationFrame(loop);
 
-// 调试/截图用：?auto 直接开局
-if(new URLSearchParams(location.search).has('auto')){
+// 调试/截图用
+const QS = new URLSearchParams(location.search);
+if(QS.has('auto')){
   setTimeout(startGame, 200);
+}
+if(QS.has('demo')){
+  setTimeout(() => {
+    if(G.state !== 'play') startGame();
+    G.t = 2600;
+    G.enemies.push(
+      {x:40,  y:60,  dir:2, speed:1,   hp:1, maxHp:1, cd:90, type:'n', think:40, flash:0, stuck:0},
+      {x:200, y:100, dir:2, speed:1,   hp:2, maxHp:2, cd:90, type:'f', think:40, flash:0, stuck:0},
+      {x:380, y:150, dir:2, speed:1,   hp:3, maxHp:3, cd:90, type:'a', think:40, flash:0, stuck:0},
+      {x:120, y:200, dir:2, speed:1,   hp:1, maxHp:1, cd:90, type:'n', think:40, flash:0, stuck:0}
+    );
+    updateHud();
+  }, 300);
 }
 </script>
 </body>
