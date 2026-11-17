@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>考研闯关 · 第一关</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --paper:#F5F0E0; --paper2:#FBF7EC;
+    --ink:#2A2620; --ink2:#4A4438; --ink3:#8A8272;
+    --rule:#D8CDB0; --red:#B4443A; --green:#4A7A52; --blue:#2F5C82;
+  }
+  body{
+    background:#1A1714; min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    overflow:hidden;
+  }
+  #stage{
+    position:relative; width:880px; height:520px;
+    background:var(--paper); border-radius:4px; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+  }
+  canvas{display:block; image-rendering:pixelated}
+
+  /* ---------- 顶部状态条 ---------- */
+  #hud{
+    position:absolute; left:0; top:0; right:0; height:52px;
+    display:flex; align-items:center; gap:20px; padding:0 18px;
+    background:linear-gradient(180deg,rgba(245,240,224,.96),rgba(245,240,224,.7));
+    border-bottom:1px solid var(--rule);
+    font-size:11px; color:var(--ink3); letter-spacing:.04em;
+    pointer-events:none;
+  }
+  .bar-wrap{display:flex; align-items:center; gap:7px}
+  .bar-wrap b{color:var(--ink2); font-weight:600; min-width:26px}
+  .bar{width:110px; height:9px; background:rgba(120,100,60,.16); border-radius:5px; overflow:hidden}
+  .bar i{display:block; height:100%; border-radius:5px; transition:width .28s ease}
+  #hpFill{background:linear-gradient(90deg,#C9645C,#B4443A)}
+  #pwFill{background:linear-gradient(90deg,#7FA8C4,#2F5C82)}
+  #mobBox{margin-left:auto; display:flex; align-items:center; gap:7px; opacity:.45; transition:opacity .3s}
+  #mobBox.on{opacity:1}
+
+  /* ---------- 提示 ---------- */
+  #tips{
+    position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
+    font-size:11px; color:var(--ink3); letter-spacing:.08em;
+    background:rgba(245,240,224,.85); padding:5px 14px; border-radius:3px;
+    border:1px solid var(--rule); white-space:nowrap;
+  }
+  kbd{
+    display:inline-block; padding:0 5px; border:1px solid var(--rule);
+    border-bottom-width:2px; border-radius:3px; background:#fff;
+    font-family:ui-monospace,Consolas,monospace; font-size:10px;
+    color:var(--ink2); line-height:15px; margin:0 1px;
+  }
+
+  /* ---------- 战斗面板 ---------- */
+  #battle{
+    position:absolute; inset:0; background:rgba(26,23,20,.82);
+    display:none; align-items:center; justify-content:center;
+    z-index:10;
+  }
+  #battle.on{display:flex}
+  .card{
+    width:600px; background:var(--paper2);
+    border:1px solid var(--rule); border-radius:4px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+    overflow:hidden; animation:pop .22s cubic-bezier(.2,1.3,.4,1);
+  }
+  @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  .card-top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 20px; border-bottom:1px solid var(--rule);
+    background:rgba(180,68,58,.05);
+  }
+  .mob-name{font-size:12px; color:var(--red); letter-spacing:.1em}
+  .mob-hp{display:flex; gap:4px}
+  .pip{width:9px; height:9px; border-radius:2px; background:var(--red); opacity:.9; transition:.2s}
+  .pip.gone{background:rgba(180,68,58,.18)}
+  .q-body{padding:22px 24px 18px}
+  .q-tag{
+    display:inline-block; font-size:10px; letter-spacing:.1em;
+    color:var(--ink3); border:1px solid var(--rule); border-radius:2px;
+    padding:1px 7px; margin-bottom:11px;
+  }
+  .q-text{font-size:16px; line-height:1.85; color:var(--ink); margin-bottom:18px}
+  .opts{display:flex; flex-direction:column; gap:8px}
+  .opt{
+    display:block; position:relative;
+    padding:11px 14px 11px 40px; border:1px solid var(--rule); border-radius:3px;
+    background:#FFFCF4; cursor:pointer; transition:.14s;
+    font-size:14px; line-height:1.7; color:var(--ink2); text-align:left;
+    font-family:inherit; width:100%;
+  }
+  .opt:hover{background:#fff; border-color:var(--ink3); transform:translateX(2px)}
+  .opt .k{
+    position:absolute; left:13px; top:12px;
+    width:18px; height:18px; border-radius:2px;
+    background:rgba(120,100,60,.12); color:var(--ink3);
+    font-family:ui-monospace,Consolas,monospace; font-size:10px; font-style:normal;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .opt.right{background:rgba(74,122,82,.12); border-color:var(--green); color:var(--ink)}
+  .opt.right .k{background:var(--green); color:#fff}
+  .opt.wrong{background:rgba(180,68,58,.1); border-color:var(--red); color:var(--ink)}
+  .opt.wrong .k{background:var(--red); color:#fff}
+  .opt.lock{pointer-events:none}
+  .exp{
+    display:none; margin-top:14px; padding:12px 14px;
+    border-left:2px solid var(--rule); background:rgba(255,255,255,.5);
+    font-size:12.5px; line-height:1.85; color:var(--ink3);
+  }
+  .exp.on{display:block}
+  .exp b{color:var(--ink2)}
+  .card-foot{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 20px; border-top:1px solid var(--rule);
+    background:rgba(255,255,255,.4); font-size:11px; color:var(--ink3);
+  }
+  .next-btn{
+    padding:6px 18px; border:1px solid var(--ink); border-radius:3px;
+    background:var(--ink); color:var(--paper); font-size:12px;
+    letter-spacing:.06em; cursor:pointer; font-family:inherit; transition:.15s;
+  }
+  .next-btn:hover{background:var(--red); border-color:var(--red)}
+
+  /* ---------- 飘字 ---------- */
+  .float{
+    position:absolute; font-family:ui-monospace,Consolas,monospace;
+    font-size:15px; font-weight:600; pointer-events:none; z-index:20;
+    animation:floatUp 1s ease-out forwards;
+  }
+  @keyframes floatUp{
+    0%{opacity:0; transform:translateY(0) scale(.8)}
+    20%{opacity:1; transform:translateY(-6px) scale(1.1)}
+    100%{opacity:0; transform:translateY(-40px) scale(1)}
+  }
+  @keyframes shake{
+    0%,100%{transform:translate(0,0)}
+    20%{transform:translate(-6px,2px)}
+    40%{transform:translate(6px,-2px)}
+    60%{transform:translate(-4px,-1px)}
+    80%{transform:translate(4px,1px)}
+  }
+  #stage.shake{animation:shake .32s}
+
+  /* ---------- 结算 ---------- */
+  #over{
+    position:absolute; inset:0; background:rgba(26,23,20,.9);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:16px; z-index:30; color:var(--paper);
+  }
+  #over.on{display:flex}
+  #over h2{font-size:30px; letter-spacing:.12em; font-weight:400}
+  #over p{font-size:13px; color:rgba(245,240,224,.6); line-height:2; text-align:center}
+  #over button{
+    margin-top:8px; padding:9px 28px; border:1px solid rgba(245,240,224,.4);
+    background:none; color:var(--paper); border-radius:3px; font-size:13px;
+    letter-spacing:.1em; cursor:pointer; font-family:inherit; transition:.2s;
+  }
+  #over button:hover{background:var(--paper); color:var(--ink); border-color:var(--paper)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" width="880" height="520"></canvas>
+
+  <div id="hud">
+    <div class="bar-wrap"><b id="hpNum">5</b><div class="bar"><i id="hpFill" style="width:100%"></i></div></div>
+    <div class="bar-wrap"><span style="font-size:10px">战力</span><b id="pwNum">10</b><div class="bar"><i id="pwFill" style="width:20%"></i></div></div>
+    <div class="bar-wrap" id="comboWrap" style="opacity:0"><span style="color:var(--red)">连击</span><b id="comboNum" style="color:var(--red)">0</b></div>
+    <div id="mobBox"><span style="font-size:10px">剩余</span><b id="mobNum" style="color:var(--red)">1</b></div>
+  </div>
+
+  <div id="tips"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动　·　靠近怪物自动进入战斗　·　<kbd>1</kbd>-<kbd>4</kbd> 选答案</div>
+
+  <div id="battle">
+    <div class="card">
+      <div class="card-top">
+        <span class="mob-name" id="mobName">◆ 顺序表小妖</span>
+        <div class="mob-hp" id="mobPips"></div>
+      </div>
+      <div class="q-body">
+        <span class="q-tag" id="qTag">数据结构 · 1.2</span>
+        <div class="q-text" id="qText"></div>
+        <div class="opts" id="opts"></div>
+        <div class="exp" id="exp"></div>
+      </div>
+      <div class="card-foot">
+        <span id="footHint">选一个答案</span>
+        <button class="next-btn" id="nextBtn" style="visibility:hidden">继续 →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="over">
+    <h2 id="overTitle">胜利</h2>
+    <p id="overText"></p>
+    <button onclick="location.reload()">再来一次</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   考研闯关 · 第一关 MVP
+   验证核心机制：探索态走位 → 战斗态答题 → 数值变化
+   ============================================================ */
+
+const cvs = document.getElementById('game');
+const ctx = cvs.getContext('2d');
+const W = 880, H = 520;
+
+/* ---------- 题库（MVP 硬编码 5 题，后面从 data/ 读） ---------- */
+const QUESTIONS = [
+  {
+    tag: '数据结构 · 1.2',
+    q: '在长度为 n 的顺序表第 i 个位置插入一个元素，需要移动多少个元素？',
+    opts: ['n − i', 'n − i + 1', 'n − i − 1', 'i'],
+    ans: 1,
+    exp: '插入是 n−i+1，删除才是 n−i。差一个是因为插入允许插到表尾之后（i = n+1 时移动 0 个）。'
+  },
+  {
+    tag: '数据结构 · 2.2',
+    q: '8 位补码能表示的整数范围是？',
+    opts: ['−127 ~ 127', '−128 ~ 127', '0 ~ 255', '−128 ~ 128'],
+    ans: 1,
+    exp: '补码的 0 只有一种表示，所以比原码多一个负数：−128 ~ 127。原码才是 −127 ~ 127。'
+  },
+  {
+    tag: '数据结构 · 2.3',
+    q: '循环队列（牺牲一个单元）判满的条件是？',
+    opts: ['front == rear', '(rear + 1) % MaxSize == front', 'rear == MaxSize − 1', 'front + 1 == rear'],
+    ans: 1,
+    exp: '判空是 front == rear，判满是 (rear+1)%MaxSize == front。牺牲一个单元就是为了区分这两种情况。'
+  },
+  {
+    tag: '数据结构 · 5.3',
+    q: 'n 个结点的折半查找判定树，高度是多少？',
+    opts: ['⌊log₂n⌋ + 1', '⌈log₂n⌉', 'n / 2', 'log₂(n+1)'],
+    ans: 0,
+    exp: '判定树高度 = ⌊log₂n⌋ + 1，这也是最多比较次数。n=7 时高度 3。'
+  },
+  {
+    tag: '数据结构 · 6.3',
+    q: '快速排序在什么情况下最慢（O(n²)）？',
+    opts: ['数据随机排列', '数据基本有序或基本逆序', '数据全部相同', '数据规模很小'],
+    ans: 1,
+    exp: '已排序时每次划分都把元素分到一边，递归 n 层退化。解法是随机选基准或三数取中。'
+  }
+];
+
+/* ---------- 游戏状态 ---------- */
+const state = {
+  mode: 'explore',      // explore | battle | over
+  keys: {},
+  qIndex: 0,
+  kills: 0,
+  totalPower: 0
+};
+
+const player = {
+  x: 140, y: 300, r: 11, speed: 2.6,
+  hp: 5, maxHp: 5,
+  power: 10,
+  combo: 0,
+  hitFlash: 0
+};
+
+const monster = {
+  x: 640, y: 280, r: 12,
+  hp: 3, maxHp: 3,
+  x0: 640, y0: 280,
+  t: 0,
+  rage: 0,
+  alive: true,
+  hitFlash: 0
+};
+
+/* 障碍物（墙） */
+const walls = [
+  { x: 0,   y: 52,  w: 880, h: 14 },
+  { x: 0,   y: 506, w: 880, h: 14 },
+  { x: 0,   y: 52,  w: 14,  h: 468 },
+  { x: 866, y: 52,  w: 14,  h: 468 },
+  { x: 300, y: 150, w: 120, h: 16 },
+  { x: 300, y: 150, w: 16,  h: 90  },
+  { x: 460, y: 360, w: 140, h: 16 },
+  { x: 584, y: 300, w: 16,  h: 76  }
+];
+
+/* ---------- 输入 ---------- */
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  state.keys[k] = true;
+
+  if(state.mode === 'battle'){
+    const n = parseInt(e.key);
+    if(n >= 1 && n <= 4) chooseOption(n - 1);
+    if(e.key === 'Enter' || e.key === ' '){
+      const btn = document.getElementById('nextBtn');
+      if(btn.style.visibility === 'visible'){ e.preventDefault(); nextQuestion(); }
+    }
+  }
+  if(['w','a','s','d',' '].includes(k)) e.preventDefault();
+});
+window.addEventListener('keyup', e => { state.keys[e.key.toLowerCase()] = false; });
+
+/* ---------- 碰撞 ---------- */
+function hitsWall(x, y, r){
+  // 边界
+  if(x - r < 14 || x + r > 866 || y - r < 66 || y + r > 506) return true;
+  for(const w of walls){
+    if(x + r > w.x && x - r < w.x + w.w && y + r > w.y && y - r < w.y + w.h) return true;
+  }
+  return false;
+}
+
+/* ---------- 更新 ---------- */
+function update(){
+  if(state.mode !== 'explore') return;
+
+  let dx = 0, dy = 0;
+  if(state.keys['a']) dx -= 1;
+  if(state.keys['d']) dx += 1;
+  if(state.keys['w']) dy -= 1;
+  if(state.keys['s']) dy += 1;
+
+  if(dx || dy){
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = player.x + (dx / len) * player.speed;
+    const ny = player.y + (dy / len) * player.speed;
+    if(!hitsWall(nx, player.y, player.r)) player.x = nx;
+    if(!hitsWall(player.x, ny, player.r)) player.y = ny;
+  }
+
+  // 怪物游荡
+  if(monster.alive){
+    monster.t += 0.016;
+    monster.x = monster.x0 + Math.sin(monster.t * 1.1) * 42;
+    monster.y = monster.y0 + Math.cos(monster.t * 1.7) * 26;
+
+    // 靠近触发战斗
+    const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+    if(dist < player.r + monster.r + 14) startBattle();
+  }
+
+  if(player.hitFlash > 0) player.hitFlash -= 0.05;
+  if(monster.hitFlash > 0) monster.hitFlash -= 0.05;
+}
+
+/* ---------- 绘制 ---------- */
+function drawFloor(){
+  ctx.fillStyle = '#F0E9D6';
+  ctx.fillRect(0, 0, W, H);
+
+  // 交错地砖
+  const T = 44;
+  for(let y = 52; y < H; y += T){
+    for(let x = 0; x < W; x += T){
+      const odd = ((x / T) + (y / T)) % 2 === 0;
+      ctx.fillStyle = odd ? 'rgba(190,172,136,.10)' : 'rgba(190,172,136,.02)';
+      ctx.fillRect(x, y, T, T);
+    }
+  }
+  // 砖缝
+  ctx.strokeStyle = 'rgba(150,132,96,.14)';
+  ctx.lineWidth = 1;
+  for(let x = 0; x < W; x += T){
+    ctx.beginPath(); ctx.moveTo(x + .5, 52); ctx.lineTo(x + .5, H); ctx.stroke();
+  }
+  for(let y = 52; y < H; y += T){
+    ctx.beginPath(); ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); ctx.stroke();
+  }
+
+  // 装饰：草丛、碎石
+  const decos = [
+    [90, 120, 'grass'], [180, 430, 'grass'], [740, 120, 'grass'],
+    [420, 250, 'stone'], [700, 420, 'stone'], [110, 250, 'stone'],
+    [820, 300, 'grass'], [520, 460, 'grass']
+  ];
+  for(const [dx, dy, kind] of decos){
+    if(kind === 'grass'){
+      ctx.strokeStyle = 'rgba(110,130,90,.28)';
+      ctx.lineWidth = 1.6;
+      for(let i = -2; i <= 2; i++){
+        ctx.beginPath();
+        ctx.moveTo(dx + i * 3, dy + 8);
+        ctx.quadraticCurveTo(dx + i * 4, dy + 1, dx + i * 5.5, dy - 5);
+        ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = 'rgba(150,132,96,.22)';
+      ctx.beginPath();
+      ctx.ellipse(dx, dy, 7, 4.5, .3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      ctx.beginPath();
+      ctx.ellipse(dx - 1.5, dy - 1.5, 3, 1.8, .3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawWalls(){
+  for(const w of walls){
+    ctx.fillStyle = '#7E7052';
+    ctx.fillRect(w.x, w.y, w.w, w.h);
+    // 顶部高光
+    ctx.fillStyle = 'rgba(255,255,255,.18)';
+    ctx.fillRect(w.x, w.y, w.w, 3);
+    // 底部阴影
+    ctx.fillStyle = 'rgba(60,50,30,.18)';
+    ctx.fillRect(w.x, w.y + w.h - 2, w.w, 2);
+    // 砖纹
+    ctx.strokeStyle = 'rgba(60,50,30,.12)';
+    ctx.lineWidth = 1;
+    if(w.w > w.h){
+      for(let x = w.x + 22; x < w.x + w.w; x += 22){
+        ctx.beginPath(); ctx.moveTo(x + .5, w.y); ctx.lineTo(x + .5, w.y + w.h); ctx.stroke();
+      }
+    } else {
+      for(let y = w.y + 22; y < w.y + w.h; y += 22){
+        ctx.beginPath(); ctx.moveTo(w.x, y + .5); ctx.lineTo(w.x + w.w, y + .5); ctx.stroke();
+      }
+    }
+  }
+}
+
+function drawPlayer(){
+  const p = player;
+  const bob = Math.sin(Date.now() / 200) * 1.6;
+  const S = 1.55;   // 体型放大倍数
+  const w = 18 * S, h = 22 * S;
+
+  // 影子
+  ctx.fillStyle = 'rgba(120,100,60,.16)';
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y + h * 0.5 + 2, w * 0.52, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 身体
+  ctx.fillStyle = p.hitFlash > 0 ? '#B4443A' : '#2A2620';
+  ctx.fillRect(p.x - w / 2, p.y - h * 0.18 + bob, w, h * 0.68);
+
+  // 头
+  ctx.fillStyle = p.hitFlash > 0 ? '#C9574B' : '#3A352C';
+  ctx.fillRect(p.x - w * 0.4, p.y - h * 0.5 + bob, w * 0.8, h * 0.36);
+
+  // 眼睛
+  ctx.fillStyle = '#F5F0E0';
+  const eyeY = p.y - h * 0.36 + bob;
+  ctx.fillRect(p.x - w * 0.22, eyeY, 3, 4);
+  ctx.fillRect(p.x + w * 0.08, eyeY, 3, 4);
+
+  // 脚下光晕
+  ctx.strokeStyle = 'rgba(47,92,130,.22)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(p.x, p.y + h * 0.5 + 2, w * 0.6, 6, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawMonster(){
+  if(!monster.alive) return;
+  const m = monster;
+  const pulse = 1 + Math.sin(Date.now() / 180) * 0.05;
+  const size = 38 * pulse;
+
+  // 狂暴光环
+  if(m.rage > 0){
+    for(let i = 0; i < m.rage; i++){
+      ctx.strokeStyle = `rgba(180,68,58,${0.22 - i * 0.05})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, size * 0.62 + i * 7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // 影子
+  ctx.fillStyle = 'rgba(120,100,60,.18)';
+  ctx.beginPath();
+  ctx.ellipse(m.x, m.y + size * 0.5, size * 0.36, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 身体
+  ctx.fillStyle = m.hitFlash > 0 ? '#F0A090' : '#B4443A';
+  ctx.fillRect(m.x - size / 2, m.y - size / 2, size, size);
+
+  // 高光
+  ctx.fillStyle = 'rgba(255,255,255,.22)';
+  ctx.fillRect(m.x - size / 2, m.y - size / 2, size, 4);
+
+  // 眼睛
+  ctx.fillStyle = '#FFFDF2';
+  const eyeY = m.y - size * 0.14;
+  const ew = size * 0.2, eh = size * 0.24;
+  ctx.fillRect(m.x - size * 0.28, eyeY, ew, eh);
+  ctx.fillRect(m.x + size * 0.08, eyeY, ew, eh);
+  ctx.fillStyle = '#2A2620';
+  const look = Math.sin(Date.now() / 900) * 2;
+  ctx.fillRect(m.x - size * 0.2 + look, eyeY + eh * 0.35, size * 0.09, size * 0.1);
+  ctx.fillRect(m.x + size * 0.16 + look, eyeY + eh * 0.35, size * 0.09, size * 0.1);
+
+  // 血条
+  const bw = 44, bh = 4.5;
+  const bx = m.x - bw / 2, by = m.y - size / 2 - 13;
+  ctx.fillStyle = 'rgba(180,68,58,.18)';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = '#B4443A';
+  ctx.fillRect(bx, by, bw * (m.hp / m.maxHp), bh);
+}
+
+function drawVignette(){
+  const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.95);
+  g.addColorStop(0, 'rgba(60,50,30,0)');
+  g.addColorStop(1, 'rgba(60,50,30,.16)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function draw(){
+  drawFloor();
+  drawWalls();
+  drawMonster();
+  drawPlayer();
+  drawVignette();
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- 战斗 ---------- */
+function startBattle(){
+  state.mode = 'battle';
+  state.qIndex = state.qIndex % QUESTIONS.length;
+  renderQuestion();
+  document.getElementById('battle').classList.add('on');
+  document.getElementById('mobBox').classList.add('on');
+  updateHUD();
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[state.qIndex];
+  document.getElementById('qTag').textContent = q.tag;
+  document.getElementById('qText').textContent = q.q;
+
+  const box = document.getElementById('opts');
+  box.innerHTML = '';
+  q.opts.forEach((text, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<i class="k">' + (i + 1) + '</i>' + text;
+    b.onclick = () => chooseOption(i);
+    box.appendChild(b);
+  });
+
+  document.getElementById('exp').classList.remove('on');
+  document.getElementById('exp').textContent = '';
+  document.getElementById('nextBtn').style.visibility = 'hidden';
+  document.getElementById('footHint').textContent = '选一个答案（按 1-4 也可以）';
+  renderPips();
+}
+
+function renderPips(){
+  const box = document.getElementById('mobPips');
+  box.innerHTML = '';
+  for(let i = 0; i < monster.maxHp; i++){
+    const d = document.createElement('span');
+    d.className = 'pip' + (i >= monster.hp ? ' gone' : '');
+    box.appendChild(d);
+  }
+}
+
+function chooseOption(i){
+  if(state.mode !== 'battle') return;
+  if(document.getElementById('nextBtn').style.visibility === 'visible') return;
+
+  const q = QUESTIONS[state.qIndex];
+  const opts = [...document.querySelectorAll('.opt')];
+  opts.forEach(o => o.classList.add('lock'));
+
+  const correct = i === q.ans;
+  opts[i].classList.add(correct ? 'right' : 'wrong');
+  if(!correct) opts[q.ans].classList.add('right');
+
+  if(correct){
+    // 答对：怪物掉血，玩家战力涨，连击+
+    player.combo++;
+    const bonus = player.combo >= 3 ? 2 : 0;
+    player.power += 2 + bonus;
+    monster.hp--;
+    monster.hitFlash = 1;
+    floatText('+' + (2 + bonus) + ' 战力', monster.x, monster.y - 20, '#2F5C82');
+    if(player.combo >= 3) floatText('连击 ×' + player.combo, monster.x, monster.y - 44, '#B4443A');
+    if(monster.hp <= 0){
+      monster.alive = false;
+      state.kills++;
+      floatText('击破！', monster.x, monster.y - 20, '#4A7A52');
+    }
+  } else {
+    // 答错：玩家掉血，怪物回血 + 狂暴（真的变难）
+    player.combo = 0;
+    player.hp--;
+    monster.rage = Math.min(4, monster.rage + 1);
+
+    // 回血 + 上限提高，让「变难」肉眼可见
+    if(monster.maxHp < 6){
+      monster.maxHp++;
+      monster.hp = Math.min(monster.maxHp, monster.hp + 2);
+    } else {
+      monster.hp = monster.maxHp;
+    }
+
+    player.hitFlash = 1;
+    document.getElementById('stage').classList.add('shake');
+    setTimeout(() => document.getElementById('stage').classList.remove('shake'), 340);
+    floatText('−1', player.x, player.y - 26, '#B4443A');
+    floatText('狂暴 ' + monster.rage, monster.x, monster.y - 20, '#B4443A');
+  }
+
+  document.getElementById('exp').innerHTML = '<b>解析　</b>' + q.exp;
+  document.getElementById('exp').classList.add('on');
+  document.getElementById('footHint').textContent = correct ? '答对了' : '答错了，怪物变强了';
+  document.getElementById('nextBtn').style.visibility = 'visible';
+
+  updateHUD();
+  renderPips();
+}
+
+function nextQuestion(){
+  document.getElementById('battle').classList.remove('on');
+
+  // 胜利 / 失败判定
+  if(player.hp <= 0){ return endGame(false); }
+  if(!monster.alive){
+    state.mode = 'explore';
+    // 简单结算：全部打完就胜利
+    setTimeout(() => endGame(true), 400);
+    return;
+  }
+
+  // 继续打同一只怪（换下一题）
+  state.mode = 'battle';
+  state.qIndex = (state.qIndex + 1) % QUESTIONS.length;
+  renderQuestion();
+  document.getElementById('battle').classList.add('on');
+}
+
+/* ---------- HUD ---------- */
+function updateHUD(){
+  document.getElementById('hpNum').textContent = Math.max(0, player.hp);
+  document.getElementById('hpFill').style.width = Math.max(0, player.hp / player.maxHp * 100) + '%';
+  document.getElementById('pwNum').textContent = player.power;
+  document.getElementById('pwFill').style.width = Math.min(100, player.power / 30 * 100) + '%';
+
+  const cw = document.getElementById('comboWrap');
+  cw.style.opacity = player.combo > 0 ? 1 : 0;
+  document.getElementById('comboNum').textContent = player.combo;
+
+  document.getElementById('mobNum').textContent = monster.alive ? 1 : 0;
+}
+
+/* ---------- 飘字 ---------- */
+function floatText(text, x, y, color){
+  const el = document.createElement('div');
+  el.className = 'float';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.transform = 'translate(-50%,-50%)';
+  document.getElementById('stage').appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+/* ---------- 结算 ---------- */
+function endGame(win){
+  state.mode = 'over';
+  document.getElementById('battle').classList.remove('on');
+  document.getElementById('over').classList.add('on');
+  document.getElementById('overTitle').textContent = win ? '通关' : '倒下了';
+  document.getElementById('overTitle').style.color = win ? '#B4443A' : 'rgba(245,240,224,.5)';
+  document.getElementById('overText').innerHTML = win
+    ? '击败了 1 只怪，最终战力 <b style="color:#7FA8C4">' + player.power + '</b><br>剩余生命 ' + player.hp + ' / 5'
+    : '生命耗尽。别灰心 —— 答错的题才是要重点看的地方。<br>本局战力 ' + player.power;
+}
+
+/* ---------- 启动 ---------- */
+document.getElementById('nextBtn').onclick = nextQuestion;
+updateHUD();
+loop();
+</script>
+</body>
+</html>
