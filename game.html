@@ -429,7 +429,7 @@ const LEVELS = [
    traits:['multi','rapid','armor','pierce']},
   {n:4,  waves:4, types:['drone','shooter'], map:'fortress', mods:['elite'],
    traits:['multi','rapid','armor','pierce','regen'], newEnemy:'shooter'},
-  {n:5,  waves:4, types:['drone','shooter'], map:'ring', mods:[],
+  {n:5,  waves:0, types:['drone','shooter'], map:'ring', mods:[], goal:'survive', survive:3600,
    traits:['multi','rapid','armor','pierce','regen','speed']},
   {n:6,  waves:5, types:['drone','shooter'], map:'rooms', mods:['iron'],
    traits:['multi','rapid','armor','pierce','regen','speed','crit']},
@@ -475,6 +475,7 @@ const G = {
   slowT:0, rageT:0, pendReward:null,
   traits:{}, orbitA:0, chainCd:0, regenCd:0,
   qOrder:'random', qPool:[], curQ:null,
+  goal:'clear', surviveLeft:0, surviveTotal:0,
   level:1, wave:0, totalWaves:3, waveState:'gap', waveTimer:240,
   waveLeft:0, waveGap:480, waveBonus:1, settled:false, newTip:null
 };
@@ -895,8 +896,21 @@ function update(){
   for(const f of G.floats){ f.y -= 0.55; f.life--; }
   G.floats = G.floats.filter(f => f.life > 0);
 
-  // --- 波次 ---
-  updateWaves();
+  // --- 目标推进 ---
+  if(G.goal === 'survive'){
+    if(G.state === 'play'){
+      G.surviveLeft--;
+      if(G.surviveLeft <= 0){
+        victory();
+      } else {
+        if(G.t % 80 === 0 && G.enemies.length < 6) spawnEnemy();
+        if(G.t % 8 === 0) updateWaveUI();
+        if(G.t % 60 === 0) checkSettle();
+      }
+    }
+  } else {
+    updateWaves();
+  }
 
   // --- 镜头 ---
   const camTX = p.x - G.viewW/(2*G.zoom);
@@ -1028,6 +1042,14 @@ function updateWaveUI(){
   const el = document.getElementById('wavebar');
   if(!el) return;
 
+  if(G.goal === 'survive'){
+    const sec = Math.ceil(Math.max(0, G.surviveLeft) / 60);
+    el.className = 'wavebar on';
+    el.innerHTML = '生存 <b>' + sec + '</b> 秒　·　场上 <b>' + G.enemies.length + '</b> 个' +
+                   '<span class="go">撑住就行</span>';
+    return;
+  }
+
   if(G.newTip && G.newTip.t > 0){
     el.className = 'wavebar on tip';
     el.innerHTML = '⚠ 新敌人出现：<b style="color:' + G.newTip.col + '">' + G.newTip.name + '</b>';
@@ -1054,7 +1076,14 @@ function checkSettle(){
   if(total < 6) return;
   const rate = G.okN / total;
   const need = G.diff === 'easy' ? 0.6 : (G.diff === 'normal' ? 0.7 : 0.8);
-  if(rate >= need && G.wave >= Math.ceil(G.totalWaves * 0.5)){
+  if(rate < need) return;
+
+  if(G.goal === 'survive'){
+    if(G.surviveLeft < G.surviveTotal * 0.5){
+      G.settled = true;
+      showSettle(false);
+    }
+  } else if(G.wave >= Math.ceil(G.totalWaves * 0.5)){
     G.settled = true;
     showSettle(false);
   }
@@ -1095,7 +1124,7 @@ function showSettle(final){
     '<h1 style="color:' + (final ? '#5fe08a' : '#7fd6ff') + '">' +
       (final ? '关 卡 完 成' : '可 以 结 算') + '</h1>' +
     '<div class="hint">' +
-      '第 ' + G.level + ' 关 · 第 ' + G.wave + ' / ' + G.totalWaves + ' 波<br>' +
+      '第 ' + G.level + ' 关 · ' + (G.goal === 'survive' ? '生存关' : ('第 ' + G.wave + ' / ' + G.totalWaves + ' 波')) + '<br>' +
       '<div style="font-size:30px;letter-spacing:6px;color:#ffd166;margin-bottom:8px">' + starHtml + '</div>' +
       '答对 <b style="color:#5fe08a">' + G.okN + '</b> / ' + total + '（' + rate + '%）' +
       '　得分 <b style="color:#ffd166">' + G.score + '</b>' +
@@ -1125,7 +1154,10 @@ function startLevel(lv){
   if(lv > LEVELS.length){ lv = LEVELS.length; }
   const cfg = levelCfg(lv);
   G.level = lv;
-  G.totalWaves = cfg.waves;
+  G.totalWaves = cfg.waves || 0;
+  G.goal = cfg.goal || 'clear';
+  G.surviveTotal = cfg.survive || 0;
+  G.surviveLeft = G.surviveTotal;
   G.wave = 0;
   G.waveState = 'gap';
   G.waveTimer = 240;

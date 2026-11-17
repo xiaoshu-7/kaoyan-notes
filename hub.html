@@ -447,7 +447,7 @@ const LV_BRIEF = [
   {map:'中央堡垒', mods:'⚡'},
   {map:'十字通道', mods:''},
   {map:'中央堡垒', mods:'💀'},
-  {map:'环形走廊', mods:''},
+  {map:'环形走廊', mods:'', goal:'生存'},
   {map:'四角房间', mods:'🛡'},
   {map:'十字通道', mods:'🔥'},
   {map:'中央堡垒', mods:''},
@@ -585,8 +585,9 @@ function render(){
     ).join('');
 
     const br = LV_BRIEF[i-1] || {map:'', mods:''};
+    const extra = [br.mods, br.goal].filter(Boolean).join(' · ');
     const sub = unlocked
-      ? (p.waves ? (br.map + (br.mods ? ' · ' + br.mods : '')) : br.map)
+      ? (br.map + (extra ? ' · ' + extra : ''))
       : br.map;
 
     d.innerHTML =
