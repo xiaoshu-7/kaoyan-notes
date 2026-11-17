@@ -175,7 +175,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
     <span class="name">刷题防线</span>
     <span class="kv" id="topKv">—</span>
     <span class="sp"></span>
-    <span class="kv">WASD 移动 · 鼠标瞄准 · 自动开火 · 1-4 / 点击 答题</span>
+    <span class="kv">WASD 移动 · 鼠标瞄准 · 按住左键开火 · 1-4 或点击答题</span>
   </div>
 
   <div class="main">
@@ -187,8 +187,8 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
           <h1>刷 题 防 线</h1>
           <div class="hint">
             基地在中央，敌军从四面八方压来。<br>
-            左手 WASD 移动，右手鼠标瞄准，炮台自动开火。<br>
-            答对升火力，答错敌军变强。
+            左手 WASD 移动，右手鼠标瞄准。<br>
+            答对获得奖励，答错没有惩罚，但敌军会随时间变强。
           </div>
 
           <div class="opt-row">
@@ -206,6 +206,14 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
               <button data-v="easy">简单</button>
               <button data-v="normal" class="on">普通</button>
               <button data-v="hard">困难</button>
+            </div>
+          </div>
+
+          <div class="opt-row">
+            <span class="lbl">开 火</span>
+            <div class="seg" id="segFire">
+              <button data-v="manual" class="on">手动</button>
+              <button data-v="auto">自动</button>
             </div>
           </div>
 
@@ -295,7 +303,8 @@ const G = {
   spawnCd:0, killed:0,
   score:0, okN:0, noN:0, streak:0,
   shake:0, zoom:1,
-  viewW:0, viewH:0
+  viewW:0, viewH:0,
+  fireMode:'manual', floats:[]
 };
 
 const cv = document.getElementById('cv');
@@ -343,8 +352,8 @@ function genWorld(){
       const dx = c-cx, dy = r-cy;
       if(Math.abs(dx) <= 5 && Math.abs(dy) <= 5) continue;   // 基地周围留空
       // 棋盘式：偶数行列才有机会成墙，保证奇数行列永远通行
-      if(r%2===0 && c%2===0 && Math.random() < 0.34) w[r][c] = 1;
-      else if(Math.random() < 0.018) w[r][c] = 1;
+      if(r%2===0 && c%2===0 && Math.random() < 0.34) w[r][c] = 2;
+      else if(Math.random() < 0.018) w[r][c] = 2;
     }
   }
   G.world = w;
@@ -390,7 +399,7 @@ function findFreeCell(c0, r0){
 function solidAt(px, py){
   const c = Math.floor(px / TILE), r = Math.floor(py / TILE);
   if(r<0||r>=G.rows||c<0||c>=G.cols) return true;
-  return G.world[r][c] === 1;
+  return G.world[r][c] > 0;
 }
 
 function hitsWall(x, y, rad){
@@ -479,9 +488,10 @@ function update(){
   const mwy = mouse.y + G.cam.y;
   p.angle = Math.atan2(mwy - p.y, mwx - p.x);
 
-  // --- 自动开火 ---
+  // --- 开火（手动：按住左键/空格；自动：一直射） ---
   if(p.cd > 0) p.cd--;
-  if(p.cd <= 0){
+  const wantFire = G.fireMode === 'auto' || mouse.down || keys[' '];
+  if(wantFire && p.cd <= 0){
     fire(p.x + Math.cos(p.angle)*13, p.y + Math.sin(p.angle)*13, p.angle, 'player', p.lv);
     p.cd = p.lv >= 3 ? 8 : (p.lv >= 2 ? 11 : 15);
   }
@@ -496,8 +506,16 @@ function update(){
 
     const nx = e.x + Math.cos(ang)*e.speed;
     const ny = e.y + Math.sin(ang)*e.speed;
-    if(!hitsWall(nx, e.y, e.r)) e.x = nx;
-    if(!hitsWall(e.x, ny, e.r)) e.y = ny;
+    const blockX = hitsWall(nx, e.y, e.r);
+    const blockY = hitsWall(e.x, ny, e.r);
+    if(!blockX) e.x = nx;
+    if(!blockY) e.y = ny;
+    e.blocked = (blockX && blockY);
+    // 被墙挡住 → 朝墙开火打穿，不再傻站着
+    if(e.blocked && e.cd <= 0){
+      fire(e.x, e.y, ang, 'enemy', 1);
+      e.cd = 45;
+    }
 
     // 撞基地
     if(Math.hypot(e.x-G.base.x, e.y-G.base.y) < G.base.r + e.r - 3){
@@ -525,7 +543,13 @@ function update(){
       b.x += Math.cos(b.a) * (b.speed/steps);
       b.y += Math.sin(b.a) * (b.speed/steps);
       if(b.x<0||b.x>G.worldW||b.y<0||b.y>G.worldH){ b.dead=true; break; }
-      if(solidAt(b.x, b.y)){ b.dead=true; spark(b.x,b.y); break; }
+      const wc = Math.floor(b.x/TILE), wr2 = Math.floor(b.y/TILE);
+      if(wr2>=0 && wr2<G.rows && wc>=0 && wc<G.cols && G.world[wr2][wc] > 0){
+        G.world[wr2][wc]--;
+        b.dead = true;
+        spark(b.x, b.y);
+        break;
+      }
 
       if(b.owner === 'player'){
         for(const e of G.enemies){
@@ -549,6 +573,10 @@ function update(){
   // --- 粒子 ---
   for(const q of G.parts){ q.x+=q.vx; q.y+=q.vy; q.vx*=.94; q.vy*=.94; q.life--; }
   G.parts = G.parts.filter(q => q.life>0);
+
+  // --- 飘字 ---
+  for(const f of G.floats){ f.y -= 0.55; f.life--; }
+  G.floats = G.floats.filter(f => f.life > 0);
 
   // --- 刷兵 ---
   G.spawnCd--;
@@ -671,16 +699,25 @@ function render(){
   // 墙
   for(let r=r0;r<r1;r++){
     for(let c=c0;c<c1;c++){
-      if(G.world[r][c] !== 1) continue;
+      if(G.world[r][c] <= 0) continue;
+      const hpw = G.world[r][c];
+      if(hpw <= 0) continue;
       const x = c*TILE, y = r*TILE;
       const pad = 2.5;
-      ctx.fillStyle = 'rgba(22,52,40,.72)';
+      ctx.fillStyle = hpw >= 2 ? 'rgba(22,52,40,.74)' : 'rgba(46,32,22,.8)';
       ctx.fillRect(x+pad, y+pad, TILE-pad*2, TILE-pad*2);
-      ctx.strokeStyle = 'rgba(90,200,145,.26)';
+      ctx.strokeStyle = hpw >= 2 ? 'rgba(90,200,145,.26)' : 'rgba(210,140,80,.42)';
       ctx.lineWidth = 1;
       ctx.strokeRect(x+pad+.5, y+pad+.5, TILE-pad*2-1, TILE-pad*2-1);
-      ctx.fillStyle = 'rgba(120,230,170,.05)';
+      ctx.fillStyle = hpw >= 2 ? 'rgba(120,230,170,.05)' : 'rgba(255,180,110,.12)';
       ctx.fillRect(x+pad+1, y+pad+1, TILE-pad*2-2, 2);
+      if(hpw < 2){
+        ctx.strokeStyle = 'rgba(220,150,90,.45)';
+        ctx.beginPath();
+        ctx.moveTo(x+pad+5, y+pad+4); ctx.lineTo(x+TILE-pad-6, y+TILE-pad-5);
+        ctx.moveTo(x+TILE-pad-7, y+pad+5); ctx.lineTo(x+pad+6, y+TILE-pad-4);
+        ctx.stroke();
+      }
     }
   }
 
@@ -771,6 +808,17 @@ function render(){
     ctx.globalAlpha = 1;
   }
 
+  // 飘字
+  ctx.textAlign = 'center';
+  ctx.font = '600 11px "Cascadia Code", Consolas, monospace';
+  for(const f of G.floats){
+    ctx.globalAlpha = Math.min(1, f.life / 30);
+    ctx.fillStyle = f.color;
+    ctx.fillText(f.text, f.x, f.y);
+  }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+
   ctx.restore();   // 世界变换结束
 
   drawMinimap();
@@ -793,7 +841,7 @@ function drawMinimap(){
   ctx.fillStyle = 'rgba(90,200,145,.2)';
   for(let r=0;r<G.rows;r+=2)
     for(let c=0;c<G.cols;c+=2)
-      if(G.world[r][c]===1) ctx.fillRect(mx + c*TILE*sx, my + r*TILE*sy, 1.6, 1.6);
+      if(G.world[r][c]>0) ctx.fillRect(mx + c*TILE*sx, my + r*TILE*sy, 1.6, 1.6);
 
   ctx.fillStyle = 'rgba(255,214,102,.9)';
   ctx.fillRect(mx + G.base.x*sx - 1.5, my + G.base.y*sy - 1.5, 3, 3);
@@ -879,19 +927,24 @@ function answer(pick){
   else { btns[pick].classList.add('wrong'); btns[q.a].classList.add('miss'); }
 
   const why = document.getElementById('why');
-  why.innerHTML = '<b>' + (right?'✓ 正确　':'✗ 答错　') + '</b>' + q.why;
+  const ABCD = ['A','B','C','D'];
+  if(G.diff === 'hard'){
+    why.innerHTML = right
+      ? '<b>✓ 正确</b>　困难模式不显示解析，错题会进错题集。'
+      : '<b>✗ 错误</b>　正确答案 ' + ABCD[q.a] + '：' + q.o[q.a];
+  } else {
+    why.innerHTML = '<b>' + (right?'✓ 正确　':'✗ 答错　') + '</b>' + q.why;
+  }
   why.className = 'why on';
 
   if(right){
     G.okN++; G.streak++;
-    G.score += 180 + G.streak * 40;
-    if(G.player.lv < 3 && G.streak % 3 === 0) G.player.lv++;
+    G.score += 120 + G.streak * 30;
+    grantReward();
     Sound.right();
   } else {
     G.noN++; G.streak = 0;
-    G.score = Math.max(0, G.score - 60);
-    for(const e of G.enemies) e.hp++;
-    if(G.noN % 2 === 0){ for(let i=0;i<2;i++) spawnEnemy(); }
+    addFloat(G.player.x, G.player.y - 24, '未获奖励', '#7a9090');
     Sound.wrong();
     wrongList.push({q:q.q, pick, right:q.a, why:q.why});
     saveWrong(q.q, pick);
@@ -899,6 +952,35 @@ function answer(pick){
   updateHud();
 
   setTimeout(() => { if(G.state==='play') nextQuestion(); }, right ? 1300 : 2500);
+}
+
+function addFloat(x, y, text, color){
+  G.floats.push({x, y, text, color, life: 75});
+}
+
+function grantReward(){
+  const p = G.player;
+  const pool = [];
+  if(p.lv < 3) pool.push('lv');
+  if(G.base.hp <= G.base.maxHp - 12) pool.push('heal');
+  pool.push('shield', 'shield', 'score', 'score');
+  const k = pool[Math.floor(Math.random()*pool.length)];
+
+  if(k === 'lv'){
+    p.lv++;
+    addFloat(p.x, p.y - 26, '火力 → Lv' + p.lv, '#ffd166');
+  } else if(k === 'heal'){
+    const add = Math.min(12, G.base.maxHp - G.base.hp);
+    G.base.hp += add;
+    addFloat(G.base.x, G.base.y - 40, '基地 +' + add, '#5fe08a');
+  } else if(k === 'shield'){
+    p.shield = Math.max(p.shield, 360);
+    addFloat(p.x, p.y - 26, '护盾 6 秒', '#7fd6ff');
+  } else {
+    const s = 150 + G.streak * 30;
+    G.score += s;
+    addFloat(p.x, p.y - 26, '+' + s, '#a8e6ff');
+  }
 }
 
 function saveWrong(q, pick){
@@ -920,7 +1002,7 @@ function startGame(){
 
   G.state = 'play';
   G.t = 0; G.score = 0; G.okN = 0; G.noN = 0; G.streak = 0;
-  G.enemies = []; G.bullets = []; G.parts = [];
+  G.enemies = []; G.bullets = []; G.parts = []; G.floats = [];
   G.spawnCd = 70; G.killed = 0; G.shake = 0; G.zoom = 1;
   wrongList = []; qIdx = 0; qLocked = true;
 
@@ -961,6 +1043,7 @@ const MOVE = ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
 document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if(MOVE.includes(k)){ keys[k] = true; e.preventDefault(); }
+  if(k === ' '){ keys[' '] = true; e.preventDefault(); }
   if(G.state === 'play'){
     if(k>='1' && k<='4'){ answer(parseInt(k)-1); e.preventDefault(); }
   }
@@ -969,6 +1052,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => {
   const k = e.key.toLowerCase();
   if(MOVE.includes(k)) keys[k] = false;
+  if(k === ' ') keys[' '] = false;
 });
 
 cv.addEventListener('mousemove', e => {
@@ -976,6 +1060,8 @@ cv.addEventListener('mousemove', e => {
   mouse.x = e.clientX - r.left;
   mouse.y = e.clientY - r.top;
 });
+cv.addEventListener('mousedown', e => { mouse.down = true; e.preventDefault(); });
+window.addEventListener('mouseup', () => { mouse.down = false; });
 
 function bindSeg(id, key){
   const box = document.getElementById(id);
@@ -989,6 +1075,7 @@ function bindSeg(id, key){
 }
 bindSeg('segSize', 'size');
 bindSeg('segDiff', 'diff');
+bindSeg('segFire', 'fireMode');
 
 document.getElementById('startBtn').onclick = startGame;
 
