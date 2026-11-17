@@ -368,7 +368,35 @@ const BANK = [
   {tag:'L8',q:'两个长度分别为 m 和 n 的有序表合并成一个有序表，时间复杂度是？',o:['O(m×n)', 'O(log(m+n))', 'O(max(m,n))', 'O(m+n)'],a:3,why:'双指针从头比较，每次取较小的放入结果，两个表各遍历一次，所以是 O(m+n)。这是归并排序的核心操作。'},
   {tag:'L9',q:'约瑟夫环问题（n 个人围圈报数，报到 m 的出列）最适合用（　）实现。',o:['栈', '顺序表', '队列', '循环链表'],a:3,why:'循环链表天然适合围成圈，每次数到 m 就删除结点，然后从下一个人继续。用数组也能做，但要处理删除后的下标移动。'},
   {tag:'L9',q:'LRU（最近最少使用）缓存的核心数据结构通常是？',o:['顺序表', '栈', '队列', '哈希表 + 双向链表'],a:3,why:'哈希表负责 O(1) 查找，双向链表负责 O(1) 移动到表头（表示刚用过）。淘汰时删链表尾。这是「哈希 + 链表」的经典组合。'},
-  {tag:'L9',q:'两个多项式相加（用链表存储），合并同类项的做法是？',o:['排序后相加', '双指针遍历，指数相等就系数相加，不等就取指数小的', '用栈', '用队列'],a:1,why:'两个多项式按指数递增排列，双指针比较：指数相同就系数相加，不同就把指数小的那项放入结果。思想和合并有序表一样。'}
+  {tag:'L9',q:'两个多项式相加（用链表存储），合并同类项的做法是？',o:['排序后相加', '双指针遍历，指数相等就系数相加，不等就取指数小的', '用栈', '用队列'],a:1,why:'两个多项式按指数递增排列，双指针比较：指数相同就系数相加，不同就把指数小的那项放入结果。思想和合并有序表一样。'},
+  {tag:'S1',q:'栈的特点是？',o:['后进先出（LIFO）', '随机存取', '按优先级存取', '先进先出（FIFO）'],a:0,why:'栈是后进先出（Last In First Out）。最后压入的元素最先弹出。队列才是先进先出。'},
+  {tag:'S1',q:'顺序栈中，栈顶指针 top 通常指向？',o:['栈顶元素的下标（初始为 −1）', '栈底元素的下标', '栈的中间位置', '栈顶元素的下一个位置（初始为 0）'],a:0,why:'常见写法有两种：top 指向栈顶元素（初始 −1，栈空条件 top == −1）；或 top 指向栈顶的下一个空位（初始 0）。两种都行，但入栈出栈的代码要配套。'},
+  {tag:'S1',q:'顺序栈（top 指向栈顶元素，初始为 −1）的入栈操作是？',o:['S[top] = x; top++;', 'top++; S[top] = x;', 'S[top+1] = x; top−−;', 'top−−; S[top] = x;'],a:1,why:'先让 top 加 1 指向新的空位，再放元素。出栈则相反：先取 S[top]，再 top−−。'},
+  {tag:'S1',q:'顺序栈（top 指向栈顶元素，初始为 −1）的栈空条件是？',o:['top == −1', 'top == 0', 'top == MAXSIZE', 'top == MAXSIZE−1'],a:0,why:'初始时 top = −1 表示没有元素。每压入一个 top 加 1，所以栈空时 top 回到 −1。栈满时 top == MAXSIZE−1。'},
+  {tag:'S1',q:'顺序栈（容量 MAXSIZE）的栈满条件是？',o:['top == MAXSIZE', 'top == 0', 'top == MAXSIZE − 1', 'top == MAXSIZE + 1'],a:2,why:'数组下标从 0 到 MAXSIZE−1，top 指向栈顶元素，所以 top == MAXSIZE−1 时满了。再压入就会越界。'},
+  {tag:'S1',q:'链栈的栈顶通常在链表的哪个位置？',o:['链表中间', '任意位置', '链表尾部', '链表头部'],a:3,why:'链栈用链表头部做栈顶，因为插入删除在头部是 O(1)，在尾部要遍历 O(n)。所以链栈的 push/pop 都在头结点之后操作。'},
+  {tag:'S1',q:'以下哪个操作不是栈的基本操作？',o:['读栈顶元素', '入栈', '出栈', '在栈中间插入元素'],a:3,why:'栈只能在栈顶操作，不能在中间插入。这就是「操作受限」的含义：插入删除只允许在端点进行。'},
+  {tag:'S1',q:'栈和队列的共同点是？',o:['都只能在端点处插入和删除', '都是先进先出', '都支持随机访问', '都是后进先出'],a:0,why:'栈和队列都是操作受限的线性表：只能在端点操作（栈在栈顶，队列在两端）。区别是栈后进先出、队列先进先出。'},
+  {tag:'S2',q:'若入栈顺序是 1、2、3，则以下哪个出栈序列是不可能的？',o:['3、2、1', '2、1、3', '1、2、3', '3、1、2'],a:3,why:'3 先出栈说明 1、2 都在栈里，此时栈顶是 2，下一个出栈的只能是 2，不可能是 1。所以 3、1、2 不可能。n 个元素出栈序列有 Catalan 数种。'},
+  {tag:'S2',q:'若入栈顺序是 1、2、3、4，出栈序列是 2、4、3、1，是否可能？',o:['不可能', '可能', '需要额外栈', '只能部分出栈'],a:1,why:'1 进、2 进、2 出（栈：1）、3 进、4 进、4 出、3 出、1 出。完全合法。判断方法：模拟一遍，出栈时看是否在栈顶。'},
+  {tag:'S2',q:'括号匹配检验最适合用（　）实现。',o:['队列', '栈', '数组', '树'],a:1,why:'左括号入栈，遇到右括号就看栈顶是不是对应的左括号。匹配就弹出，不匹配就报错。最后栈空说明全部匹配。'},
+  {tag:'S2',q:'中缀表达式转后缀表达式时，需要用（　）辅助。',o:['队列', '栈', '链表', '数组'],a:1,why:'中缀转后缀用栈暂存运算符，遇到优先级不高于栈顶的运算符就先弹出。后缀表达式求值也是用栈（操作数入栈，遇运算符弹两个算完再压回）。'},
+  {tag:'S2',q:'后缀表达式（逆波兰式）求值时，操作数应该？',o:['存数组', '放入队列', '直接输出', '压入栈'],a:3,why:'遇到操作数就压栈；遇到运算符就弹出两个操作数，计算后把结果压回栈。最后栈里剩一个数就是答案。'},
+  {tag:'S2',q:'递归函数调用时，系统用什么保存返回地址和局部变量？',o:['堆', '队列', '栈', '静态区'],a:2,why:'每次递归调用都会在栈上压入一个「栈帧」，保存参数、局部变量、返回地址。递归太深会导致栈溢出（Stack Overflow）。'},
+  {tag:'S2',q:'两个栈共享一个数组空间（共享栈）时，栈满的条件是？',o:['top1 == MAXSIZE', 'top2 == 0', 'top1 + 1 == top2', 'top1 == top2'],a:2,why:'两个栈分别从数组两端向中间生长，当两个栈顶指针相邻（top1 + 1 == top2）时，空间用完。共享栈能把空间利用率提到最高。'},
+  {tag:'S2',q:'栈在（　）中有应用。',o:['图的广度优先遍历', '文件压缩', '括号匹配、表达式求值、递归调用', '数据排序'],a:2,why:'栈的三大经典应用：括号匹配检验、表达式求值（中缀转后缀）、函数递归调用。数据排序和 BFS 用队列。'},
+  {tag:'Q1',q:'队列的特点是？',o:['随机存取', '按优先级存取', '后进先出（LIFO）', '先进先出（FIFO）'],a:3,why:'队列是先进先出（First In First Out）。从队尾入队，从队头出队。栈才是后进先出。'},
+  {tag:'Q1',q:'循环队列（容量 MAXSIZE）判空的条件是？',o:['(rear+1)%MAXSIZE == front', 'front == rear', 'front == 0', 'rear == MAXSIZE−1'],a:1,why:'循环队列用 front == rear 表示空。但这样满的时候也可能 front == rear，所以要用「少用一个空间」或其他方式区分。'},
+  {tag:'Q1',q:'循环队列（容量 MAXSIZE，少用一个空间）的队满条件是？',o:['(rear+1)%MAXSIZE == front', 'rear == front', '(front+1)%MAXSIZE == rear', 'rear == MAXSIZE−1'],a:0,why:'队满时 rear 的下一个位置就是 front，所以 (rear+1)%MAXSIZE == front。取模是为了让指针绕回数组开头。'},
+  {tag:'Q1',q:'循环队列中，当前元素个数（少用一个空间）的计算公式是？',o:['rear − front', 'rear + front', '(rear − front + MAXSIZE) % MAXSIZE', '(front − rear + MAXSIZE) % MAXSIZE'],a:2,why:'rear 可能小于 front（绕回了），所以要先加 MAXSIZE 再取模，保证结果非负。这个公式必考。'},
+  {tag:'Q1',q:'若循环队列的容量是 10（少用一个空间），实际最多能存多少个元素？',o:['8 个', '11 个', '9 个', '10 个'],a:2,why:'少用一个空间用于区分空和满，所以实际容量是 MAXSIZE−1 = 9。这是「浪费一个空间」的代价。'},
+  {tag:'Q1',q:'顺序队列（非循环）会出现「假溢出」，原因是？',o:['指针越界', '数组太小', '队列真的满了', '队头有空位但队尾已经到了数组末尾'],a:3,why:'出队后 front 后移，前面空出位置，但 rear 到了数组末尾就不能再入队了——明明还有空间却报满，这就是假溢出。解决办法是改成循环队列。'},
+  {tag:'Q1',q:'循环队列为了区分队空和队满，通常采用的方法是？',o:['多用一个存储单元', '用计数器以外的标记位', '少用一个存储单元', '用两个指针'],a:2,why:'常见做法是保留一个空位：队满条件是 (rear+1)%MAXSIZE == front。这样队空（front == rear）和队满不会混淆。也可以加一个 size 计数器。'},
+  {tag:'Q1',q:'队列的入队操作在（　）进行，出队操作在（　）进行。',o:['都在队尾', '队头、队尾', '都在队头', '队尾、队头'],a:3,why:'入队（enqueue）在队尾追加，出队（dequeue）从队头删除。这才符合先进先出。'},
+  {tag:'Q2',q:'链队列的队头和队尾分别在链表的？',o:['都在头部', '队头在尾部，队尾在头部', '队头在链表头部，队尾在链表尾部', '都在尾部'],a:2,why:'链队列用头指针指队头（出队 O(1)），用尾指针指队尾（入队 O(1)）。这样两个操作都是常数时间。'},
+  {tag:'Q2',q:'双端队列（Deque）的特点是？',o:['两端都可以入队和出队', '只能入不能出', '只能一端入队一端出队', '只能出不能入'],a:0,why:'双端队列两端都能插入和删除。如果限制某一端只能入或只能出，就退化成栈或普通队列。408 常考「输入受限」和「输出受限」两种变体。'},
+  {tag:'Q2',q:'二叉树的层次遍历需要用（　）辅助。',o:['队列', '数组', '栈', '链表'],a:0,why:'层次遍历是逐层访问，用队列：根入队，然后每次出队一个、访问它、把它的左右孩子入队。DFS（深度优先）才用栈。'},
+  {tag:'Q2',q:'操作系统中的打印缓冲区，本质上是（　）的应用。',o:['栈', '树', '数组', '队列'],a:3,why:'多个进程要打印，按提交顺序排队，先提交先打印——这就是队列。缓冲区、消息队列、任务调度都是队列的应用。'}
 ];
 
 /* ============================================================
@@ -430,31 +458,68 @@ const MODS = {
 
 
 /* ============ 关卡：一章 10 关，逐关解锁敌人与特性 ============ */
-const LEVELS = [
-  {n:1,  waves:3, types:['drone'], map:'fortress', mods:[], bank:'L1',
-   traits:['multi','rapid','armor']},
-  {n:2,  waves:3, types:['drone'], map:'fortress', mods:['rush'], bank:'L2',
-   traits:['multi','rapid','armor']},
-  {n:3,  waves:4, types:['drone'], map:'cross', mods:[], bank:'L3',
-   traits:['multi','rapid','armor','pierce']},
-  {n:4,  waves:4, types:['drone','shooter'], map:'fortress', mods:['elite'], bank:'L4',
-   traits:['multi','rapid','armor','pierce','regen'], newEnemy:'shooter'},
-  {n:5,  waves:0, types:['drone','shooter'], map:'ring', mods:[], goal:'survive', survive:3600, bank:'L5',
-   traits:['multi','rapid','armor','pierce','regen','speed']},
-  {n:6,  waves:5, types:['drone','shooter'], map:'rooms', mods:['iron'], bank:'L6',
-   traits:['multi','rapid','armor','pierce','regen','speed','crit']},
-  {n:7,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'], bank:'L7',
-   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce'], newEnemy:'charger'},
-  {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[], goal:'escort', bank:['L8','L9'],
-   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
-  {n:9,  waves:6, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'], bank:['L7','L8','L9'],
-   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
-  {n:10, waves:6, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true, bank:['L1','L2','L3','L4','L5','L6','L7','L8','L9'],
-   traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'], newEnemy:'tank'}
-];
+const CHAPTERS = {
+  1: [   // 第一章 线性表 —— 主题：排成一列
+    {n:1,  waves:3, types:['drone'], map:'fortress', mods:[], bank:'L1',
+     traits:['multi','rapid','armor']},
+    {n:2,  waves:3, types:['drone'], map:'fortress', mods:['rush'], bank:'L2',
+     traits:['multi','rapid','armor']},
+    {n:3,  waves:4, types:['drone'], map:'cross', mods:[], bank:'L3',
+     traits:['multi','rapid','armor','pierce']},
+    {n:4,  waves:4, types:['drone','shooter'], map:'fortress', mods:['elite'], bank:'L4',
+     traits:['multi','rapid','armor','pierce','regen'], newEnemy:'shooter'},
+    {n:5,  waves:0, types:['drone','shooter'], map:'ring', mods:[], bank:'L5',
+     goal:'survive', survive:3600,
+     traits:['multi','rapid','armor','pierce','regen','speed']},
+    {n:6,  waves:5, types:['drone','shooter'], map:'rooms', mods:['iron'], bank:'L6',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit']},
+    {n:7,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'], bank:'L7',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce'], newEnemy:'charger'},
+    {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[], bank:['L8','L9'],
+     goal:'escort',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
+    {n:9,  waves:6, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
+     bank:['L7','L8','L9'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
+    {n:10, waves:6, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+     bank:['L1','L2','L3','L4','L5','L6','L7','L8','L9'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
+     newEnemy:'tank'}
+  ],
+  2: [   // 第二章 栈与队列 —— 主题：成批涌入
+    {n:1,  waves:3, types:['drone'], map:'fortress', mods:[], bank:'S1',
+     traits:['multi','rapid','armor']},
+    {n:2,  waves:4, types:['drone'], map:'cross', mods:['rush'], bank:'S1',
+     traits:['multi','rapid','armor']},
+    {n:3,  waves:4, types:['drone','shooter'], map:'rooms', mods:[], bank:'S2',
+     traits:['multi','rapid','armor','pierce'], newEnemy:'shooter'},
+    {n:4,  waves:5, types:['drone','shooter'], map:'fortress', mods:['iron'], bank:'S2',
+     traits:['multi','rapid','armor','pierce','regen']},
+    {n:5,  waves:0, types:['drone','shooter'], map:'ring', mods:[], bank:['S1','S2'],
+     goal:'survive', survive:4200,
+     traits:['multi','rapid','armor','pierce','regen','speed']},
+    {n:6,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'], bank:'Q1',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit'], newEnemy:'charger'},
+    {n:7,  waves:5, types:['drone','shooter','charger'], map:'rooms', mods:['elite'], bank:'Q1',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce']},
+    {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[], bank:'Q2',
+     goal:'escort',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
+    {n:9,  waves:6, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
+     bank:['Q1','Q2'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
+    {n:10, waves:6, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+     bank:['S1','S2','Q1','Q2'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
+     newEnemy:'tank'}
+  ]
+};
+
+const CHAP_NAMES = {1:'第一章 线性表', 2:'第二章 栈与队列'};
 
 function levelCfg(n){
-  return LEVELS[Math.min(n, LEVELS.length) - 1];
+  const chs = CHAPTERS[G.chapter] || CHAPTERS[1];
+  return chs[Math.min(n, chs.length) - 1];
 }
 
 /* 敌人类型 */
@@ -486,6 +551,7 @@ const G = {
   traits:{}, orbitA:0, chainCd:0, regenCd:0,
   qOrder:'random', qPool:[], curQ:null,
   goal:'clear', surviveLeft:0, surviveTotal:0, beacon:null,
+  chapter:1,
   level:1, wave:0, totalWaves:3, waveState:'gap', waveTimer:240,
   waveLeft:0, waveGap:480, waveBonus:1, settled:false, newTip:null
 };
@@ -1191,13 +1257,13 @@ function showSettle(final){
     '</div>' +
     cardHtml +
     '<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center">' +
-      '<button class="btn-start" id="endBtn">' + (G.level >= LEVELS.length ? '完成本关' : '下一关') + '</button>' +
+      '<button class="btn-start" id="endBtn">' + (G.level >= 10 ? '完成本章' : '下一关') + '</button>' +
       '<button class="btn-start" id="contBtn" style="background:#22402f;color:#a8dcc0">继续挑战</button>' +
       '<button class="btn-start" id="hubBtn" style="background:#1a2e24;color:#7fa894">回主界面</button>' +
     '</div>';
 
   document.getElementById('endBtn').onclick = () => {
-    if(G.level >= LEVELS.length){ location.href = 'hub.html'; return; }
+    if(G.level >= 10){ location.href = 'hub.html?subject=ds&chapter=' + G.chapter; return; }
     m.innerHTML = ''; m.classList.add('off');
     G.state = 'play';
     startLevel(G.level + 1);
@@ -1211,7 +1277,7 @@ function showSettle(final){
 }
 
 function startLevel(lv){
-  if(lv > LEVELS.length){ lv = LEVELS.length; }
+  if(lv > 10){ lv = 10; }
   const cfg = levelCfg(lv);
   G.level = lv;
   G.totalWaves = cfg.waves || 0;
@@ -1916,18 +1982,22 @@ function startGame(){
   Sound.unlock();
   fitCanvas();
 
+  // 先解析章节/关卡参数
+  const qs2 = new URLSearchParams(location.search);
+  const chQ = parseInt(qs2.get('chapter'));
+  G.chapter = (chQ === 2) ? 2 : 1;
+  const lvQ = parseInt(qs2.get('level'));
+  const startLv = (lvQ >= 1 && lvQ <= 10) ? lvQ : 1;
+
   G.state = 'play';
   G.t = 0; G.score = 0; G.okN = 0; G.noN = 0; G.streak = 0;
   G.killed = 0; G.shake = 0; G.zoom = 1;
   wrongList = []; qLocked = true;
-  buildQuestionPool();
 
   document.getElementById('menu').classList.add('off');
   document.getElementById('topKv').textContent =
-    SIZES[G.size].name + '地图 · ' + DIFFS[G.diff].name;
+    (CHAP_NAMES[G.chapter] || '') + ' · ' + SIZES[G.size].name + '地图 · ' + DIFFS[G.diff].name;
 
-  const lvQ = parseInt(new URLSearchParams(location.search).get('level'));
-  const startLv = (lvQ >= 1 && lvQ <= LEVELS.length) ? lvQ : 1;
   startLevel(startLv);
   nextQuestion();
 }

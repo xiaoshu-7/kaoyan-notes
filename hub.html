@@ -419,6 +419,8 @@ body{
    数据
    ============================================================ */
 const SUBJECT_ID = new URLSearchParams(location.search).get('subject') || 'ds';
+const CH_Q = parseInt(new URLSearchParams(location.search).get('chapter'));
+const CHAPTER_ID = (CH_Q === 2) ? 2 : 1;
 
 const SUBJECTS_META = {
   ds:  {name:'数据结构',       chap1:'线性表'},
@@ -431,13 +433,41 @@ const SUBJECTS_META = {
 };
 
 const CHAPTERS = [
-  {no:1, name:'第一章', ready:true},
-  {no:2, name:'第二章', ready:false},
-  {no:3, name:'第三章', ready:false},
-  {no:4, name:'第四章', ready:false},
-  {no:5, name:'第五章', ready:false},
-  {no:6, name:'第六章', ready:false}
+  {no:1, name:'第一章 线性表', ready:true},
+  {no:2, name:'第二章 栈与队列', ready:true},
+  {no:3, name:'第三章 串', ready:false},
+  {no:4, name:'第四章 树', ready:false},
+  {no:5, name:'第五章 图', ready:false},
+  {no:6, name:'第六章 查找与排序', ready:false}
 ];
+
+/* 每章的地图/修饰符/目标 */
+const LV_BRIEF_BY_CH = {
+  1: [
+    {map:'中央堡垒', mods:''},
+    {map:'中央堡垒', mods:'⚡'},
+    {map:'十字通道', mods:''},
+    {map:'中央堡垒', mods:'💀'},
+    {map:'环形走廊', mods:'', goal:'生存'},
+    {map:'四角房间', mods:'🛡'},
+    {map:'十字通道', mods:'🔥'},
+    {map:'中央堡垒', mods:'', goal:'护送'},
+    {map:'空旷竞技场', mods:'⚡🛡'},
+    {map:'中央堡垒', mods:'💀', goal:'BOSS'}
+  ],
+  2: [
+    {map:'中央堡垒', mods:''},
+    {map:'十字通道', mods:'⚡'},
+    {map:'四角房间', mods:''},
+    {map:'中央堡垒', mods:'🛡'},
+    {map:'环形走廊', mods:'', goal:'生存'},
+    {map:'十字通道', mods:'🔥'},
+    {map:'四角房间', mods:'💀'},
+    {map:'中央堡垒', mods:'', goal:'护送'},
+    {map:'空旷竞技场', mods:'⚡🛡'},
+    {map:'中央堡垒', mods:'💀', goal:'BOSS'}
+  ]
+};
 
 const LV_TOTAL = 10;
 
@@ -515,7 +545,7 @@ function loadWrong(){
   try{ return JSON.parse(localStorage.getItem(KEY_WRONG) || '[]'); }catch(e){ return []; }
 }
 
-function lvKey(n){ return SUBJECT_ID + '-1-' + n; }
+function lvKey(n){ return SUBJECT_ID + '-' + CHAPTER_ID + '-' + n; }
 
 /* ============================================================
    渲染
@@ -523,15 +553,19 @@ function lvKey(n){ return SUBJECT_ID + '-1-' + n; }
 function renderHeader(){
   const meta = SUBJECTS_META[SUBJECT_ID] || SUBJECTS_META.ds;
   document.getElementById('subjName').textContent = meta.name;
-  document.getElementById('crumb').textContent = '第一章 · ' + meta.chap1;
+  const chName = CHAPTERS[CHAPTER_ID - 1] ? CHAPTERS[CHAPTER_ID - 1].name : '';
+  document.getElementById('crumb').textContent = chName;
 
   const box = document.getElementById('chapters');
   box.innerHTML = '';
   CHAPTERS.forEach(c => {
     const b = document.createElement('button');
     b.textContent = c.name + (c.ready ? '' : ' 🔒');
-    if(c.ready && c.no === 1) b.className = 'on';
+    if(c.ready && c.no === CHAPTER_ID) b.className = 'on';
     if(!c.ready) b.disabled = true;
+    if(c.ready && c.no !== CHAPTER_ID){
+      b.onclick = () => { location.href = 'hub.html?subject=' + SUBJECT_ID + '&chapter=' + c.no; };
+    }
     box.appendChild(b);
   });
 }
@@ -584,7 +618,8 @@ function render(){
       '<span class="' + (k < p.stars ? 'on' : 'off') + '">★</span>'
     ).join('');
 
-    const br = LV_BRIEF[i-1] || {map:'', mods:''};
+    const briefs = LV_BRIEF_BY_CH[CHAPTER_ID] || LV_BRIEF_BY_CH[1];
+    const br = briefs[i-1] || {map:'', mods:''};
     const extra = [br.mods, br.goal].filter(Boolean).join(' · ');
     const sub = unlocked
       ? (br.map + (extra ? ' · ' + extra : ''))
@@ -596,7 +631,7 @@ function render(){
       '<div class="waves">' + sub + '</div>';
 
     if(unlocked){
-      d.onclick = () => { location.href = 'game.html?level=' + i; };
+      d.onclick = () => { location.href = 'game.html?chapter=' + CHAPTER_ID + '&level=' + i; };
     }
     grid.appendChild(d);
   }
