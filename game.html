@@ -76,6 +76,18 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .hud .sp{flex:1}
 .hud .threat{color:var(--cyan)}
 
+.traits{
+  display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  padding:6px 12px;background:var(--panel2);
+  border:1px solid var(--line2);border-radius:3px;
+  font-size:10px;min-height:27px;flex:0 0 auto;
+}
+.traits .tr{
+  padding:1px 7px;border:1px solid currentColor;border-radius:2px;
+  white-space:nowrap;letter-spacing:.02em;
+}
+.traits .tr b{font-weight:700;margin-left:3px}
+
 /* 菜单 */
 .menu{
   position:absolute;inset:0;z-index:8;
@@ -235,6 +247,8 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
         <span class="sp"></span>
         <span>连对 <b id="streakTxt">0</b></span>
       </div>
+
+      <div class="traits" id="traits"><span style="color:#3a4d44">答对题目可获得永久特性</span></div>
     </div>
 
     <div class="quiz">
@@ -320,7 +334,8 @@ const G = {
   shake:0, zoom:1,
   viewW:0, viewH:0,
   fireMode:'manual', floats:[],
-  slowT:0, rageT:0, pendReward:null
+  slowT:0, rageT:0, pendReward:null,
+  traits:{}, orbitA:0, chainCd:0, regenCd:0
 };
 
 const cv = document.getElementById('cv');
@@ -493,8 +508,9 @@ function update(){
   if(dx && dy){ dx *= 0.7071; dy *= 0.7071; }
 
   if(dx || dy){
-    const nx = p.x + dx*p.speed;
-    const ny = p.y + dy*p.speed;
+    const spdM = 1 + 0.15 * (G.traits.speed || 0);
+    const nx = p.x + dx*p.speed*spdM;
+    const ny = p.y + dy*p.speed*spdM;
     if(!hitsWall(nx, p.y, p.r)) p.x = nx;
     if(!hitsWall(p.x, ny, p.r)) p.y = ny;
   }
@@ -512,7 +528,7 @@ function update(){
   const wantFire = G.fireMode === 'auto' || mouse.down || keys[' '];
   if(wantFire && p.cd <= 0){
     fire(p.x + Math.cos(p.angle)*13, p.y + Math.sin(p.angle)*13, p.angle, 'player', p.lv);
-    p.cd = (p.lv >= 3 ? 8 : (p.lv >= 2 ? 11 : 15)) * (G.rageT > 0 ? 0.5 : 1);
+    p.cd = (p.lv >= 3 ? 8 : (p.lv >= 2 ? 11 : 15)) * (G.rageT > 0 ? 0.5 : 1) * Math.pow(0.82, G.traits.rapid || 0);
   }
 
   // --- 敌人 ---
@@ -564,7 +580,13 @@ function update(){
     }
     // 撞玩家
     if(p.shield <= 0 && Math.hypot(e.x-p.x, e.y-p.y) < e.r + p.r){
-      hurtPlayer(12); e.hp = 0; boom(e.x, e.y, '#ffd166'); continue;
+      if(G.traits.thorns){
+        e.hp -= 3 * G.traits.thorns;
+        addFloat(e.x, e.y-16, '-' + (3*G.traits.thorns), '#ff8fa3');
+      }
+      hurtPlayer(12);
+      boom(e.x, e.y, e.hp <= 0 ? '#ff8fa3' : '#ffd166');
+      e.hp = 0; continue;
     }
 
     // 敌人射击
@@ -586,6 +608,17 @@ function update(){
       if(b.x<0||b.x>G.worldW||b.y<0||b.y>G.worldH){ b.dead=true; break; }
       const wc = Math.floor(b.x/TILE), wr2 = Math.floor(b.y/TILE);
       if(wr2>=0 && wr2<G.rows && wc>=0 && wc<G.cols && G.world[wr2][wc] > 0){
+        if(b.bounce > 0){
+          b.bounce--;
+          const px = b.x - Math.cos(b.a)*8;
+          const py = b.y - Math.sin(b.a)*8;
+          if(solidAt(px, b.y)) b.a = Math.PI - b.a;
+          else if(solidAt(b.x, py)) b.a = -b.a;
+          else b.a = Math.PI - b.a;
+          b.x = px; b.y = py;
+          spark(b.x, b.y);
+          break;
+        }
         G.world[wr2][wc]--;
         b.dead = true;
         spark(b.x, b.y);
@@ -596,9 +629,19 @@ function update(){
         for(const e of G.enemies){
           if(e.hp<=0) continue;
           if(Math.hypot(b.x-e.x, b.y-e.y) < e.r+3){
-            e.hp--; e.flash=5; b.dead=true;
-            if(e.hp<=0){ boom(e.x,e.y,'#ff8f8f'); G.killed++; G.score+=120; }
-            else spark(b.x,b.y);
+            const crit = Math.random() < (b.crit||0) * 0.12;
+            e.hp -= crit ? 2 : 1;
+            e.flash = 5;
+            if(crit) addFloat(e.x, e.y-e.r-10, '×2', '#ffe066');
+            if(e.hp<=0){
+              boom(e.x,e.y,'#ff8f8f'); G.killed++; G.score+=120;
+              if(G.traits.steal && p.hp < p.maxHp){
+                p.hp = Math.min(p.maxHp, p.hp + 2*G.traits.steal);
+                addFloat(p.x, p.y-32, '+'+(2*G.traits.steal), '#ff6b8a');
+              }
+            } else spark(b.x,b.y);
+            if(b.pierce > 0) b.pierce--;
+            else b.dead = true;
             break;
           }
         }
@@ -634,6 +677,55 @@ function update(){
   G.cam.y += (camTY - G.cam.y) * 0.14;
   clampCam();
 
+  // --- 特性：再生 ---
+  if(G.traits.regen){
+    G.regenCd = (G.regenCd||0) + 1;
+    if(G.regenCd >= 90){
+      G.regenCd = 0;
+      if(p.hp < p.maxHp) p.hp = Math.min(p.maxHp, p.hp + 1);
+    }
+  }
+
+  // --- 特性：环绕光球 ---
+  if(G.traits.orbit){
+    G.orbitA += 0.048;
+    const cnt = G.traits.orbit;
+    for(let i=0;i<cnt;i++){
+      const a = G.orbitA + i*Math.PI*2/cnt;
+      const ox = p.x + Math.cos(a)*46;
+      const oy = p.y + Math.sin(a)*46;
+      for(const e of G.enemies){
+        if(e.hp <= 0) continue;
+        if(Math.hypot(e.x-ox, e.y-oy) < e.r + 7){
+          if(!e._orbT || G.t - e._orbT > 30){
+            e._orbT = G.t;
+            e.hp -= 1;
+            spark(ox, oy);
+          }
+        }
+      }
+    }
+  }
+
+  // --- 特性：电弧 ---
+  if(G.traits.chain){
+    G.chainCd = (G.chainCd||0) + 1;
+    if(G.chainCd >= 180){
+      G.chainCd = 0;
+      let best = null, bd = 400;
+      for(const e of G.enemies){
+        const d = Math.hypot(e.x-p.x, e.y-p.y);
+        if(d < bd){ bd = d; best = e; }
+      }
+      if(best){
+        best.hp -= 2 * G.traits.chain;
+        G.arc = {x1:p.x, y1:p.y, x2:best.x, y2:best.y, life:14};
+        Sound.hitWall();
+      }
+    }
+  }
+  if(G.arc){ G.arc.life--; if(G.arc.life <= 0) G.arc = null; }
+
   updateHud();
 }
 
@@ -647,15 +739,25 @@ function clampCam(){
 
 function fire(x, y, ang, owner, lv){
   if(owner === 'player'){
-    const mine = G.bullets.filter(b => b.owner==='player').length;
-    if(mine >= (lv>=3?3:2)) return;
+    const T = G.traits;
+    const count = 1 + Math.min(4, T.multi || 0);
+    const spread = 0.19;
+    const start = ang - (count-1)*spread/2;
+    if(G.bullets.length > 110) return;
+    for(let i=0;i<count;i++){
+      G.bullets.push({
+        x, y, a: start + i*spread,
+        speed: (lv>=2?8:6.5),
+        owner, dead:false,
+        pierce: T.pierce || 0,
+        bounce: T.bounce || 0,
+        crit: T.crit || 0
+      });
+    }
     Sound.shoot();
+    return;
   }
-  G.bullets.push({
-    x, y, a:ang,
-    speed: owner==='player' ? (lv>=2?8:6.5) : 4.2,
-    owner, dead:false
-  });
+  G.bullets.push({x, y, a:ang, speed:4.2, owner, dead:false, pierce:0, bounce:0, crit:0});
 }
 
 function pickType(stage){
@@ -881,6 +983,35 @@ function render(){
     ctx.restore();
   }
 
+  // 环绕光球
+  if(p && G.traits.orbit){
+    const cnt = G.traits.orbit;
+    for(let i=0;i<cnt;i++){
+      const a = G.orbitA + i*Math.PI*2/cnt;
+      const ox = p.x + Math.cos(a)*46;
+      const oy = p.y + Math.sin(a)*46;
+      ctx.fillStyle = 'rgba(199,125,255,.9)';
+      ctx.beginPath(); ctx.arc(ox, oy, 5, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(225,190,255,.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(ox, oy, 8.5, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+
+  // 电弧
+  if(G.arc){
+    const al = Math.max(0, G.arc.life/14);
+    ctx.strokeStyle = 'rgba(127,214,255,' + al + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(G.arc.x1, G.arc.y1);
+    const mx = (G.arc.x1+G.arc.x2)/2 + (Math.random()-.5)*28;
+    const my = (G.arc.y1+G.arc.y2)/2 + (Math.random()-.5)*28;
+    ctx.lineTo(mx, my);
+    ctx.lineTo(G.arc.x2, G.arc.y2);
+    ctx.stroke();
+  }
+
   // 子弹
   for(const b of G.bullets){
     ctx.strokeStyle = b.owner==='player' ? 'rgba(168,230,255,.3)' : 'rgba(255,154,154,.28)';
@@ -1066,70 +1197,51 @@ function addFloat(x, y, text, color){
   G.floats.push({x, y, text, color, life: 75});
 }
 
-const REWARDS = [
-  {id:'lv',     name:'火力 +1',  col:'#ffd166'},
-  {id:'shield', name:'护盾 6 秒', col:'#7fd6ff'},
-  {id:'heal',   name:'基地 +15', col:'#5fe08a'},
-  {id:'emp',    name:'EMP 清屏', col:'#ffe066'},
-  {id:'slow',   name:'时缓 5 秒', col:'#9bb7ff'},
-  {id:'rage',   name:'狂暴 8 秒', col:'#ff9f68'},
-  {id:'nuke',   name:'核弹',     col:'#ff5c5c'}
+/* ============ 永久特性（本局内累积，死了清空） ============ */
+const TRAITS = [
+  {id:'multi',  name:'多重射击', icon:'⋔', col:'#ffd166', max:4, desc:'每次多射 1 发（扇形）'},
+  {id:'pierce', name:'穿透',     icon:'➤', col:'#7fd6ff', max:3, desc:'子弹多穿 1 个敌人'},
+  {id:'bounce', name:'弹射',     icon:'⤡', col:'#9bb7ff', max:2, desc:'子弹碰墙反弹 1 次'},
+  {id:'rapid',  name:'速射',     icon:'⚡', col:'#ff9f68', max:3, desc:'射击间隔 -18%'},
+  {id:'crit',   name:'暴击',     icon:'✦', col:'#ffe066', max:3, desc:'12% 概率双倍伤害'},
+  {id:'armor',  name:'装甲',     icon:'▣', col:'#5fe08a', max:3, desc:'最大生命 +25 并回满'},
+  {id:'regen',  name:'再生',     icon:'♻', col:'#7fffd4', max:3, desc:'每 1.5 秒回 1 血'},
+  {id:'thorns', name:'荆棘',     icon:'✵', col:'#ff8fa3', max:2, desc:'被撞时反弹伤害'},
+  {id:'speed',  name:'疾行',     icon:'⇒', col:'#a8e6ff', max:3, desc:'移动速度 +15%'},
+  {id:'orbit',  name:'环绕',     icon:'◍', col:'#c77dff', max:3, desc:'增加 1 颗环绕光球'},
+  {id:'chain',  name:'电弧',     icon:'⌁', col:'#7fd6ff', max:3, desc:'每 3 秒电击最近敌人'},
+  {id:'steal',  name:'吸血',     icon:'♥', col:'#ff6b8a', max:2, desc:'击杀回 2 血'}
 ];
 
 function pickReward(){
-  const p = G.player;
-  const pool = [];
-  if(p.lv < 3) pool.push(REWARDS[0]);
-  if(G.base.hp < G.base.maxHp) pool.push(REWARDS[2]);
-  pool.push(REWARDS[1]);
-  if(G.enemies.length >= 3) pool.push(REWARDS[3]);
-  pool.push(REWARDS[4], REWARDS[5], REWARDS[6]);
-  return pool[Math.floor(Math.random()*pool.length)];
+  const pool = TRAITS.filter(t => (G.traits[t.id] || 0) < t.max);
+  if(!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function applyReward(r){
+function applyReward(t){
+  if(!t) return;
   const p = G.player;
-  if(!r) return;
-  switch(r.id){
-    case 'lv':
-      p.lv++;
-      addFloat(p.x, p.y - 28, '火力 → Lv' + p.lv, r.col);
-      break;
-    case 'shield':
-      p.shield = Math.max(p.shield, 360);
-      addFloat(p.x, p.y - 28, '护盾 6 秒', r.col);
-      break;
-    case 'heal': {
-      const a = Math.min(15, G.base.maxHp - G.base.hp);
-      G.base.hp += a;
-      addFloat(G.base.x, G.base.y - 44, '基地 +' + a, r.col);
-      break;
-    }
-    case 'emp': {
-      const cnt = G.enemies.length;
-      G.enemies.forEach(e => { boom(e.x, e.y, '#ffe066'); G.score += 60; });
-      G.enemies = [];
-      addFloat(p.x, p.y - 28, 'EMP 清屏 ×' + cnt, r.col);
-      break;
-    }
-    case 'slow':
-      G.slowT = 300;
-      addFloat(p.x, p.y - 28, '时缓 5 秒', r.col);
-      break;
-    case 'rage':
-      G.rageT = 480;
-      addFloat(p.x, p.y - 28, '狂暴 8 秒', r.col);
-      break;
-    case 'nuke': {
-      for(let i=0;i<4;i++){
-        const a = Math.random()*Math.PI*2, d = 60 + Math.random()*180;
-        boom(p.x + Math.cos(a)*d, p.y + Math.sin(a)*d, '#ff5c5c');
-      }
-      G.enemies.forEach(e => { if(Math.hypot(e.x-p.x, e.y-p.y) < 250) e.hp -= 6; });
-      addFloat(p.x, p.y - 28, '核弹', r.col);
-      break;
-    }
+  G.traits[t.id] = (G.traits[t.id] || 0) + 1;
+  const lv = G.traits[t.id];
+
+  if(t.id === 'armor'){
+    p.maxHp += 25;
+    p.hp = p.maxHp;
   }
+  addFloat(p.x, p.y - 30, t.name + ' Lv' + lv, t.col);
+  updateTraitsUI();
+}
+
+function updateTraitsUI(){
+  const box = document.getElementById('traits');
+  if(!box) return;
+  const list = TRAITS.filter(t => G.traits[t.id]);
+  if(!list.length){ box.innerHTML = '<span style="color:#3a4d44">答对题目可获得永久特性</span>'; return; }
+  box.innerHTML = list.map(t =>
+    '<span class="tr" style="color:' + t.col + ';border-color:' + t.col + '">' +
+    t.icon + ' ' + t.name + '<b>' + G.traits[t.id] + '</b></span>'
+  ).join('');
 }
 
 function saveWrong(q, pick){
@@ -1152,6 +1264,8 @@ function startGame(){
   G.state = 'play';
   G.t = 0; G.score = 0; G.okN = 0; G.noN = 0; G.streak = 0;
   G.enemies = []; G.bullets = []; G.parts = []; G.floats = [];
+  G.traits = {}; G.orbitA = 0; G.chainCd = 0; G.regenCd = 0; G.arc = null;
+  updateTraitsUI();
   G.spawnCd = 70; G.killed = 0; G.shake = 0; G.zoom = 1;
   wrongList = []; qIdx = 0; qLocked = true;
 
@@ -1257,6 +1371,11 @@ if(new URLSearchParams(location.search).has('demo')){
         cd: 9999, fireGap: 120
       });
     }
+    // demo 预设几个特性，方便验收
+    G.traits = {multi:2, pierce:1, crit:1, orbit:2, rapid:1, armor:1};
+    p.maxHp = 125; p.hp = 125;
+    updateTraitsUI();
+
     G.cam.x = p.x - G.viewW/2;
     G.cam.y = p.y - G.viewH/2;
     updateHud();
