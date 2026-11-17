@@ -91,6 +91,20 @@ body{
 }
 
 /* ---------- 关卡 ---------- */
+.chapters{
+  display:flex;gap:7px;flex-wrap:wrap;
+  padding:14px 28px 0;
+}
+.chapters button{
+  padding:6px 13px;background:#0a1710;color:var(--dim);
+  border:1px solid var(--line2);border-radius:2px;
+  font-family:inherit;font-size:10.5px;letter-spacing:.04em;
+  cursor:pointer;transition:.14s;
+}
+.chapters button:hover:not(:disabled){color:var(--ink);border-color:rgba(95,224,138,.4)}
+.chapters button.on{background:rgba(95,224,138,.13);color:var(--green);border-color:var(--green)}
+.chapters button:disabled{opacity:.35;cursor:not-allowed}
+
 .levels{padding:22px 28px 26px}
 .sec-title{
   font-size:10.5px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;
@@ -255,7 +269,7 @@ body{
 
 <div class="app">
   <div class="top">
-    <a href="index.html">← 返回笔记</a>
+    <a href="subjects.html">← 选择科目</a>
     <span class="name">刷题防线</span>
     <span class="sp"></span>
     <div class="acts">
@@ -267,8 +281,8 @@ body{
   </div>
 
   <div class="hero">
-    <div class="crumb">数据结构 · 第一章</div>
-    <h1>线性表</h1>
+    <div class="crumb" id="crumb">第一章 · 线性表</div>
+    <h1 id="subjName">数据结构</h1>
 
     <div class="starline">
       <span class="stars" id="starRow"></span>
@@ -289,6 +303,8 @@ body{
       <span style="color:#4d6b5c">（不答题拿不到星）</span>
     </div>
   </div>
+
+  <div class="chapters" id="chapters"></div>
 
   <div class="levels">
     <div class="sec-title">关 卡</div>
@@ -384,6 +400,27 @@ body{
 /* ============================================================
    数据
    ============================================================ */
+const SUBJECT_ID = new URLSearchParams(location.search).get('subject') || 'ds';
+
+const SUBJECTS_META = {
+  ds:  {name:'数据结构',       chap1:'线性表'},
+  coa: {name:'计算机组成原理', chap1:'计算机系统概述'},
+  os:  {name:'操作系统',       chap1:'操作系统概述'},
+  net: {name:'计算机网络',     chap1:'体系结构'},
+  math:{name:'数学一',         chap1:'高等数学'},
+  en:  {name:'英语一',         chap1:'基础能力'},
+  pol: {name:'政治',           chap1:'马克思主义基本原理'}
+};
+
+const CHAPTERS = [
+  {no:1, name:'第一章', ready:true},
+  {no:2, name:'第二章', ready:false},
+  {no:3, name:'第三章', ready:false},
+  {no:4, name:'第四章', ready:false},
+  {no:5, name:'第五章', ready:false},
+  {no:6, name:'第六章', ready:false}
+];
+
 const LV_TOTAL = 10;
 const KEY_PROG = 'qz:progress';
 const KEY_SET  = 'qz:settings';
@@ -433,11 +470,27 @@ function loadWrong(){
   try{ return JSON.parse(localStorage.getItem(KEY_WRONG) || '[]'); }catch(e){ return []; }
 }
 
-function lvKey(n){ return 'ds-1-' + n; }
+function lvKey(n){ return SUBJECT_ID + '-1-' + n; }
 
 /* ============================================================
    渲染
    ============================================================ */
+function renderHeader(){
+  const meta = SUBJECTS_META[SUBJECT_ID] || SUBJECTS_META.ds;
+  document.getElementById('subjName').textContent = meta.name;
+  document.getElementById('crumb').textContent = '第一章 · ' + meta.chap1;
+
+  const box = document.getElementById('chapters');
+  box.innerHTML = '';
+  CHAPTERS.forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c.name + (c.ready ? '' : ' 🔒');
+    if(c.ready && c.no === 1) b.className = 'on';
+    if(!c.ready) b.disabled = true;
+    box.appendChild(b);
+  });
+}
+
 function render(){
   const prog = loadProg();
   const wrong = loadWrong();
@@ -666,6 +719,7 @@ function renderSkins(){
 /* ============================================================
    启动
    ============================================================ */
+renderHeader();
 render();
 </script>
 </body>
