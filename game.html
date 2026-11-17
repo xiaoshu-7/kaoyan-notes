@@ -435,7 +435,7 @@ const LEVELS = [
    traits:['multi','rapid','armor','pierce','regen','speed','crit']},
   {n:7,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'],
    traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce'], newEnemy:'charger'},
-  {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[],
+  {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[], goal:'escort',
    traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
   {n:9,  waves:6, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
    traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
@@ -475,7 +475,7 @@ const G = {
   slowT:0, rageT:0, pendReward:null,
   traits:{}, orbitA:0, chainCd:0, regenCd:0,
   qOrder:'random', qPool:[], curQ:null,
-  goal:'clear', surviveLeft:0, surviveTotal:0,
+  goal:'clear', surviveLeft:0, surviveTotal:0, beacon:null,
   level:1, wave:0, totalWaves:3, waveState:'gap', waveTimer:240,
   waveLeft:0, waveGap:480, waveBonus:1, settled:false, newTip:null
 };
@@ -755,8 +755,10 @@ function update(){
       }
       continue;
     }
-    const tx = e.target === 'base' ? G.base.x : p.x;
-    const ty = e.target === 'base' ? G.base.y : p.y;
+    let tx, ty;
+    if(e.target === 'base'){ tx = G.base.x; ty = G.base.y; }
+    else if(e.target === 'beacon' && G.beacon){ tx = G.beacon.x; ty = G.beacon.y; }
+    else { tx = p.x; ty = p.y; }
     const ang = Math.atan2(ty - e.y, tx - e.x);
     e.angle = ang;
 
@@ -799,6 +801,15 @@ function update(){
       if(Math.hypot(e.x-G.base.x, e.y-G.base.y) < 74) damage(8);
       e.hp = 0; continue;
     }
+    // 撞信标
+    if(G.beacon && Math.hypot(e.x-G.beacon.x, e.y-G.beacon.y) < e.r + G.beacon.r){
+      G.beacon.hp -= 8;
+      boom(e.x, e.y, '#7fd6ff');
+      e.hp = 0;
+      if(G.beacon.hp <= 0){ G.beacon.hp = 0; beaconDown(); }
+      continue;
+    }
+
     // 撞玩家
     if(p.shield <= 0 && Math.hypot(e.x-p.x, e.y-p.y) < e.r + p.r){
       if(G.traits.thorns){
@@ -880,7 +891,11 @@ function update(){
           }
         }
       } else {
-        if(p.shield<=0 && Math.hypot(b.x-p.x, b.y-p.y) < p.r+3){
+        if(G.beacon && Math.hypot(b.x-G.beacon.x, b.y-G.beacon.y) < G.beacon.r + 3){
+          G.beacon.hp -= 4; b.dead = true; boom(b.x, b.y, '#7fd6ff');
+          if(G.beacon.hp <= 0){ G.beacon.hp = 0; beaconDown(); }
+        }
+        else if(p.shield<=0 && Math.hypot(b.x-p.x, b.y-p.y) < p.r+3){
           hurtPlayer(7); b.dead=true; boom(b.x,b.y,'#ffd166');
         }
       }
@@ -895,6 +910,14 @@ function update(){
   // --- 飘字 ---
   for(const f of G.floats){ f.y -= 0.55; f.life--; }
   G.floats = G.floats.filter(f => f.life > 0);
+
+  // 信标绕基地巡逻
+  if(G.goal === 'escort' && G.beacon){
+    G.beacon.angle += G.beacon.speed;
+    const bx = G.base.x + Math.cos(G.beacon.angle) * G.beacon.orbitR;
+    const by = G.base.y + Math.sin(G.beacon.angle) * G.beacon.orbitR;
+    if(!hitsWall(bx, by, G.beacon.r)){ G.beacon.x = bx; G.beacon.y = by; }
+  }
 
   // --- 目标推进 ---
   if(G.goal === 'survive'){
@@ -1042,6 +1065,14 @@ function updateWaveUI(){
   const el = document.getElementById('wavebar');
   if(!el) return;
 
+  if(G.goal === 'escort' && G.beacon){
+    el.className = 'wavebar on';
+    el.innerHTML = '护送信标 <b>' + Math.round(G.beacon.hp) + '</b>%　' +
+                   '第 <b>' + G.wave + '</b> / ' + G.totalWaves + ' 波' +
+                   '<span class="go">别让它被打到</span>';
+    return;
+  }
+
   if(G.goal === 'survive'){
     const sec = Math.ceil(Math.max(0, G.surviveLeft) / 60);
     el.className = 'wavebar on';
@@ -1089,6 +1120,25 @@ function checkSettle(){
   }
 }
 
+function beaconDown(){
+  G.state = 'over';
+  Sound.over();
+  const m = document.getElementById('menu');
+  m.classList.remove('off');
+  m.innerHTML =
+    '<h1 style="color:#ff6b6b;text-shadow:0 0 26px rgba(255,107,107,.5)">信 标 被 毁</h1>' +
+    '<div class="hint">护送失败<br>得分 <b style="color:#ffd166">' + G.score + '</b>　' +
+    '答对 <b style="color:#5fe08a">' + G.okN + '</b></div>' +
+    '<div style="display:flex;gap:10px;margin-top:6px">' +
+      '<button class="btn-start" id="retryBtn">再试一次</button>' +
+      '<button class="btn-start" id="hubBtn3" style="background:#1a2e24;color:#7fa894">回主界面</button>' +
+    '</div>';
+  document.getElementById('retryBtn').onclick = () => {
+    m.innerHTML = ''; m.classList.add('off'); startGame();
+  };
+  document.getElementById('hubBtn3').onclick = () => { location.href = 'hub.html'; };
+}
+
 function victory(){
   G.state = 'win';
   Sound.right();
@@ -1124,7 +1174,7 @@ function showSettle(final){
     '<h1 style="color:' + (final ? '#5fe08a' : '#7fd6ff') + '">' +
       (final ? '关 卡 完 成' : '可 以 结 算') + '</h1>' +
     '<div class="hint">' +
-      '第 ' + G.level + ' 关 · ' + (G.goal === 'survive' ? '生存关' : ('第 ' + G.wave + ' / ' + G.totalWaves + ' 波')) + '<br>' +
+      '第 ' + G.level + ' 关 · ' + (G.goal === 'survive' ? '生存关' : (G.goal === 'escort' ? '护送关' : ('第 ' + G.wave + ' / ' + G.totalWaves + ' 波'))) + '<br>' +
       '<div style="font-size:30px;letter-spacing:6px;color:#ffd166;margin-bottom:8px">' + starHtml + '</div>' +
       '答对 <b style="color:#5fe08a">' + G.okN + '</b> / ' + total + '（' + rate + '%）' +
       '　得分 <b style="color:#ffd166">' + G.score + '</b>' +
@@ -1158,6 +1208,12 @@ function startLevel(lv){
   G.goal = cfg.goal || 'clear';
   G.surviveTotal = cfg.survive || 0;
   G.surviveLeft = G.surviveTotal;
+
+  G.beacon = (G.goal === 'escort') ? {
+    x: G.base.x + 90, y: G.base.y,
+    r: 10, hp: 100, maxHp: 100,
+    angle: 0, orbitR: 90, speed: 0.005
+  } : null;
   G.wave = 0;
   G.waveState = 'gap';
   G.waveTimer = 240;
@@ -1264,7 +1320,8 @@ function spawnEnemy(){
       speed: spd,
       hp, maxHp: hp,
       elit: elite, flash: 0,
-      target: type === 'charger' ? 'player' : (Math.random() < 0.6 ? 'player' : 'base'),
+      target: (G.goal === 'escort' && Math.random() < 0.55) ? 'beacon'
+              : (type === 'charger' ? 'player' : (Math.random() < 0.6 ? 'player' : 'base')),
       keep: T.keep || 0,
       suicide: !!T.suicide,
       cd: 40 + Math.random()*60,
@@ -1385,6 +1442,30 @@ function render(){
   ctx.fillStyle = hpRate > .5 ? 'rgba(255,232,160,.9)' : 'rgba(255,150,120,.9)';
   ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
   ctx.restore();
+
+  // 护送信标
+  if(G.beacon && G.beacon.hp > 0){
+    const b = G.beacon;
+    const pl = 1 + Math.sin(G.t * 0.1) * 0.08;
+    ctx.strokeStyle = 'rgba(127,214,255,.35)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 1.9 * pl, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(127,214,255,.15)';
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 2.6 * pl, 0, Math.PI*2); ctx.stroke();
+
+    ctx.fillStyle = b.hp > 50 ? 'rgba(127,214,255,.9)' : 'rgba(255,120,120,.9)';
+    ctx.beginPath();
+    ctx.moveTo(b.x, b.y - b.r); ctx.lineTo(b.x + b.r, b.y);
+    ctx.lineTo(b.x, b.y + b.r); ctx.lineTo(b.x - b.r, b.y);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(210,245,255,.8)';
+    ctx.lineWidth = 1; ctx.stroke();
+
+    ctx.fillStyle = 'rgba(0,0,0,.55)';
+    ctx.fillRect(b.x - 12, b.y - b.r - 11, 24, 3);
+    ctx.fillStyle = b.hp > 50 ? '#5fe08a' : '#ff6b6b';
+    ctx.fillRect(b.x - 12, b.y - b.r - 11, 24 * (b.hp / b.maxHp), 3);
+  }
 
   // 敌人
   for(const e of G.enemies){
