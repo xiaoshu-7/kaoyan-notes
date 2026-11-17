@@ -306,6 +306,12 @@ function renderPortal(){
     + '<div class="lbl">总进度</div></div>'
     + '</div>'
 
+    + '<a class="game-banner" href="game.html">'
+    + '<span class="gb-icon">◈</span>'
+    + '<span class="gb-text"><b>坦克防线</b><em>边守边答题，答错敌人推进</em></span>'
+    + '<span class="gb-go">开战 →</span>'
+    + '</a>'
+
     + '<div class="portal-sec"><span class="ps-num">A</span>408 专业课<span class="ps-note">150 分，四门合卷</span></div>'
     + '<div class="subj-grid">' + proCards + '</div>'
 

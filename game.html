@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>坦克防线 · 知识突击</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --paper:#F4EFE2; --ink:#282620; --ink-2:#4E4A42; --ink-3:#7A7466;
+  --red:#B4443A; --green:#4A7A52; --rule:#D8CFB8; --rule-2:#E6DFCA;
+}
+body{
+  min-height:100vh;
+  background:#EDE7D8;
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.35),transparent 55%),
+    radial-gradient(circle at 80% 70%,rgba(255,255,255,.25),transparent 50%);
+  font-family:"Noto Serif SC","Source Han Serif SC","Songti SC",serif;
+  color:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px 16px;
+}
+
+.wrap{
+  display:grid;grid-template-columns:620px 420px;gap:0;
+  background:var(--paper);border-radius:3px;
+  box-shadow:0 14px 44px -14px rgba(90,74,40,.42),0 0 0 1px rgba(120,100,60,.14);
+  overflow:hidden;
+}
+
+/* ---------- 战场 ---------- */
+.field{position:relative;background:#EAE3D0;border-right:1px solid var(--rule)}
+#cv{display:block;width:620px;height:720px}
+
+.hud{
+  position:absolute;left:0;right:0;top:0;
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;
+  font-family:"Cascadia Code",Consolas,monospace;font-size:11px;
+  color:var(--ink-2);letter-spacing:.04em;
+  pointer-events:none;
+}
+.hud .hpbar{
+  flex:1;height:6px;background:rgba(120,100,60,.16);border-radius:3px;overflow:hidden;
+}
+.hud .hpbar i{display:block;height:100%;background:var(--green);transition:width .2s,background .2s}
+.hud .hpbar.low i{background:var(--red)}
+.hud .tag{
+  border:1px solid var(--rule);border-radius:2px;padding:2px 7px;
+  background:rgba(255,253,245,.7);
+}
+
+.overlay{
+  position:absolute;inset:0;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:14px;
+  background:rgba(244,239,226,.93);backdrop-filter:blur(2px);
+  text-align:center;padding:40px;
+}
+.overlay.on{display:flex}
+.overlay h2{font-size:30px;font-weight:600;letter-spacing:.06em}
+.overlay .sub{font-size:13px;color:var(--ink-3);line-height:2}
+.overlay .big{
+  font-family:"Cascadia Code",Consolas,monospace;font-size:44px;color:var(--red);
+  letter-spacing:.04em;
+}
+.btn{
+  font-family:"Noto Serif SC",serif;font-size:14px;letter-spacing:.1em;
+  padding:11px 28px;border:1.5px solid var(--ink);border-radius:2px;
+  background:none;color:var(--ink);cursor:pointer;transition:.16s;
+}
+.btn:hover{background:var(--ink);color:var(--paper)}
+
+/* ---------- 题目区 ---------- */
+.panel{
+  padding:24px 26px 22px;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,rgba(255,253,245,.6),transparent 200px);
+}
+.p-top{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding-bottom:10px;border-bottom:1.5px solid var(--ink);
+  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;
+  color:var(--ink-3);letter-spacing:.08em;
+}
+.p-top .combo{color:var(--red)}
+
+.p-subject{
+  margin-top:14px;font-size:10.5px;color:var(--ink-3);letter-spacing:.14em;
+  font-family:"Cascadia Code",Consolas,monospace;
+}
+.p-q{
+  margin-top:8px;font-size:17px;line-height:1.9;color:var(--ink);
+  min-height:86px;letter-spacing:.01em;
+}
+.p-q b{color:var(--red)}
+
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.opt{
+  display:flex;gap:10px;align-items:flex-start;
+  padding:10px 12px;border:1px solid var(--rule);border-radius:2px;
+  background:rgba(255,255,255,.5);cursor:pointer;transition:.14s;
+  font-size:15px;line-height:1.7;color:var(--ink-2);text-align:left;
+}
+.opt:hover{background:#fff;border-color:var(--ink-3)}
+.opt .k{
+  flex:0 0 auto;width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;
+  font-family:"Cascadia Code",Consolas,monospace;font-size:10px;color:var(--ink-3);
+  margin-top:2px;
+}
+.opt.right{border-color:var(--green);background:rgba(205,232,203,.45)}
+.opt.right .k{border-color:var(--green);color:var(--green)}
+.opt.wrong{border-color:var(--red);background:rgba(240,200,195,.4)}
+.opt.wrong .k{border-color:var(--red);color:var(--red)}
+.opt.dim{opacity:.45}
+
+.p-foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--rule-2)}
+.exp{
+  font-size:12.5px;line-height:1.85;color:var(--ink-2);
+  min-height:64px;padding:9px 11px;
+  background:rgba(255,253,242,.7);border-left:2px solid var(--rule);
+}
+.exp b{color:var(--red)}
+.exp .lb{color:var(--green);font-family:"Cascadia Code",Consolas,monospace;font-size:10px;letter-spacing:.1em}
+
+.stats{
+  display:flex;gap:18px;margin-top:12px;
+  font-family:"Cascadia Code",Consolas,monospace;font-size:10.5px;color:var(--ink-3);
+}
+.stats b{color:var(--ink);font-weight:400}
+
+/* 浮动提示 */
+.toast{
+  position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.8);
+  font-family:"Noto Serif SC",serif;font-size:26px;font-weight:600;
+  letter-spacing:.12em;pointer-events:none;opacity:0;
+  transition:opacity .18s,transform .3s cubic-bezier(.2,1.6,.4,1);
+  text-shadow:0 2px 12px rgba(244,239,226,.9);
+}
+.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.toast.good{color:var(--green)}
+.toast.bad{color:var(--red)}
+
+@media(max-width:1100px){
+  .wrap{grid-template-columns:1fr;width:100%;max-width:620px}
+  #cv{width:100%;height:auto;aspect-ratio:620/720}
+  .field{border-right:none;border-bottom:1px solid var(--rule)}
+  .panel{padding:20px}
+  .p-q{min-height:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="field">
+    <canvas id="cv" width="620" height="720"></canvas>
+    <div class="hud">
+      <span class="tag">基地</span>
+      <div class="hpbar" id="hpbar"><i id="hpfill" style="width:100%"></i></div>
+      <span class="tag" id="scoreTag">0 分</span>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="overlay on" id="ovStart">
+      <h2>坦克防线</h2>
+      <p class="sub">
+        坦克自动开火，你只管答题。<br>
+        答对一发重炮，答错敌人推进。<br>
+        守住基地，看能撑到第几题。
+      </p>
+      <button class="btn" id="btnStart">开始战斗</button>
+    </div>
+    <div class="overlay" id="ovOver">
+      <h2>基地失守</h2>
+      <div class="big" id="finalScore">0</div>
+      <p class="sub" id="finalStat">答对 0 题 / 共 0 题</p>
+      <button class="btn" id="btnAgain">再来一局</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="p-top">
+      <span id="qno">第 1 题</span>
+      <span class="combo" id="comboTag"></span>
+    </div>
+    <div class="p-subject" id="subj">数据结构 · 408</div>
+    <div class="p-q" id="qtext">准备中…</div>
+    <div class="opts" id="opts"></div>
+    <div class="p-foot">
+      <div class="exp" id="exp"><span class="lb">解析</span>　答题后显示</div>
+      <div class="stats">
+        <span>答对 <b id="stRight">0</b></span>
+        <span>答错 <b id="stWrong">0</b></span>
+        <span>错题 <b id="stBank">0</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data/ds.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
