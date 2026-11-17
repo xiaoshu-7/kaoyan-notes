@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刷题防线 · 主界面</title>
+<style>
+:root{
+  --bg:#060f0b;
+  --panel:#0b1a13;
+  --panel2:#0e2018;
+  --line:rgba(90,210,150,.22);
+  --line2:rgba(90,210,150,.12);
+  --ink:#c9e8d8;
+  --dim:#5f8172;
+  --green:#5fe08a;
+  --cyan:#7fd6ff;
+  --gold:#ffd166;
+  --red:#ff6b6b;
+  --purple:#c77dff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:radial-gradient(1200px 700px at 50% -20%,#0d2018,#050a08 65%);
+  color:var(--ink);
+  font-family:"Cascadia Code","Consolas","Microsoft YaHei",monospace;
+  padding:20px;display:flex;justify-content:center;
+}
+
+.app{
+  width:100%;max-width:1120px;
+  background:linear-gradient(180deg,#0b1912,#070e0a);
+  border:1px solid var(--line);border-radius:6px;
+  box-shadow:0 30px 90px -30px #000;
+  overflow:hidden;
+}
+
+/* ---------- 顶栏 ---------- */
+.top{
+  display:flex;align-items:center;gap:14px;
+  padding:11px 20px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#0e2018,#0a1510);
+}
+.top a{
+  color:var(--dim);text-decoration:none;font-size:11.5px;
+  padding:4px 9px;border:1px solid transparent;border-radius:2px;transition:.15s;
+}
+.top a:hover{color:var(--green);border-color:var(--line)}
+.top .name{
+  font-size:13px;letter-spacing:.22em;color:var(--green);
+  text-shadow:0 0 14px rgba(95,224,138,.4);
+}
+.top .sp{flex:1}
+.top .acts{display:flex;gap:6px}
+.top .acts button{
+  width:34px;height:30px;display:flex;align-items:center;justify-content:center;
+  background:#0c1b14;border:1px solid var(--line);border-radius:3px;
+  color:var(--dim);cursor:pointer;font-size:14px;transition:.15s;
+  font-family:inherit;
+}
+.top .acts button:hover{color:var(--green);border-color:rgba(95,224,138,.5);background:#102419}
+
+/* ---------- 头部统计 ---------- */
+.hero{padding:26px 28px 22px;border-bottom:1px solid var(--line2)}
+.hero .crumb{
+  font-size:10.5px;color:var(--dim);letter-spacing:.18em;margin-bottom:8px;
+}
+.hero h1{
+  font-size:26px;letter-spacing:.12em;color:#e2f5ea;font-weight:500;
+  margin-bottom:16px;
+}
+.starline{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.stars{font-size:20px;letter-spacing:3px;color:var(--gold);line-height:1}
+.stars .off{color:#1e3529}
+.starnum{
+  font-size:13px;color:var(--dim);
+}
+.starnum b{color:var(--gold);font-size:20px;margin-right:2px}
+
+.stats{display:flex;gap:22px;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
+.stats b{color:var(--ink);font-size:13px}
+
+.hintline{
+  margin-top:16px;padding:9px 12px;
+  background:rgba(95,224,138,.05);border-left:2px solid rgba(95,224,138,.4);
+  font-size:11px;color:#7fa894;line-height:1.8;
+}
+
+/* ---------- 关卡 ---------- */
+.levels{padding:22px 28px 26px}
+.sec-title{
+  font-size:10.5px;color:var(--dim);letter-spacing:.2em;margin-bottom:14px;
+}
+.grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:12px;
+}
+@media(max-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
+@media(max-width:600px){ .grid{grid-template-columns:repeat(2,1fr)} }
+
+.lv{
+  position:relative;
+  aspect-ratio:1.18;
+  background:linear-gradient(160deg,#0d1f16,#0a1610);
+  border:1px solid #1a3324;border-radius:5px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;transition:.18s;
+  padding:10px;
+}
+.lv:hover:not(.lock){
+  border-color:rgba(95,224,138,.55);
+  background:linear-gradient(160deg,#11291c,#0c1c14);
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px -12px rgba(95,224,138,.35);
+}
+.lv .no{
+  font-size:19px;letter-spacing:.05em;color:#8fb8a2;
+}
+.lv .waves{font-size:9.5px;color:#3f5a4c}
+.lv .st{font-size:12px;letter-spacing:1.5px;height:16px}
+.lv .st .on{color:var(--gold)}
+.lv .st .off{color:#1e3529}
+
+.lv.lock{opacity:.38;cursor:not-allowed;background:#08120d}
+.lv.lock .no{color:#2f4438}
+.lv.zero{border-color:#223d2c}
+.lv.best{border-color:rgba(255,209,102,.35);box-shadow:0 0 0 1px rgba(255,209,102,.12) inset}
+
+/* ---------- 弹层 ---------- */
+.panel{
+  position:fixed;inset:0;z-index:50;
+  background:rgba(3,8,6,.86);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:24px;
+}
+.panel.on{display:flex}
+.panel .box{
+  width:100%;max-width:520px;max-height:82vh;
+  background:linear-gradient(180deg,#0c1c14,#081310);
+  border:1px solid var(--line);border-radius:5px;
+  display:flex;flex-direction:column;
+  box-shadow:0 30px 80px -20px #000;
+}
+.panel .hd{
+  padding:14px 20px;border-bottom:1px solid var(--line2);
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;letter-spacing:.14em;color:#c9e8d8;
+}
+.panel .hd .sp{flex:1}
+.panel .hd button{
+  background:none;border:none;color:var(--dim);cursor:pointer;
+  font-size:17px;padding:0 4px;font-family:inherit;
+}
+.panel .hd button:hover{color:var(--red)}
+.panel .bd{
+  padding:18px 20px;overflow-y:auto;font-size:12px;line-height:1.9;
+  color:#a6c4b4;
+}
+.panel .bd::-webkit-scrollbar{width:5px}
+.panel .bd::-webkit-scrollbar-thumb{background:#1e3a2a;border-radius:3px}
+
+/* 设置项 */
+.row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 0;border-bottom:1px solid rgba(90,210,150,.07);
+}
+.row .k{flex:1;font-size:12px;color:#a6c4b4}
+.row .k small{display:block;color:#4d6b5c;font-size:10px;margin-top:2px}
+.seg{display:flex;gap:5px}
+.seg button{
+  padding:5px 14px;background:#0a1710;color:var(--dim);
+  border:1px solid var(--line);border-radius:2px;cursor:pointer;
+  font-family:inherit;font-size:11px;transition:.14s;
+}
+.seg button:hover{color:var(--ink);border-color:rgba(95,224,138,.4)}
+.seg button.on{background:rgba(95,224,138,.14);color:var(--green);border-color:var(--green)}
+.danger{
+  margin-top:14px;padding:8px 16px;width:100%;
+  background:rgba(255,107,107,.08);color:#ff8f8f;
+  border:1px solid rgba(255,107,107,.3);border-radius:2px;
+  cursor:pointer;font-family:inherit;font-size:11px;transition:.15s;
+}
+.danger:hover{background:rgba(255,107,107,.16);border-color:#ff6b6b}
+
+/* 图鉴 */
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{
+  flex:1;padding:7px;background:#0a1710;color:var(--dim);
+  border:1px solid var(--line);border-radius:2px;cursor:pointer;
+  font-family:inherit;font-size:11px;transition:.14s;
+}
+.tabs button.on{background:rgba(95,224,138,.13);color:var(--green);border-color:var(--green)}
+
+.codex-item{
+  display:flex;gap:12px;padding:11px 0;
+  border-bottom:1px solid rgba(90,210,150,.07);
+}
+.codex-item .ic{
+  flex:0 0 34px;height:34px;display:flex;align-items:center;justify-content:center;
+  font-size:17px;border:1px solid currentColor;border-radius:3px;
+  opacity:.92;
+}
+.codex-item .tx{flex:1;min-width:0}
+.codex-item .nm{font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.codex-item .nm b{font-weight:500}
+.codex-item .lvtag{
+  font-size:9.5px;padding:0 5px;border:1px solid currentColor;border-radius:2px;
+  opacity:.7;
+}
+.codex-item .ds{font-size:10.5px;color:#6d8a7b;line-height:1.7}
+.codex-item.locked{opacity:.42}
+.codex-item.locked .ic{border-style:dashed}
+
+/* 皮肤 */
+.skin-sec{margin-bottom:18px}
+.skin-sec h4{
+  font-size:10.5px;color:var(--dim);letter-spacing:.16em;
+  margin-bottom:9px;font-weight:400;
+}
+.skin-row{display:flex;gap:8px;flex-wrap:wrap}
+.skin{
+  width:74px;height:74px;border-radius:4px;
+  border:1px solid #1a3324;background:#0a1610;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  font-size:9.5px;color:#4d6b5c;position:relative;
+}
+.skin.on{border-color:var(--green);color:var(--green);background:rgba(95,224,138,.08)}
+.skin.lock{opacity:.42}
+.skin .dot{width:18px;height:18px;border-radius:50%}
+.skin .dash{font-size:15px;color:#2a4636}
+
+/* 题库 */
+.bank-stat{
+  display:flex;gap:18px;margin-bottom:14px;padding-bottom:14px;
+  border-bottom:1px solid rgba(90,210,150,.08);font-size:11px;color:var(--dim);
+}
+.bank-stat b{color:var(--ink);font-size:13px}
+.q-row{
+  display:flex;gap:9px;padding:9px 0;
+  border-bottom:1px solid rgba(90,210,150,.06);
+  font-size:11px;line-height:1.7;
+}
+.q-row .idx{flex:0 0 22px;color:#3f5a4c}
+.q-row .tx{flex:1;color:#9fbfae}
+.q-row .badge{
+  flex:0 0 auto;font-size:9.5px;padding:0 5px;border-radius:2px;
+  border:1px solid currentColor;height:16px;line-height:16px;
+}
+.q-row .badge.w{color:#ff8f8f}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="top">
+    <a href="index.html">← 返回笔记</a>
+    <span class="name">刷题防线</span>
+    <span class="sp"></span>
+    <div class="acts">
+      <button data-panel="settings" title="设置">⚙</button>
+      <button data-panel="bank" title="题库">▤</button>
+      <button data-panel="codex" title="图鉴">✦</button>
+      <button data-panel="skin" title="外观">◈</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="crumb">数据结构 · 第一章</div>
+    <h1>线性表</h1>
+
+    <div class="starline">
+      <span class="stars" id="starRow"></span>
+      <span class="starnum"><b id="starGot">0</b> / <span id="starMax">30</span></span>
+    </div>
+
+    <div class="stats">
+      <span>答对 <b id="okNum">0</b></span>
+      <span>正确率 <b id="accNum">—</b></span>
+      <span>总分 <b id="scoreNum">0</b></span>
+      <span>通关 <b id="clearNum">0</b> / 10</span>
+    </div>
+
+    <div class="hintline">
+      星星只看答对率：<b style="color:#ffd166">★</b> 通关即可 ·
+      <b style="color:#ffd166">★★</b> 正确率 ≥ 70% ·
+      <b style="color:#ffd166">★★★</b> 正确率 ≥ 90%　
+      <span style="color:#4d6b5c">（不答题拿不到星）</span>
+    </div>
+  </div>
+
+  <div class="levels">
+    <div class="sec-title">关 卡</div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- 设置 -->
+<div class="panel" id="panel-settings">
+  <div class="box">
+    <div class="hd">设 置 <span class="sp"></span><button data-close>✕</button></div>
+    <div class="bd">
+      <div class="row">
+        <div class="k">开火方式<small>手动需要按住左键；自动一直射击</small></div>
+        <div class="seg" id="setFire">
+          <button data-v="manual">手动</button>
+          <button data-v="auto">自动</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="k">题目顺序<small>随机不重复，顺序按题库排</small></div>
+        <div class="seg" id="setOrder">
+          <button data-v="random">随机</button>
+          <button data-v="seq">顺序</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="k">音效</div>
+        <div class="seg" id="setSound">
+          <button data-v="on">开</button>
+          <button data-v="off">关</button>
+        </div>
+      </div>
+      <button class="danger" id="resetBtn">清空全部进度</button>
+    </div>
+  </div>
+</div>
+
+<!-- 题库 -->
+<div class="panel" id="panel-bank">
+  <div class="box">
+    <div class="hd">题 库 <span class="sp"></span><button data-close>✕</button></div>
+    <div class="bd">
+      <div class="bank-stat">
+        <span>共 <b id="bankTotal">0</b> 题</span>
+        <span>已答 <b id="bankDone">0</b></span>
+        <span>错题 <b id="bankWrong" style="color:#ff8f8f">0</b></span>
+      </div>
+      <div id="bankList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 图鉴 -->
+<div class="panel" id="panel-codex">
+  <div class="box">
+    <div class="hd">图 鉴 <span class="sp"></span><button data-close>✕</button></div>
+    <div class="bd">
+      <div class="tabs">
+        <button class="on" data-tab="trait">特性 12</button>
+        <button data-tab="enemy">敌人 4</button>
+      </div>
+      <div id="codexBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 外观 -->
+<div class="panel" id="panel-skin">
+  <div class="box">
+    <div class="hd">外 观 <span class="sp"></span><button data-close>✕</button></div>
+    <div class="bd">
+      <div class="skin-sec">
+        <h4>机 体</h4>
+        <div class="skin-row" id="skinBody"></div>
+      </div>
+      <div class="skin-sec">
+        <h4>弹 丸</h4>
+        <div class="skin-row" id="skinBullet"></div>
+      </div>
+      <div class="skin-sec">
+        <h4>场 地</h4>
+        <div class="skin-row" id="skinField"></div>
+      </div>
+      <div style="font-size:10.5px;color:#4d6b5c;margin-top:6px;line-height:1.9">
+        皮肤在后续版本开放，解锁条件为「通关指定关卡」或「累计星数」。
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   数据
+   ============================================================ */
+const LV_TOTAL = 10;
+const KEY_PROG = 'qz:progress';
+const KEY_SET  = 'qz:settings';
+const KEY_WRONG = 'qz:wrong';
+
+const TRAITS = [
+  {id:'multi',  name:'多重射击', icon:'⋔', col:'#ffd166', max:4, desc:'每次多射 1 发，扇形展开。视觉上最直观的成长。'},
+  {id:'pierce', name:'穿透',     icon:'➤', col:'#7fd6ff', max:3, desc:'子弹可多穿 1 个敌人，适合打成一列的时候。'},
+  {id:'bounce', name:'弹射',     icon:'⤡', col:'#9bb7ff', max:2, desc:'子弹碰墙反弹 1 次，拐角处特别好用。'},
+  {id:'rapid',  name:'速射',     icon:'⚡', col:'#ff9f68', max:3, desc:'射击间隔 -18%，层数是乘算不是加算。'},
+  {id:'crit',   name:'暴击',     icon:'✦', col:'#ffe066', max:3, desc:'12% 概率打出双倍伤害，命中时跳金色 ×2。'},
+  {id:'armor',  name:'装甲',     icon:'▣', col:'#5fe08a', max:3, desc:'最大生命 +25 并立刻回满，容错率最高的一档。'},
+  {id:'regen',  name:'再生',     icon:'♻', col:'#7fffd4', max:3, desc:'每 1.5 秒回 1 血，慢慢磨回来。'},
+  {id:'thorns', name:'荆棘',     icon:'✵', col:'#ff8fa3', max:2, desc:'被撞时对敌人反弹伤害，近身怪越多越有用。'},
+  {id:'speed',  name:'疾行',     icon:'⇒', col:'#a8e6ff', max:3, desc:'移动速度 +15%，躲冲锋者靠它。'},
+  {id:'orbit',  name:'环绕',     icon:'◍', col:'#c77dff', max:3, desc:'增加 1 颗绕你转的光球，碰到敌人掉血。'},
+  {id:'chain',  name:'电弧',     icon:'⌁', col:'#7fd6ff', max:3, desc:'每 3 秒电击最近的敌人，不用瞄准。'},
+  {id:'steal',  name:'吸血',     icon:'♥', col:'#ff6b8a', max:2, desc:'击杀回 2 血，配合多重射击回得飞快。'}
+];
+
+const ETYPES = [
+  {id:'drone',   name:'游荡者', icon:'◆', col:'#ff6b6b', hp:1, desc:'只会朝你移动，不射击。撞到才伤人，是最基础的炮灰。', unlock:'第 1 关出现'},
+  {id:'shooter', name:'射手',   icon:'◇', col:'#ffa94d', hp:2, desc:'保持 150px 距离射击，会后退拉开。近身反而打不到你。', unlock:'第 4 关出现'},
+  {id:'charger', name:'冲锋者', icon:'➤', col:'#ff4d6d', hp:1, desc:'速度近 2 倍，贴近就自爆，范围 74px。别让它靠近。', unlock:'第 7 关出现'},
+  {id:'tank',    name:'重甲',   icon:'⬢', col:'#c77dff', hp:5, desc:'极慢、5 血、射程内开火。硬骨头，要靠特性磨。', unlock:'第 10 关出现'}
+];
+
+/* 题库（与 game.html 保持同步：只读展示用） */
+const BANK_LEN = 12;
+
+/* ============================================================
+   读写
+   ============================================================ */
+function loadProg(){
+  try{ return JSON.parse(localStorage.getItem(KEY_PROG) || '{}'); }catch(e){ return {}; }
+}
+function saveProg(p){
+  try{ localStorage.setItem(KEY_PROG, JSON.stringify(p)); }catch(e){}
+}
+function loadSet(){
+  try{ return JSON.parse(localStorage.getItem(KEY_SET) || '{}'); }catch(e){ return {}; }
+}
+function saveSet(s){
+  try{ localStorage.setItem(KEY_SET, JSON.stringify(s)); }catch(e){}
+}
+function loadWrong(){
+  try{ return JSON.parse(localStorage.getItem(KEY_WRONG) || '[]'); }catch(e){ return []; }
+}
+
+function lvKey(n){ return 'ds-1-' + n; }
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function render(){
+  const prog = loadProg();
+  const wrong = loadWrong();
+
+  let stars = 0, okSum = 0, accSum = 0, accN = 0, scoreSum = 0, cleared = 0;
+
+  for(let i=1;i<=LV_TOTAL;i++){
+    const p = prog[lvKey(i)];
+    if(!p) continue;
+    stars += p.stars || 0;
+    if(p.cleared) cleared++;
+    if(p.ok != null) okSum += p.ok;
+    if(p.rate != null){ accSum += p.rate; accN++; }
+    scoreSum += p.score || 0;
+  }
+
+  // 星星行
+  const full = Math.floor(stars / 10);
+  const part = stars % 10;
+  let row = '';
+  for(let i=0;i<full;i++) row += '<span class="on">★</span>';
+  if(part) row += '<span class="on" style="opacity:.55">★</span>';
+  const rest = 10 - full - (part ? 1 : 0);
+  for(let i=0;i<rest;i++) row += '<span class="off">★</span>';
+  document.getElementById('starRow').innerHTML = row;
+  document.getElementById('starGot').textContent = stars;
+  document.getElementById('starMax').textContent = LV_TOTAL * 3;
+
+  document.getElementById('okNum').textContent = okSum;
+  document.getElementById('accNum').textContent = accN ? Math.round(accSum / accN * 100) + '%' : '—';
+  document.getElementById('scoreNum').textContent = scoreSum.toLocaleString();
+  document.getElementById('clearNum').textContent = cleared;
+
+  // 关卡格子
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for(let i=1;i<=LV_TOTAL;i++){
+    const p = prog[lvKey(i)] || {stars:0};
+    const prev = i === 1 ? {cleared:true} : (prog[lvKey(i-1)] || {});
+    const unlocked = i === 1 || (prev && prev.stars > 0);
+
+    const d = document.createElement('div');
+    d.className = 'lv' + (unlocked ? '' : ' lock') + (p.stars === 0 && unlocked ? ' zero' : '') + (p.stars === 3 ? ' best' : '');
+
+    const st = [0,1,2].map(k =>
+      '<span class="' + (k < p.stars ? 'on' : 'off') + '">★</span>'
+    ).join('');
+
+    d.innerHTML =
+      '<div class="no">' + String(i).padStart(2,'0') + '</div>' +
+      (unlocked ? '<div class="st">' + st + '</div>' : '<div class="st" style="color:#2a4436">🔒</div>') +
+      '<div class="waves">' + (unlocked ? (p.waves ? p.waves + ' 波' : '未通关') : '未解锁') + '</div>';
+
+    if(unlocked){
+      d.onclick = () => { location.href = 'game.html?level=' + i; };
+    }
+    grid.appendChild(d);
+  }
+}
+
+/* ============================================================
+   弹层
+   ============================================================ */
+function openPanel(id){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  const el = document.getElementById('panel-' + id);
+  if(el) el.classList.add('on');
+  if(id === 'settings') renderSettings();
+  if(id === 'bank') renderBank();
+  if(id === 'codex') renderCodex('trait');
+  if(id === 'skin') renderSkins();
+}
+function closePanels(){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+}
+
+document.querySelectorAll('[data-panel]').forEach(b => {
+  b.onclick = () => openPanel(b.dataset.panel);
+});
+document.querySelectorAll('[data-close]').forEach(b => {
+  b.onclick = closePanels;
+});
+document.querySelectorAll('.panel').forEach(p => {
+  p.onclick = (e) => { if(e.target === p) closePanels(); };
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanels(); });
+
+/* 设置 */
+function renderSettings(){
+  const s = loadSet();
+  bindSegVal('setFire', s.fireMode || 'manual');
+  bindSegVal('setOrder', s.qOrder || 'random');
+  bindSegVal('setSound', s.sound || 'on');
+  document.getElementById('setFire').querySelectorAll('button').forEach(b => {
+    b.onclick = () => { s.fireMode = b.dataset.v; saveSet(s); bindSegVal('setFire', b.dataset.v); };
+  });
+  document.getElementById('setOrder').querySelectorAll('button').forEach(b => {
+    b.onclick = () => { s.qOrder = b.dataset.v; saveSet(s); bindSegVal('setOrder', b.dataset.v); };
+  });
+  document.getElementById('setSound').querySelectorAll('button').forEach(b => {
+    b.onclick = () => { s.sound = b.dataset.v; saveSet(s); bindSegVal('setSound', b.dataset.v); };
+  });
+}
+function bindSegVal(id, v){
+  document.getElementById(id).querySelectorAll('button').forEach(b => {
+    b.classList.toggle('on', b.dataset.v === v);
+  });
+}
+document.getElementById('resetBtn').onclick = () => {
+  if(confirm('确定清空所有进度？星数、纪录、错题都会删除。')){
+    try{
+      localStorage.removeItem(KEY_PROG);
+      localStorage.removeItem(KEY_WRONG);
+    }catch(e){}
+    render();
+    closePanels();
+  }
+};
+
+/* 题库 */
+function renderBank(){
+  const wrong = loadWrong();
+  document.getElementById('bankTotal').textContent = BANK_LEN;
+  document.getElementById('bankDone').textContent = wrong.length ? '—' : '0';
+  document.getElementById('bankWrong').textContent = wrong.length;
+
+  const body = document.getElementById('bankList');
+  if(!wrong.length){
+    body.innerHTML = '<div style="color:#4d6b5c;font-size:11px;padding:14px 0;line-height:2">还没有错题。答错的题会自动收进这里，附解析。</div>';
+    return;
+  }
+  body.innerHTML = wrong.slice(-40).reverse().map((w, i) =>
+    '<div class="q-row">' +
+      '<span class="idx">' + String(i+1).padStart(2,'0') + '</span>' +
+      '<span class="tx">' + (w.q || '') + '</span>' +
+      '<span class="badge w">错</span>' +
+    '</div>'
+  ).join('');
+}
+
+/* 图鉴 */
+let codexTab = 'trait';
+function renderCodex(tab){
+  codexTab = tab;
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.classList.toggle('on', b.dataset.tab === tab);
+  });
+  const body = document.getElementById('codexBody');
+  const prog = loadProg();
+  let maxLevel = 1;
+  for(let i=1;i<=LV_TOTAL;i++) if(prog[lvKey(i)]) maxLevel = i;
+
+  if(tab === 'trait'){
+    body.innerHTML = TRAITS.map(t => {
+      const unlocked = maxLevel >= 1;
+      return '<div class="codex-item' + (unlocked ? '' : ' locked') + '" style="color:' + t.col + '">' +
+        '<div class="ic">' + t.icon + '</div>' +
+        '<div class="tx">' +
+          '<div class="nm"><b>' + t.name + '</b><span class="lvtag">Lv1-' + t.max + '</span></div>' +
+          '<div class="ds" style="color:#6d8a7b">' + t.desc + '</div>' +
+        '</div></div>';
+    }).join('');
+  } else {
+    body.innerHTML = ETYPES.map(e =>
+      '<div class="codex-item" style="color:' + e.col + '">' +
+        '<div class="ic">' + e.icon + '</div>' +
+        '<div class="tx">' +
+          '<div class="nm"><b>' + e.name + '</b><span class="lvtag">' + e.hp + ' 血</span></div>' +
+          '<div class="ds" style="color:#6d8a7b">' + e.desc + '</div>' +
+          '<div class="ds" style="color:#4d6b5c;margin-top:2px">' + e.unlock + '</div>' +
+        '</div></div>'
+    ).join('');
+  }
+}
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.onclick = () => renderCodex(b.dataset.tab);
+});
+
+/* 皮肤 */
+function renderSkins(){
+  const prog = loadProg();
+  let stars = 0;
+  for(let i=1;i<=LV_TOTAL;i++){
+    const p = prog[lvKey(i)];
+    if(p) stars += p.stars || 0;
+  }
+  const cleared = (n) => {
+    for(let i=1;i<=n;i++){
+      const p = prog[lvKey(i)];
+      if(!p || !p.cleared) return false;
+    }
+    return true;
+  };
+
+  const bodySkins = [
+    {name:'默认', col:'#7fd6ff', ok:true},
+    {name:'翠绿', col:'#5fe08a', ok:cleared(3), need:'通关第 3 关'},
+    {name:'琥珀', col:'#ffd166', ok:cleared(6), need:'通关第 6 关'},
+    {name:'紫晶', col:'#c77dff', ok:stars >= 20, need:'累计 20 星'}
+  ];
+  const bulletSkins = [
+    {name:'默认', col:'#a8e6ff', ok:true},
+    {name:'金弹', col:'#ffd166', ok:stars >= 10, need:'累计 10 星'},
+    {name:'血弹', col:'#ff8fa3', ok:stars >= 26, need:'累计 26 星'}
+  ];
+  const fieldSkins = [
+    {name:'深林', col:'#0b1a13', ok:true},
+    {name:'深海', col:'#0a1524', ok:stars >= 15, need:'累计 15 星'}
+  ];
+
+  const draw = (arr) => arr.map(s =>
+    '<div class="skin' + (s.ok ? ' on' : ' lock') + '">' +
+      (s.ok
+        ? '<span class="dot" style="background:' + s.col + '"></span>'
+        : '<span class="dash">🔒</span>') +
+      '<span>' + s.name + '</span>' +
+      (s.ok ? '' : '<span style="font-size:8px;color:#3a5346">' + s.need + '</span>') +
+    '</div>'
+  ).join('');
+
+  document.getElementById('skinBody').innerHTML = draw(bodySkins);
+  document.getElementById('skinBullet').innerHTML = draw(bulletSkins);
+  document.getElementById('skinField').innerHTML = draw(fieldSkins);
+}
+
+/* ============================================================
+   启动
+   ============================================================ */
+render();
+</script>
+</body>
+</html>

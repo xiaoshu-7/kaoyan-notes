@@ -312,7 +312,7 @@ function renderPortal(){
     + '<div class="portal-sec"><span class="ps-num">B</span>公共课<span class="ps-note">各 100 分，单独成卷</span></div>'
     + '<div class="subj-grid">' + pubCards + '</div>'
 
-    + '<a class="game-entry" href="game.html">'
+    + '<a class="game-entry" href="hub.html">'
     + '<span class="ge-art">'
     +   '<svg viewBox="0 0 40 32" width="46" height="37" aria-hidden="true">'
     +     '<rect x="1" y="1" width="38" height="30" rx="2" fill="#1a2234" stroke="#3a4a68" stroke-width="1.5"/>'

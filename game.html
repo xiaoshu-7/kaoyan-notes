@@ -886,22 +886,37 @@ function showSettle(final){
   const m = document.getElementById('menu');
   m.classList.remove('off');
   const total = G.okN + G.noN;
-  const rate = total ? Math.round(G.okN / total * 100) : 0;
+  const rateRaw = total ? G.okN / total : 0;
+  const rate = Math.round(rateRaw * 100);
+  const stars = calcStars(rateRaw);
+  saveProgress(G.level, stars, rateRaw, G.score);
+
+  const starHtml = [0,1,2].map(i =>
+    '<span style="opacity:' + (i < stars ? 1 : .16) + '">★</span>'
+  ).join('');
 
   m.innerHTML =
     '<h1 style="color:' + (final ? '#5fe08a' : '#7fd6ff') + '">' +
       (final ? '关 卡 完 成' : '可 以 结 算') + '</h1>' +
     '<div class="hint">' +
       '第 ' + G.level + ' 关 · 第 ' + G.wave + ' / ' + G.totalWaves + ' 波<br>' +
+      '<div style="font-size:30px;letter-spacing:6px;color:#ffd166;margin-bottom:8px">' + starHtml + '</div>' +
       '答对 <b style="color:#5fe08a">' + G.okN + '</b> / ' + total + '（' + rate + '%）' +
       '　得分 <b style="color:#ffd166">' + G.score + '</b>' +
     '</div>' +
-    '<div style="display:flex;gap:10px;margin-top:6px">' +
-      '<button class="btn-start" id="endBtn">结束本关</button>' +
+    '<div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap;justify-content:center">' +
+      '<button class="btn-start" id="endBtn">' + (G.level >= LEVELS.length ? '完成本关' : '下一关') + '</button>' +
       '<button class="btn-start" id="contBtn" style="background:#22402f;color:#a8dcc0">继续挑战</button>' +
+      '<button class="btn-start" id="hubBtn" style="background:#1a2e24;color:#7fa894">回主界面</button>' +
     '</div>';
 
-  document.getElementById('endBtn').onclick = () => { m.innerHTML = ''; m.classList.add('off'); startLevel(G.level + 1); };
+  document.getElementById('endBtn').onclick = () => {
+    if(G.level >= LEVELS.length){ location.href = 'hub.html'; return; }
+    m.innerHTML = ''; m.classList.add('off');
+    G.state = 'play';
+    startLevel(G.level + 1);
+  };
+  document.getElementById('hubBtn').onclick = () => { location.href = 'hub.html'; };
   document.getElementById('contBtn').onclick = () => {
     m.innerHTML = ''; m.classList.add('off');
     G.state = 'play';
@@ -1471,8 +1486,35 @@ function startGame(){
   document.getElementById('topKv').textContent =
     SIZES[G.size].name + '地图 · ' + DIFFS[G.diff].name;
 
-  startLevel(1);
+  const lvQ = parseInt(new URLSearchParams(location.search).get('level'));
+  const startLv = (lvQ >= 1 && lvQ <= LEVELS.length) ? lvQ : 1;
+  startLevel(startLv);
   nextQuestion();
+}
+
+function calcStars(rate){
+  if(rate >= 0.9) return 3;
+  if(rate >= 0.7) return 2;
+  return 1;
+}
+
+function saveProgress(level, stars, rate, score){
+  try{
+    const k = 'qz:progress';
+    const p = JSON.parse(localStorage.getItem(k) || '{}');
+    const key = 'ds-1-' + level;
+    const old = p[key] || {};
+    p[key] = {
+      stars: Math.max(old.stars || 0, stars),
+      best: Math.max(old.best || 0, rate),
+      score: Math.max(old.score || 0, score),
+      ok: Math.max(old.ok || 0, G.okN),
+      rate: rate,
+      waves: G.totalWaves,
+      cleared: true
+    };
+    localStorage.setItem(k, JSON.stringify(p));
+  }catch(e){}
 }
 
 function gameOver(){
