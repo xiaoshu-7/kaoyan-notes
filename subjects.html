@@ -193,8 +193,8 @@ function render(){
 
   const readyN = SUBJECTS.filter(s => s.ready).length;
   document.getElementById('foot').innerHTML =
-    '当前开放 ' + readyN + ' / ' + SUBJECTS.length + ' 个科目。' +
-    '其余科目的战斗内容相同（敌人、特性、关卡结构），差异只在题库——补齐题库即可开放。';
+    '7 个科目全部开放，共 ' + SUBJECTS.reduce(function(a,x){ return a + x.chapters * 10; }, 0) + ' 关。' +
+    '每个科目有独立的配色、敌人形状和题库，后续可按章节继续扩充。';
 }
 
 render();
