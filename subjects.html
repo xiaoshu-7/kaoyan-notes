@@ -134,7 +134,7 @@ body{
 const SUBJECTS = [
   {id:'ds',  name:'数据结构',      icon:'◈', col:'#7fd6ff', chapters:6, ready:true,  desc:'线性表、栈队列、树、图、查找、排序'},
   {id:'coa', name:'计算机组成原理', icon:'▤', col:'#c77dff', chapters:7, ready:false, desc:'数据表示、存储、指令、CPU、总线、I/O'},
-  {id:'os',  name:'操作系统',      icon:'⬢', col:'#5fe0d0', chapters:1, ready:true,  desc:'概述、进程、内存、文件、I/O'}
+  {id:'os',  name:'操作系统',      icon:'⬢', col:'#5fe0d0', chapters:1, ready:true,  desc:'概述、进程、内存、文件、I/O'},
   {id:'net', name:'计算机网络',    icon:'⌁', col:'#ffd166', chapters:6, ready:false, desc:'体系结构、物理层、链路层、网络层、传输层、应用层'},
   {id:'math',name:'数学一',        icon:'∑', col:'#ff9f68', chapters:3, ready:false, desc:'高等数学、线性代数、概率统计'},
   {id:'en',  name:'英语一',        icon:'A', col:'#a8e6ff', chapters:4, ready:false, desc:'词汇语法、阅读理解、其他题型、写作'},
@@ -177,7 +177,7 @@ function render(){
         '<div class="nm">' + s.name + '</div>' +
         '<div class="meta">' +
           '<span>' + s.chapters + ' 章</span>' +
-          '<span>' + (s.ready ? '第 1 章已开放' : '题库建设中') + '</span>' +
+          '<span>' + (s.ready ? '已开放' : '题库建设中') + '</span>' +
         '</div>' +
       '</div>' +
       '<div class="stars">' +
