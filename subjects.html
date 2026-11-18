@@ -190,7 +190,7 @@ function render(){
   });
 
   document.getElementById('totalStars').textContent = total;
-  const totalMax = SUBJECTS.reduce(function(acc, x){ return acc + x.chapters * 30; }, 0);
+  const totalMax = SUBJECTS.filter(function(x){ return x.ready; }).reduce(function(acc, x){ return acc + x.chapters * 30; }, 0);
   document.getElementById('totalMax').textContent = totalMax;
 
   const readyN = SUBJECTS.filter(s => s.ready).length;
