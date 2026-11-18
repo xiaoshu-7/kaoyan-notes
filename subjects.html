@@ -165,7 +165,7 @@ function render(){
   SUBJECTS.forEach(s => {
     const got = subjectStars(prog, s.id);
     total += got;
-    const max = 30;
+    const max = s.chapters * 30;
 
     const el = document.createElement(s.ready ? 'a' : 'div');
     el.className = 'card' + (s.ready ? '' : ' lock');

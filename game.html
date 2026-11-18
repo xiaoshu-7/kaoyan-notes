@@ -2104,6 +2104,16 @@ function loop(ts){
    HUD
    ============================================================ */
 function updateHud(){
+  const okEl = document.getElementById('okN');
+  if(okEl) okEl.textContent = G.okN;
+  const noEl = document.getElementById('noN');
+  if(noEl) noEl.textContent = G.noN;
+  const scEl = document.getElementById('scoreN');
+  if(scEl) scEl.textContent = G.score;
+  const stEl = document.getElementById('streakBox');
+  if(stEl) stEl.textContent = QUIZ_MODE ? ('第 ' + (qIdx) + ' / ' + quizLimit + ' 题') : ('连对 ' + G.streak);
+  if(QUIZ_MODE) return;
+
   const rate = G.base.hp / G.base.maxHp * 100;
   document.getElementById('hpBar').style.width = rate + '%';
   const meRate = G.player ? (G.player.hp / G.player.maxHp * 100) : 100;
@@ -2171,8 +2181,9 @@ function nextQuestion(){
   const q = BANK[qi];
   G.curQ = q;
 
-  // 本题的奖励预告
-  G.pendReward = pickReward();
+  // 本题的奖励预告（极速模式没有游戏，不需要）
+  if(QUIZ_MODE){ G.pendReward = null; }
+  else { G.pendReward = pickReward(); }
   const tag = document.getElementById('rewardTag');
   if(tag && G.pendReward){
     tag.textContent = '答对 ' + G.pendReward.name;
@@ -2220,11 +2231,11 @@ function answer(pick){
   if(right){
     G.okN++; G.streak++;
     G.score += 120 + G.streak * 30;
-    applyReward(G.pendReward);
+    if(!QUIZ_MODE) applyReward(G.pendReward);
     Sound.right();
   } else {
     G.noN++; G.streak = 0;
-    addFloat(G.player.x, G.player.y - 24, '未获奖励', '#7a9090');
+    if(!QUIZ_MODE) addFloat(G.player.x, G.player.y - 24, '未获奖励', '#7a9090');
     Sound.wrong();
     wrongList.push({q:q.q, pick, right:q.a, why:q.why});
     saveWrong(q.q, pick);
