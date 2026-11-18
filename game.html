@@ -1499,7 +1499,7 @@ const G = {
   shake:0, zoom:1,
   viewW:0, viewH:0,
   fireMode:'manual', floats:[],
-  skin:{ body:'#7fd6ff', bullet:'#a8e6ff', field:'040a07' },
+  skin:{ body:'#7fd6ff', bullet:'#a8e6ff', field:'040a07', fieldTexture:'' },
   slowT:0, rageT:0, pendReward:null,
   traits:{}, orbitA:0, chainCd:0, regenCd:0,
   qOrder:'random', qPool:[], curQ:null,
@@ -2424,7 +2424,10 @@ function render(){
   ctx.save();
   // === 屏幕空间背景（不随镜头滚动） ===
   const BGART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
-  if(BGART.bgStyle === 'circuit'){
+  // 地皮：皮肤优先，否则用科目默认
+  const FIELD = G.skin.fieldTexture || BGART.bgStyle || 'grid';
+
+  if(FIELD === 'circuit'){
     // 计组：电路走线（固定在屏幕上）
     const step = 74;
     ctx.strokeStyle = 'rgba(' + BGART.grid + ',.11)';
@@ -2439,7 +2442,7 @@ function render(){
         ctx.beginPath(); ctx.arc(x+22, y+22, 1.7, 0, Math.PI*2); ctx.fill();
       }
     }
-  } else if(BGART.bgStyle === 'dots'){
+  } else if(FIELD === 'dots'){
     // 网络：点阵（固定在屏幕上）
     const step = 26;
     ctx.fillStyle = 'rgba(' + BGART.grid + ',.13)';
@@ -2448,8 +2451,8 @@ function render(){
         ctx.fillRect(x, y, 2, 2);
       }
     }
-  } else if(BGART.bgStyle === 'none'){
-    // 政治：无纹理
+  } else if(FIELD === 'none'){
+    // 无纹理
   }
 
   ctx.scale(zoom, zoom);
@@ -2465,7 +2468,7 @@ function render(){
   const GART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
   const BGS = GART.bgStyle;
 
-  if(BGS === 'grid'){
+  if(BGS === 'grid' && FIELD === 'grid'){
     ctx.strokeStyle = 'rgba(' + GART.grid + ',.07)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -3281,6 +3284,7 @@ function loadSettings(){
     if(s.skinBody) G.skin.body = s.skinBody;
     if(s.skinBullet) G.skin.bullet = s.skinBullet;
     if(s.skinField) G.skin.field = s.skinField;
+    if(s.fieldTexture) G.skin.fieldTexture = s.fieldTexture;
   }catch(e){}
   syncSeg('segSize', G.size);
   syncSeg('segDiff', G.diff);

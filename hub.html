@@ -451,11 +451,11 @@ body{
         <div class="skin-row" id="skinBullet"></div>
       </div>
       <div class="skin-sec">
-        <h4>场 地</h4>
+        <h4>地 皮</h4>
         <div class="skin-row" id="skinField"></div>
       </div>
       <div style="font-size:10.5px;color:#4d6b5c;margin-top:6px;line-height:1.9">
-        通关指定关卡或累计星数即可解锁，点击色块切换。机体影响你的颜色，弹丸影响子弹，场地影响战场底色。
+        通关指定关卡或累计星数即可解锁，点击切换。机体是你的形状，弹丸是子弹，地皮是战场底纹（点阵/电路/无纹）。
       </div>
     </div>
   </div>
@@ -1600,10 +1600,13 @@ function renderSkins(){
     {name:'金弹', col:'#ffd166', ok:stars >= 10, need:'累计 10 星'},
     {name:'血弹', col:'#ff8fa3', ok:stars >= 26, need:'累计 26 星'}
   ];
+  // 地皮（纹理，不是颜色）
+  const curTex = set.fieldTexture || '';
   const fieldSkins = [
-    {name:'深林', col:'040a07', ok:true},
-    {name:'深海', col:'040914', ok:stars >= 15, need:'累计 15 星'},
-    {name:'深紫', col:'0a0614', ok:stars >= 30, need:'累计 30 星'}
+    {name:'默认', tex:'',    preview:'grid',  ok:true},
+    {name:'点阵', tex:'dots',    preview:'dots',    ok:stars >= 8,  need:'8 星'},
+    {name:'电路', tex:'circuit', preview:'circuit', ok:stars >= 16, need:'16 星'},
+    {name:'无纹', tex:'none',    preview:'none',    ok:stars >= 24, need:'24 星'}
   ];
 
   const draw = (arr, key, cur) => arr.map(sk => {
@@ -1621,7 +1624,24 @@ function renderSkins(){
 
   document.getElementById('skinBody').innerHTML = draw(bodySkins, 'skinBody', curBody);
   document.getElementById('skinBullet').innerHTML = draw(bulletSkins, 'skinBullet', curBullet);
-  document.getElementById('skinField').innerHTML = draw(fieldSkins, 'skinField', curField);
+
+  // 地皮：用纹理图标
+  const texIcon = (t) => {
+    if(t === 'dots')    return '<span style="letter-spacing:3px;font-size:9px">⋯⋯</span>';
+    if(t === 'circuit') return '<span style="font-size:11px">⌗</span>';
+    if(t === 'none')    return '<span style="font-size:11px">▢</span>';
+    return '<span style="font-size:11px">▦</span>';
+  };
+  document.getElementById('skinField').innerHTML = fieldSkins.map(sk => {
+    const on = sk.ok && (sk.tex === curTex);
+    return '<div class="skin' + (sk.ok ? '' : ' lock') + (on ? ' on' : '') + '"' +
+      (sk.ok ? ' data-key="fieldTexture" data-val="' + sk.tex + '"' : '') + '>' +
+      (sk.ok ? texIcon(sk.preview) : '<span class="dash">🔒</span>') +
+      '<span>' + sk.name + '</span>' +
+      (sk.ok ? '' : '<span style="font-size:8px;color:#3a5346">' + sk.need + '</span>') +
+      (on ? '<span style="font-size:8px;color:#5fe08a">使用中</span>' : '') +
+    '</div>';
+  }).join('');
 
   document.querySelectorAll('#panel-skin .skin[data-key]').forEach(el => {
     el.onclick = () => {
