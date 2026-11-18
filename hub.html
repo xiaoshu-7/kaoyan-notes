@@ -49,7 +49,7 @@ body{
 .top a:hover{color:var(--green);border-color:var(--line)}
 .top .name{
   font-size:13px;letter-spacing:.22em;color:var(--green);
-  text-shadow:0 0 14px rgba(95,224,138,.4);
+  text-shadow:0 0 14px var(--line);
 }
 .top .sp{flex:1}
 .top .acts{display:flex;gap:6px}
@@ -59,7 +59,7 @@ body{
   color:var(--dim);cursor:pointer;font-size:14px;transition:.15s;
   font-family:inherit;
 }
-.top .acts button:hover{color:var(--green);border-color:rgba(95,224,138,.5);background:#102419}
+.top .acts button:hover{color:var(--green);border-color:var(--green);background:var(--panel2)}
 
 /* ---------- 头部统计 ---------- */
 .hero{padding:26px 28px 22px;border-bottom:1px solid var(--line2)}
@@ -96,7 +96,7 @@ body{
 
 .hintline{
   margin-top:16px;padding:9px 12px;
-  background:rgba(95,224,138,.05);border-left:2px solid rgba(95,224,138,.4);
+  background:var(--line2);border-left:2px solid var(--green);
   font-size:11px;color:#7fa894;line-height:1.8;
 }
 
@@ -111,8 +111,8 @@ body{
   font-family:inherit;font-size:10.5px;letter-spacing:.04em;
   cursor:pointer;transition:.14s;
 }
-.chapters button:hover:not(:disabled){color:var(--ink);border-color:rgba(95,224,138,.4)}
-.chapters button.on{background:rgba(95,224,138,.13);color:var(--green);border-color:var(--green)}
+.chapters button:hover:not(:disabled){color:var(--ink);border-color:var(--line)}
+.chapters button.on{background:var(--line2);color:var(--green);border-color:var(--green)}
 .chapters button:disabled{opacity:.35;cursor:not-allowed}
 
 .levels{padding:22px 28px 26px}
@@ -135,10 +135,10 @@ body{
   padding:10px;
 }
 .lv:hover:not(.lock){
-  border-color:rgba(95,224,138,.55);
+  border-color:var(--green);
   background:linear-gradient(160deg,#11291c,#0c1c14);
   transform:translateY(-2px);
-  box-shadow:0 10px 24px -12px rgba(95,224,138,.35);
+  box-shadow:0 10px 24px -12px var(--line);
 }
 .lv .no{
   font-size:19px;letter-spacing:.05em;color:#8fb8a2;
@@ -469,6 +469,47 @@ const SUBJECT_ID = new URLSearchParams(location.search).get('subject') || 'ds';
 const CH_Q = parseInt(new URLSearchParams(location.search).get('chapter'));
 const CHAPTER_ID = (CH_Q >= 1 && CH_Q <= 6) ? CH_Q : 1;
 
+
+/* ============ 科目主题配色 ============ */
+const THEMES = {
+  ds:   {name:'数据结构', bg:'#060f0b', p1:'#0b1a13', p2:'#0e2018',
+         line:'rgba(90,210,150,.22)',  line2:'rgba(90,210,150,.12)',
+         ink:'#c9e8d8', dim:'#5f8172', main:'#5fe08a', sub:'#7fd6ff'},
+  coa:  {name:'计算机组成原理', bg:'#0a0816', p1:'#13102b', p2:'#181436',
+         line:'rgba(170,120,255,.22)', line2:'rgba(170,120,255,.12)',
+         ink:'#ddd2f5', dim:'#6f5f92', main:'#c77dff', sub:'#8fd8ff'},
+  os:   {name:'操作系统', bg:'#04100f', p1:'#0a1c1a', p2:'#0d2320',
+         line:'rgba(90,224,208,.22)',  line2:'rgba(90,224,208,.12)',
+         ink:'#c5eae5', dim:'#4f8079', main:'#5fe0d0', sub:'#7fd6ff'},
+  net:  {name:'计算机网络', bg:'#05101e', p1:'#0b1a2e', p2:'#0e2038',
+         line:'rgba(95,168,255,.22)',  line2:'rgba(95,168,255,.12)',
+         ink:'#c5d8f0', dim:'#4f6d8f', main:'#5fa8ff', sub:'#8fe0ff'},
+  math: {name:'数学一', bg:'#140d06', p1:'#22180c', p2:'#2a1e10',
+         line:'rgba(255,169,77,.22)',  line2:'rgba(255,169,77,.12)',
+         ink:'#f0e0c8', dim:'#8f7452', main:'#ffa94d', sub:'#ffd166'},
+  en:   {name:'英语一', bg:'#12100a', p1:'#1e1b12', p2:'#26221a',
+         line:'rgba(224,208,144,.22)', line2:'rgba(224,208,144,.12)',
+         ink:'#eae2c8', dim:'#8a8262', main:'#e0d090', sub:'#a8e6ff'},
+  pol:  {name:'政治', bg:'#140608', p1:'#241012', p2:'#2c1416',
+         line:'rgba(255,107,107,.22)', line2:'rgba(255,107,107,.12)',
+         ink:'#f0cccc', dim:'#8f5f5f', main:'#ff6b6b', sub:'#ffd166'}
+};
+
+function applyTheme(subj){
+  const t = THEMES[subj] || THEMES.ds;
+  const r = document.documentElement.style;
+  r.setProperty('--bg', t.bg);
+  r.setProperty('--panel', t.p1);
+  r.setProperty('--panel2', t.p2);
+  r.setProperty('--line', t.line);
+  r.setProperty('--line2', t.line2);
+  r.setProperty('--ink', t.ink);
+  r.setProperty('--dim', t.dim);
+  r.setProperty('--green', t.main);
+  r.setProperty('--cyan', t.sub);
+  return t;
+}
+
 const SUBJECTS_META = {
   ds:  {name:'数据结构',       chap1:'线性表'},
   coa: {name:'计算机组成原理', chap1:'计算机系统概述'},
@@ -487,6 +528,22 @@ const CHAPTERS = [
   {no:5, name:'第五章 图', ready:true},
   {no:6, name:'第六章 查找与排序', ready:true}
 ];
+
+/* 各科的章节（目前除数据结构外，每科只开第一章） */
+const CHAPTERS_BY_SUBJ = {
+  ds:   null,
+  coa:  [{no:1, name:'第一章 计算机系统概述', ready:true}],
+  os:   [{no:1, name:'第一章 操作系统概述', ready:true}],
+  net:  [{no:1, name:'第一章 体系结构', ready:true}],
+  math: [{no:1, name:'第一章 高等数学', ready:true}],
+  en:   [{no:1, name:'第一章 阅读理解', ready:true}],
+  pol:  [{no:1, name:'第一章 马克思主义基本原理', ready:true}]
+};
+
+function getChapters(){
+  const list = CHAPTERS_BY_SUBJ[SUBJECT_ID];
+  return list || CHAPTERS;
+}
 
 /* 每章的地图/修饰符/目标 */
 const LV_BRIEF_BY_CH = {
@@ -909,13 +966,14 @@ function chapterStars(ch){
 function renderHeader(){
   const meta = SUBJECTS_META[SUBJECT_ID] || SUBJECTS_META.ds;
   document.getElementById('subjName').textContent = meta.name;
-  const chName = CHAPTERS[CHAPTER_ID - 1] ? CHAPTERS[CHAPTER_ID - 1].name : '';
-  const ready = CHAPTERS.filter(function(c){ return c.ready; }).length;
+  const chList = getChapters();
+  const chName = chList[CHAPTER_ID - 1] ? chList[CHAPTER_ID - 1].name : '';
+  const ready = getChapters().filter(function(c){ return c.ready; }).length;
   document.getElementById('crumb').textContent = '共 ' + ready + ' 章 · ' + (ready * 10) + ' 关';
 
   const box = document.getElementById('chapters');
   box.innerHTML = '';
-  CHAPTERS.forEach(c => {
+  getChapters().forEach(c => {
     const b = document.createElement('button');
     b.textContent = c.name + (c.ready ? ' ★' + chapterStars(c.no) : ' 🔒');
     if(c.ready && c.no === CHAPTER_ID) b.className = 'on';
@@ -936,7 +994,7 @@ function render(){
   for(const k in prog){
     if(k.indexOf(SUBJECT_ID + '-') === 0) stars += prog[k].stars || 0;
   }
-  const chCount = CHAPTERS.filter(c => c.ready).length || 1;
+  const chCount = getChapters().filter(function(c){ return c.ready; }).length || 1;
   const starMax = chCount * 30;
 
   // 当前章的统计
@@ -990,7 +1048,7 @@ function render(){
       '<div class="waves">' + sub + '</div>';
 
     if(unlocked){
-      d.onclick = () => { location.href = 'game.html?chapter=' + CHAPTER_ID + '&level=' + i; };
+      d.onclick = () => { location.href = 'game.html?subject=' + SUBJECT_ID + '&chapter=' + CHAPTER_ID + '&level=' + i; };
     }
     grid.appendChild(d);
   }
@@ -1278,6 +1336,7 @@ function renderSkins(){
 /* ============================================================
    启动
    ============================================================ */
+applyTheme(SUBJECT_ID);
 renderHeader();
 render();
 

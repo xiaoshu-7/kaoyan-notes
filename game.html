@@ -656,6 +656,47 @@ const DIFFS = {
 
 const TILE = 24;
 
+
+/* ============ 科目主题配色 ============ */
+const THEMES = {
+  ds:   {name:'数据结构', bg:'#060f0b', p1:'#0b1a13', p2:'#0e2018',
+         line:'rgba(90,210,150,.22)',  line2:'rgba(90,210,150,.12)',
+         ink:'#c9e8d8', dim:'#5f8172', main:'#5fe08a', sub:'#7fd6ff'},
+  coa:  {name:'计算机组成原理', bg:'#0a0816', p1:'#13102b', p2:'#181436',
+         line:'rgba(170,120,255,.22)', line2:'rgba(170,120,255,.12)',
+         ink:'#ddd2f5', dim:'#6f5f92', main:'#c77dff', sub:'#8fd8ff'},
+  os:   {name:'操作系统', bg:'#04100f', p1:'#0a1c1a', p2:'#0d2320',
+         line:'rgba(90,224,208,.22)',  line2:'rgba(90,224,208,.12)',
+         ink:'#c5eae5', dim:'#4f8079', main:'#5fe0d0', sub:'#7fd6ff'},
+  net:  {name:'计算机网络', bg:'#05101e', p1:'#0b1a2e', p2:'#0e2038',
+         line:'rgba(95,168,255,.22)',  line2:'rgba(95,168,255,.12)',
+         ink:'#c5d8f0', dim:'#4f6d8f', main:'#5fa8ff', sub:'#8fe0ff'},
+  math: {name:'数学一', bg:'#140d06', p1:'#22180c', p2:'#2a1e10',
+         line:'rgba(255,169,77,.22)',  line2:'rgba(255,169,77,.12)',
+         ink:'#f0e0c8', dim:'#8f7452', main:'#ffa94d', sub:'#ffd166'},
+  en:   {name:'英语一', bg:'#12100a', p1:'#1e1b12', p2:'#26221a',
+         line:'rgba(224,208,144,.22)', line2:'rgba(224,208,144,.12)',
+         ink:'#eae2c8', dim:'#8a8262', main:'#e0d090', sub:'#a8e6ff'},
+  pol:  {name:'政治', bg:'#140608', p1:'#241012', p2:'#2c1416',
+         line:'rgba(255,107,107,.22)', line2:'rgba(255,107,107,.12)',
+         ink:'#f0cccc', dim:'#8f5f5f', main:'#ff6b6b', sub:'#ffd166'}
+};
+
+function applyTheme(subj){
+  const t = THEMES[subj] || THEMES.ds;
+  const r = document.documentElement.style;
+  r.setProperty('--bg', t.bg);
+  r.setProperty('--panel', t.p1);
+  r.setProperty('--panel2', t.p2);
+  r.setProperty('--line', t.line);
+  r.setProperty('--line2', t.line2);
+  r.setProperty('--ink', t.ink);
+  r.setProperty('--dim', t.dim);
+  r.setProperty('--green', t.main);
+  r.setProperty('--cyan', t.sub);
+  return t;
+}
+
 /* 地图模板 */
 const MAP_NAMES = {
   fortress: '中央堡垒',
@@ -2649,6 +2690,9 @@ function startQuiz(){
   quizStart = Date.now();
   nextQuestion();
 }
+
+const SUBJ_Q = new URLSearchParams(location.search).get('subject') || 'ds';
+applyTheme(SUBJ_Q);
 
 fitCanvas();
 loadSettings();
