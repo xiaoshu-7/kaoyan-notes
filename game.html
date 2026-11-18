@@ -2430,7 +2430,7 @@ function render(){
   if(FIELD === 'circuit'){
     // 计组：电路走线（固定在屏幕上）
     const step = 74;
-    ctx.strokeStyle = 'rgba(' + BGART.grid + ',.11)';
+    ctx.strokeStyle = 'rgba(' + BGART.grid + ',.22)';
     ctx.lineWidth = 1;
     for(let y=26; y<vh; y+=step){
       for(let x=34; x<vw; x+=step){
@@ -2438,14 +2438,14 @@ function render(){
         ctx.moveTo(x, y); ctx.lineTo(x+22, y); ctx.lineTo(x+22, y+22);
         ctx.stroke();
         ctx.beginPath(); ctx.arc(x, y, 1.7, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(' + BGART.grid + ',.22)'; ctx.fill();
+        ctx.fillStyle = 'rgba(' + BGART.grid + ',.38)'; ctx.fill();
         ctx.beginPath(); ctx.arc(x+22, y+22, 1.7, 0, Math.PI*2); ctx.fill();
       }
     }
   } else if(FIELD === 'dots'){
     // 网络：点阵（固定在屏幕上）
     const step = 26;
-    ctx.fillStyle = 'rgba(' + BGART.grid + ',.13)';
+    ctx.fillStyle = 'rgba(' + BGART.grid + ',.22)';
     for(let y=13; y<vh; y+=step){
       for(let x=13; x<vw; x+=step){
         ctx.fillRect(x, y, 2, 2);
@@ -2469,7 +2469,7 @@ function render(){
   const BGS = GART.bgStyle;
 
   if(BGS === 'grid' && FIELD === 'grid'){
-    ctx.strokeStyle = 'rgba(' + GART.grid + ',.07)';
+    ctx.strokeStyle = 'rgba(' + GART.grid + ',.13)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
@@ -2734,12 +2734,19 @@ function render(){
   // 玩家
   const p = G.player;
   if(p){
-    // 贴地阴影（仅立体模式）
+    // 贴地光晕（同色，极扁，像从地面长出来）
     if(G.skin.depth !== 'flat'){
-      ctx.fillStyle = 'rgba(0,0,0,.40)';
+      ctx.save();
+      ctx.fillStyle = G.skin.body;
+      ctx.globalAlpha = 0.16;
       ctx.beginPath();
-      ctx.ellipse(p.x, p.y + p.r*0.6, p.r*0.9, p.r*0.38, 0, 0, Math.PI*2);
+      ctx.ellipse(p.x, p.y + p.r*0.75, p.r*1.35, p.r*0.42, 0, 0, Math.PI*2);
       ctx.fill();
+      ctx.globalAlpha = 0.30;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y + p.r*0.75, p.r*0.7, p.r*0.26, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
     }
 
     ctx.save();
