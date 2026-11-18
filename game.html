@@ -1022,13 +1022,20 @@ const TILE = 24;
 
 /* ============ 科目美术风格（墙 / 敌人形状） ============ */
 const SUBJ_ART = {
-  ds:  {wall:'rgba(22,52,40,.74)',   edge:'rgba(90,200,145,.26)', glow:'rgba(120,230,170,.05)', shape:'diamond',  base:'255,214,102', grid:'60,150,110'},
-  coa: {wall:'rgba(38,26,64,.78)',   edge:'rgba(170,120,255,.30)', glow:'rgba(200,160,255,.08)', shape:'square',   base:'199,125,255', grid:'140,100,220'},
-  os:  {wall:'rgba(10,36,32,.78)',   edge:'rgba(90,224,208,.30)',  glow:'rgba(120,240,225,.08)', shape:'block',    base:'95,224,208',  grid:'60,180,170'},
-  net: {wall:'rgba(12,30,56,.78)',   edge:'rgba(95,168,255,.30)',  glow:'rgba(130,190,255,.08)', shape:'circle',   base:'95,168,255',  grid:'70,130,220'},
-  math:{wall:'rgba(42,30,16,.78)',   edge:'rgba(255,169,77,.30)',  glow:'rgba(255,200,120,.08)', shape:'triangle', base:'255,169,77',  grid:'220,150,70'},
-  en:  {wall:'rgba(34,30,20,.78)',   edge:'rgba(224,208,144,.30)', glow:'rgba(240,230,170,.08)', shape:'round',    base:'224,208,144', grid:'180,170,120'},
-  pol: {wall:'rgba(42,16,20,.78)',   edge:'rgba(255,107,107,.30)', glow:'rgba(255,150,150,.08)', shape:'star',     base:'255,140,140', grid:'200,90,90'}
+  ds:  {wall:'rgba(22,52,40,.74)',   edge:'rgba(90,200,145,.26)', glow:'rgba(120,230,170,.05)',
+        shape:'diamond',  base:'255,214,102', grid:'60,150,110',  wallShape:'round', bgStyle:'grid'},
+  coa: {wall:'rgba(38,26,64,.78)',   edge:'rgba(170,120,255,.30)', glow:'rgba(200,160,255,.08)',
+        shape:'square',   base:'199,125,255', grid:'140,100,220', wallShape:'chip',  bgStyle:'circuit'},
+  os:  {wall:'rgba(10,36,32,.78)',   edge:'rgba(90,224,208,.30)',  glow:'rgba(120,240,225,.08)',
+        shape:'block',    base:'95,224,208',  grid:'60,180,170',  wallShape:'term',  bgStyle:'grid'},
+  net: {wall:'rgba(12,30,56,.78)',   edge:'rgba(95,168,255,.30)',  glow:'rgba(130,190,255,.08)',
+        shape:'circle',   base:'95,168,255',  grid:'70,130,220',  wallShape:'node',  bgStyle:'dots'},
+  math:{wall:'rgba(42,30,16,.78)',   edge:'rgba(255,169,77,.30)',  glow:'rgba(255,200,120,.08)',
+        shape:'triangle', base:'255,169,77',  grid:'220,150,70',  wallShape:'tiny',  bgStyle:'axis'},
+  en:  {wall:'rgba(34,30,20,.78)',   edge:'rgba(224,208,144,.30)', glow:'rgba(240,230,170,.08)',
+        shape:'round',    base:'224,208,144', grid:'180,170,120', wallShape:'paper', bgStyle:'lines'},
+  pol: {wall:'rgba(42,16,20,.78)',   edge:'rgba(255,107,107,.30)', glow:'rgba(255,150,150,.08)',
+        shape:'star',     base:'255,140,140', grid:'200,90,90',   wallShape:'seal',  bgStyle:'none'}
 };
 
 /* ============ 科目主题配色 ============ */
@@ -2424,14 +2431,65 @@ function render(){
   const c0 = Math.max(0, Math.floor(viewL/TILE)), c1 = Math.min(G.cols, Math.ceil(viewR/TILE)+1);
   const r0 = Math.max(0, Math.floor(viewT/TILE)), r1 = Math.min(G.rows, Math.ceil(viewB/TILE)+1);
 
-  // 网格
+  // 背景纹理（按科目）
   const GART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
-  ctx.strokeStyle = 'rgba(' + GART.grid + ',.07)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
-  for(let r=r0;r<=r1;r++){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); }
-  ctx.stroke();
+  const BGS = GART.bgStyle;
+
+  if(BGS === 'grid'){
+    ctx.strokeStyle = 'rgba(' + GART.grid + ',.07)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
+    for(let r=r0;r<=r1;r++){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); }
+    ctx.stroke();
+  } else if(BGS === 'circuit'){
+    // 电路走线：每隔 3 格画一段 L 形
+    ctx.strokeStyle = 'rgba(' + GART.grid + ',.10)';
+    ctx.lineWidth = 1;
+    for(let r=r0;r<r1;r+=3){
+      for(let c=c0;c<c1;c+=3){
+        ctx.beginPath();
+        ctx.moveTo(c*TILE, r*TILE);
+        ctx.lineTo(c*TILE + TILE, r*TILE);
+        ctx.lineTo(c*TILE + TILE, r*TILE + TILE);
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(c*TILE, r*TILE, 1.6, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(' + GART.grid + ',.20)'; ctx.fill();
+      }
+    }
+  } else if(BGS === 'dots'){
+    // 点阵
+    ctx.fillStyle = 'rgba(' + GART.grid + ',.14)';
+    for(let r=r0;r<r1;r+=2){
+      for(let c=c0;c<c1;c+=2){
+        ctx.fillRect(c*TILE - 1, r*TILE - 1, 2, 2);
+      }
+    }
+  } else if(BGS === 'axis'){
+    // 坐标纸：细网格 + 每 5 格加粗
+    ctx.strokeStyle = 'rgba(' + GART.grid + ',.06)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
+    for(let r=r0;r<=r1;r++){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); }
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(' + GART.grid + ',.16)';
+    ctx.beginPath();
+    for(let c=c0;c<=c1;c++){ if(c % 5 === 0){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); } }
+    for(let r=r0;r<=r1;r++){ if(r % 5 === 0){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); } }
+    ctx.stroke();
+  } else if(BGS === 'lines'){
+    // 稿纸横线
+    ctx.strokeStyle = 'rgba(' + GART.grid + ',.10)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let r=r0;r<=r1;r++){
+      ctx.moveTo(c0*TILE, r*TILE + TILE*0.75);
+      ctx.lineTo(c1*TILE, r*TILE + TILE*0.75);
+    }
+    ctx.stroke();
+  }
+  // bgStyle === 'none' 时什么都不画
 
   // 墙
   for(let r=r0;r<r1;r++){
@@ -2442,13 +2500,39 @@ function render(){
       const x = c*TILE, y = r*TILE;
       const pad = 2.5;
       const ART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
+      const WS = ART.wallShape;
+      const cxw = x + TILE/2, cyw = y + TILE/2;
       ctx.fillStyle = hpw >= 2 ? ART.wall : 'rgba(46,32,22,.8)';
-      ctx.fillRect(x+pad, y+pad, TILE-pad*2, TILE-pad*2);
       ctx.strokeStyle = hpw >= 2 ? ART.edge : 'rgba(210,140,80,.42)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(x+pad+.5, y+pad+.5, TILE-pad*2-1, TILE-pad*2-1);
-      ctx.fillStyle = hpw >= 2 ? ART.glow : 'rgba(255,180,110,.12)';
-      ctx.fillRect(x+pad+1, y+pad+1, TILE-pad*2-2, 2);
+
+      if(WS === 'node'){
+        // 网络：圆形节点
+        ctx.beginPath(); ctx.arc(cxw, cyw, TILE/2 - 4, 0, Math.PI*2);
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(cxw, cyw, 2.5, 0, Math.PI*2);
+        ctx.fillStyle = ART.edge; ctx.fill();
+      } else if(WS === 'paper'){
+        // 英语：横条（像书页的行）
+        ctx.fillRect(x+pad, y+TILE*0.32, TILE-pad*2, TILE*0.36);
+        ctx.strokeRect(x+pad+.5, y+TILE*0.32+.5, TILE-pad*2-1, TILE*0.36-1);
+      } else if(WS === 'tiny'){
+        // 数学：小方块
+        ctx.fillRect(x+TILE*0.28, y+TILE*0.28, TILE*0.44, TILE*0.44);
+        ctx.strokeRect(x+TILE*0.28+.5, y+TILE*0.28+.5, TILE*0.44-1, TILE*0.44-1);
+      } else if(WS === 'seal'){
+        // 政治：粗方块（印章）
+        ctx.fillRect(x+1, y+1, TILE-2, TILE-2);
+        ctx.strokeRect(x+1.5, y+1.5, TILE-3, TILE-3);
+        ctx.strokeStyle = ART.edge;
+        ctx.strokeRect(x+4.5, y+4.5, TILE-9, TILE-9);
+      } else {
+        // 默认：圆角/方块
+        ctx.fillRect(x+pad, y+pad, TILE-pad*2, TILE-pad*2);
+        ctx.strokeRect(x+pad+.5, y+pad+.5, TILE-pad*2-1, TILE-pad*2-1);
+        ctx.fillStyle = hpw >= 2 ? ART.glow : 'rgba(255,180,110,.12)';
+        ctx.fillRect(x+pad+1, y+pad+1, TILE-pad*2-2, 2);
+      }
       // 科目专属纹理
       if(hpw >= 2 && G.subject === 'coa'){
         // 芯片引脚
@@ -2458,10 +2542,6 @@ function render(){
           ctx.moveTo(x+pad+4+k*6, y+pad+2); ctx.lineTo(x+pad+4+k*6, y+pad+7);
           ctx.stroke();
         }
-      } else if(hpw >= 2 && G.subject === 'net'){
-        // 节点小圆
-        ctx.fillStyle = ART.edge;
-        ctx.beginPath(); ctx.arc(x+TILE/2, y+TILE/2, 2.2, 0, Math.PI*2); ctx.fill();
       } else if(hpw >= 2 && G.subject === 'os'){
         // 终端光标
         ctx.fillStyle = ART.edge;
