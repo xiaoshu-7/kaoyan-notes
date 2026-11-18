@@ -157,14 +157,14 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .opts{display:flex;flex-direction:column;gap:7px}
 .opt{
   display:flex;gap:9px;align-items:flex-start;text-align:left;
-  padding:10px 12px;background:#0a1710;border:1px solid #16301f;
+  padding:10px 12px;background:var(--panel);border:1px solid var(--line2);
   border-radius:3px;cursor:pointer;transition:.14s;
-  font-size:12.5px;line-height:1.7;color:#b6d2c2;font-family:inherit;
+  font-size:12.5px;line-height:1.7;color:var(--ink);font-family:inherit;
 }
-.opt:hover{border-color:#2a5a40;background:#0d1e15}
+.opt:hover{border-color:var(--line);background:var(--panel2)}
 .opt .k{
-  flex:0 0 auto;width:16px;height:16px;border-radius:2px;background:#16301f;
-  color:#7a9c8a;font-size:10px;display:flex;align-items:center;justify-content:center;
+  flex:0 0 auto;width:16px;height:16px;border-radius:2px;background:var(--line2);
+  color:var(--dim);font-size:10px;display:flex;align-items:center;justify-content:center;
   margin-top:2px;
 }
 .opt.right{border-color:#2f7a4e;background:rgba(95,224,138,.1)}
@@ -177,7 +177,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .why{
   border-left:2px solid var(--cyan);padding:9px 11px;
   background:rgba(127,214,255,.06);font-size:11.5px;line-height:1.9;
-  color:#9dbfae;display:none;
+  color:var(--ink);opacity:.82;display:none;
 }
 .why.on{display:block}
 .why b{color:var(--cyan)}
@@ -603,7 +603,47 @@ const BANK = [
   {tag:'O5',subj:'os',q:'单缓冲和双缓冲的区别是？',o:['双缓冲让 CPU 和设备可以并行处理不同数据块', '双缓冲只能用于磁盘', '双缓冲更快', '单缓冲不需要内存'],a:0,why:'单缓冲：设备写缓冲时 CPU 不能处理该缓冲（要么等，要么处理另一块但只有一块）。双缓冲：CPU 处理一块时设备填另一块，并行度更高。'},
   {tag:'O5',subj:'os',q:'设备独立性是指？',o:['用户程序用逻辑设备名，不关心具体物理设备', '设备都能共享', '设备都是即插即用', '设备不需要驱动'],a:0,why:'程序用「逻辑设备名」（如 printer），由 OS 映射到具体物理设备。这样换设备不用改程序，是 IO 软件分层的目的之一。'},
   {tag:'O5',subj:'os',q:'IO 软件的分层结构中，最靠近硬件的是？',o:['中断处理程序', '设备独立性软件', '用户层 IO 软件', '设备驱动程序'],a:0,why:'四层（从下到上）：中断处理程序 → 设备驱动程序 → 设备独立性软件 → 用户层 IO 软件。中断处理最底层，直接和硬件打交道。'},
-  {tag:'O5',subj:'os',q:'RAID 1 的特点是？',o:['镜像，写两份，可靠性高但空间利用率 50%', '校验盘，省空间', '条带化，速度快', '不冗余'],a:0,why:'RAID 0：条带，速度快但无冗余。RAID 1：镜像，写两份，坏一块不丢数据。RAID 5：条带 + 分布式校验，兼顾性能和空间。'}
+  {tag:'O5',subj:'os',q:'RAID 1 的特点是？',o:['镜像，写两份，可靠性高但空间利用率 50%', '校验盘，省空间', '条带化，速度快', '不冗余'],a:0,why:'RAID 0：条带，速度快但无冗余。RAID 1：镜像，写两份，坏一块不丢数据。RAID 5：条带 + 分布式校验，兼顾性能和空间。'},
+  {tag:'A1',subj:'coa',q:'原码、反码、补码中，0 的表示唯一的是？',o:['都不是', '原码', '反码', '补码'],a:3,why:'补码中 +0 和 −0 是同一个编码（全 0），所以表示范围比原码/反码多一个（能表示 −2^(n−1)）。原码和反码都有 +0 和 −0 两种。'},
+  {tag:'A1',subj:'coa',q:'8 位补码能表示的整数范围是？',o:['−255 ~ +255', '−128 ~ +127', '0 ~ 255', '−127 ~ +127'],a:1,why:'n 位补码范围是 −2^(n−1) ~ 2^(n−1)−1。8 位就是 −128 ~ 127。注意负数比正数多一个（因为 0 只占一个编码）。'},
+  {tag:'A1',subj:'coa',q:'十进制 −5 的 8 位补码是？',o:['00000101', '11111011', '10000101', '11111010'],a:1,why:'−5 的原码 10000101，反码 11111010，补码 = 反码 + 1 = 11111011。快捷算法：5 = 00000101，取反加一 = 11111011。'},
+  {tag:'A1',subj:'coa',q:'IEEE 754 单精度浮点数由哪几部分组成？',o:['32 位全是尾数', '8 位符号 + 1 位阶码 + 23 位尾数', '1 位符号 + 23 位阶码 + 8 位尾数', '1 位符号 + 8 位阶码 + 23 位尾数'],a:3,why:'单精度 32 位：符号 1 位、阶码 8 位（移码）、尾数 23 位（隐含最高位 1）。双精度 64 位：1 + 11 + 52。'},
+  {tag:'A1',subj:'coa',q:'浮点数中，阶码用移码表示的目的是？',o:['节省空间', '提高精度', '简化乘法', '便于比较大小'],a:3,why:'移码把有符号的阶码映射成无符号数（加一个偏移量），这样比较大小时可以直接按无符号比较，硬件实现简单。'},
+  {tag:'A1',subj:'coa',q:'奇偶校验码能检测出？',o:['所有错误', '奇数个位错误', '只能纠错', '偶数个位错误'],a:1,why:'奇偶校验只能发现奇数个位翻转（偶数个位翻转会互相抵消）。而且**不能纠错**，只能发现。要纠错需要海明码。'},
+  {tag:'A1',subj:'coa',q:'海明码的校验位位数 r 与数据位 k 的关系是？',o:['2^r ≥ k', 'r ≥ k', '2^r ≥ k + r + 1', '2^k ≥ r'],a:2,why:'r 个校验位能表示 2^r 种状态，要覆盖「k 位数据中任意一位出错」+「无错」，所以需要 2^r ≥ k + r + 1。这是海明码的核心公式。'},
+  {tag:'A1',subj:'coa',q:'十进制数 0.1 用二进制表示是？',o:['有限小数', '整数', '无法表示', '无限循环小数'],a:3,why:'0.1 在二进制里是 0.0001100110011…（1100 循环），永远表示不精确。这就是浮点数精度问题的根源（0.1 + 0.2 ≠ 0.3）。'},
+  {tag:'A2',subj:'coa',q:'补码加减运算中，减法可以转换成？',o:['加上减数的原码', '直接减', '减去减数的反码', '加上减数的补码（即加上负数的补码）'],a:3,why:'[A−B]补 = [A]补 + [−B]补。求 −B 的补码：把 B 的补码连同符号位一起取反加一。这样减法就用加法器实现了，硬件只需一套。'},
+  {tag:'A2',subj:'coa',q:'两个补码数相加，什么情况下发生溢出？',o:['同号相加结果异号', '结果为 0', '异号相加', '进位为 1'],a:0,why:'同号相加才可能溢出：正+正得负，或负+负得正。异号相加永远不会溢出。硬件用「最高位进位 ⊕ 次高位进位」判断。'},
+  {tag:'A2',subj:'coa',q:'原码一位乘法的核心操作是？',o:['直接相乘', '查表', '取反加一', '根据乘数位决定加被乘数还是加 0，然后右移'],a:3,why:'原码乘法：符号位单独处理，数值部分用「移位+相加」。乘数当前位为 1 就加被乘数，为 0 就加 0，然后部分积右移。'},
+  {tag:'A2',subj:'coa',q:'补码一位乘法（Booth 算法）的优点是可以？',o:['不需要加法器', '更省空间', '直接处理带符号数，不用转成原码', '更快'],a:2,why:'Booth 算法直接对补码运算，通过判断乘数相邻两位（00/01/10/11）决定加、减还是不动，避免了符号位的特殊处理。'},
+  {tag:'A2',subj:'coa',q:'除法运算中，「恢复余数法」的缺点是？',o:['需要乘法器', '需要试减，失败还要恢复，速度慢', '精度低', '不能处理负数'],a:1,why:'恢复余数法先试减，如果结果为负就要把余数加回去（恢复），操作次数不固定。改进的「加减交替法」不用恢复，速度更快。'},
+  {tag:'A2',subj:'coa',q:'ALU 的主要功能是？',o:['控制指令', '存储数据', '传输数据', '算术运算和逻辑运算'],a:3,why:'ALU（算术逻辑单元）是运算器的核心，负责加减乘除、与或非、移位等操作。它不存储数据（那是寄存器的事）。'},
+  {tag:'A2',subj:'coa',q:'定点数和浮点数的主要区别是？',o:['运算速度不同', '精度不同', '存储方式不同', '小数点位置固定 vs 浮动'],a:3,why:'定点数小数点位置固定（隐含约定），表示范围小但运算简单。浮点数小数点位置浮动（用阶码表示），范围大但运算复杂。'},
+  {tag:'A2',subj:'coa',q:'浮点数加减运算的第一步是？',o:['舍入', '对阶（小阶向大阶看齐）', '尾数相加', '规格化'],a:1,why:'浮点加减四步：对阶 → 尾数运算 → 规格化 → 舍入。对阶时小阶向大阶靠拢（尾数右移），保证不丢高位。'},
+  {tag:'A3',subj:'coa',q:'Cache 的作用是？',o:['缓解 CPU 和主存的速度差', '扩大内存容量', '存放下一条指令', '降低功耗'],a:0,why:'CPU 速度快、主存慢，Cache 用 SRAM 做高速缓冲，存放最近常用的数据。依据是程序局部性原理。'},
+  {tag:'A3',subj:'coa',q:'Cache 命中率 H 的定义是？',o:['Cache 速度 / 主存速度', 'CPU 访问 Cache 命中次数 / 总访问次数', 'Cache 容量 / 主存容量', 'Cache 块数 / 主存块数'],a:1,why:'命中率 H = 命中次数 / 总访问次数。平均访问时间 = H×Cache时间 + (1−H)×主存时间。H 越高，平均访问时间越接近 Cache。'},
+  {tag:'A3',subj:'coa',q:'Cache 和主存之间的地址映射方式不包括？',o:['直接映射', '页式映射', '全相联映射', '组相联映射'],a:1,why:'三种映射：直接（一块只能放一个位置）、全相联（任意位置）、组相联（折中，组间直接、组内全相联）。「页式」是虚拟存储的概念。'},
+  {tag:'A3',subj:'coa',q:'Cache 替换算法中，LRU 是指？',o:['随机替换', '替换最近最久未使用的块', '替换最少使用的块', '先进先出'],a:1,why:'LRU（Least Recently Used）：替换最久没被访问的。依据是时间局部性。实现开销比 FIFO 大，但命中率更高。'},
+  {tag:'A3',subj:'coa',q:'写直达（Write Through）和写回（Write Back）的区别是？',o:['写直达不用 Cache', '写直达更快', '写直达每次写都更新主存，写回只在替换时才写回', '写回不用 Cache'],a:2,why:'写直达：每次写 Cache 同时写主存，简单但慢（主存写频繁）。写回：只写 Cache，块被替换时才写回主存，快但需要「脏位」标记。'},
+  {tag:'A3',subj:'coa',q:'多级存储系统的层次结构（从快到慢）是？',o:['寄存器 → Cache → 主存 → 磁盘', '主存 → Cache → 寄存器 → 磁盘', '磁盘 → 主存 → Cache → 寄存器', 'Cache → 寄存器 → 主存 → 磁盘'],a:0,why:'速度递减、容量递增、价格递减：寄存器 > Cache > 主存 > 磁盘 > 磁带。上一层的常用数据放在下一层，形成「缓存」关系。'},
+  {tag:'A3',subj:'coa',q:'主存容量为 4GB，按字节编址，地址线至少需要多少位？',o:['16 位', '32 位', '30 位', '34 位'],a:1,why:'4GB = 2^32 字节，按字节编址就是 2^32 个单元，需要 32 位地址。记住：n 位地址能寻址 2^n 个单元。'},
+  {tag:'A3',subj:'coa',q:'DRAM 和 SRAM 的区别是？',o:['DRAM 需要刷新、速度慢、密度高；SRAM 不需要刷新、速度快、成本高', '两者一样', 'SRAM 需要刷新', 'DRAM 更快'],a:0,why:'DRAM 用电容存数据（会漏电，必须定期刷新），密度高、便宜，用作主存。SRAM 用触发器，不用刷新、速度快，但贵，用作 Cache。'},
+  {tag:'A4',subj:'coa',q:'指令的寻址方式中，「立即寻址」是指？',o:['操作数地址在指令中给出', '操作数直接在指令中给出', '操作数在主存中', '操作数在寄存器中'],a:1,why:'立即寻址：指令里直接放操作数的值（如 ADD R1, #5）。优点是快（不用访存），缺点是数值大小受限。'},
+  {tag:'A4',subj:'coa',q:'「间接寻址」比「直接寻址」多访问几次内存？',o:['少一次', '多两次', '一样', '多一次（要先取出操作数地址）'],a:3,why:'直接寻址：指令给出地址，直接访存取数（1 次访存）。间接寻址：指令给出的是「地址的地址」，要再访存一次取出真正的地址（2 次访存）。'},
+  {tag:'A4',subj:'coa',q:'变址寻址中，有效地址是？',o:['程序计数器 + 形式地址', '变址寄存器的内容 + 形式地址', '形式地址本身', '基址寄存器 + 变址寄存器'],a:1,why:'变址寻址：EA = (IX) + A，IX 可变（常用于数组遍历）。基址寻址：EA = (BR) + A，BR 固定（用于程序重定位）。两者容易混，记「变址变、基址基」。'},
+  {tag:'A4',subj:'coa',q:'RISC 和 CISC 的主要区别是？',o:['RISC 更慢', 'RISC 指令少而简单、定长；CISC 指令多而复杂、变长', '两者一样', 'CISC 指令更少'],a:1,why:'RISC：精简指令集，指令少、定长、寻址方式少，靠流水线提高性能（如 ARM）。CISC：复杂指令集，指令多、变长、功能强（如 x86）。'},
+  {tag:'A4',subj:'coa',q:'指令的操作码字段决定了？',o:['操作数在哪里', '要执行什么操作', '结果放哪里', '下一条指令地址'],a:1,why:'一条指令 = 操作码 + 地址码。操作码指明「做什么」（加、减、跳转），地址码指明「操作数在哪」。'},
+  {tag:'A4',subj:'coa',q:'程序计数器（PC）存放的是？',o:['栈顶地址', '运算结果', '下一条要执行的指令地址', '当前指令的地址'],a:2,why:'PC 指向下一条指令。取指后 PC 自动加「指令长度」，遇到跳转指令则修改 PC。这是程序顺序执行的基础。'},
+  {tag:'A4',subj:'coa',q:'指令周期是指？',o:['执行时间', '时钟周期', '取出并执行一条指令所需的全部时间', '取指时间'],a:2,why:'指令周期 = 取指周期 + 执行周期（可能还有间址周期、中断周期）。一个指令周期包含多个机器周期，一个机器周期包含多个时钟周期。'},
+  {tag:'A4',subj:'coa',q:'堆栈寻址中，栈指针 SP 的作用是？',o:['存数据', '指向栈顶，入栈减、出栈加（或相反）', '存指令', '指向栈底'],a:1,why:'SP 指向栈顶。有的机器入栈时 SP 先减（向低地址生长），出栈时 SP 加。堆栈用于函数调用、中断保存现场。'},
+  {tag:'A5',subj:'coa',q:'流水线技术的主要目的是？',o:['节省内存', '减少单条指令的执行时间', '降低功耗', '提高指令吞吐率'],a:3,why:'流水线让多条指令重叠执行，**提高吞吐率**（单位时间完成的指令数），但**不减少单条指令的延迟**（甚至略增，因为要加流水寄存器）。'},
+  {tag:'A5',subj:'coa',q:'五段流水线（取指、译码、执行、访存、写回）的理想加速比是？',o:['等于 1', '小于 1', '接近 5', '等于 5'],a:2,why:'理想情况 k 段流水线的加速比接近 k（这里是 5），但达不到精确 5，因为有流水寄存器开销、流水不满（启动/排空）。'},
+  {tag:'A5',subj:'coa',q:'流水线的「数据冒险」是指？',o:['后一条指令需要前一条指令还没算出的结果', '中断', '资源冲突', '指令地址跳转'],a:0,why:'数据冒险（RAW）：后一条要用前一条的结果，但前一条还没写回。解决办法：转发（旁路）、插入气泡、编译调度。'},
+  {tag:'A5',subj:'coa',q:'流水线的「控制冒险」通常由什么引起？',o:['数据依赖', '转移指令（分支）', '中断', '资源冲突'],a:1,why:'分支指令要等结果才知道下一条取哪，导致流水线可能取错。解决办法：分支预测、延迟槽、提前判断。'},
+  {tag:'A5',subj:'coa',q:'CPU 中，控制器的功能是？',o:['产生控制信号，协调各部件工作', '执行算术运算', '缓存指令', '存储数据'],a:0,why:'控制器是 CPU 的「指挥中心」，根据指令译码产生各种控制信号（读寄存器、ALU 运算、写内存…）。分为硬布线和微程序两种实现。'},
+  {tag:'A5',subj:'coa',q:'系统总线中，地址总线的作用是？',o:['传送控制信号', '传送内存或 IO 端口的地址', '传送时钟', '传送数据'],a:1,why:'三总线：地址总线（单向，CPU 发出）、数据总线（双向）、控制总线（双向）。地址总线宽度决定了可寻址空间的大小。'},
+  {tag:'A5',subj:'coa',q:'中断向量表存放的是？',o:['中断次数', '中断优先级', '各中断服务程序的入口地址', '中断屏蔽字'],a:2,why:'中断向量表（IVT）按中断号索引，存对应处理程序的入口地址。CPU 响应中断后查表跳转。'},
+  {tag:'A5',subj:'coa',q:'DMA 传输时，CPU 的工作状态是？',o:['CPU 逐字节搬运数据', 'CPU 反复查询设备', 'CPU 可以继续执行程序（不参与数据传输）', 'CPU 暂停所有工作'],a:2,why:'DMA 让设备直接和内存交换数据，CPU 只在传输开始/结束时代码介入（设置寄存器、处理中断）。传输期间 CPU 继续执行程序（可能和 DMA 抢总线）。'}
 ];
 
 /* ============================================================
@@ -693,6 +733,18 @@ const CARDS = {
     {id:'co-8',  title:'分页 vs 分段', src:'OS3', body:'页是物理划分（大小固定、透明），段是逻辑划分（大小可变、用户可见）。'},
     {id:'co-9',  title:'虚拟内存的基础', src:'OS3', body:'程序局部性原理：只把正在用的部分调入内存，其余留磁盘。'},
     {id:'co-10', title:'页面置换', src:'OS3', body:'FIFO 有 Belady 异常；LRU 不会；OPT 是理论最优但无法实现。'}
+  ],
+  coa: [
+    {id:'ca-1',  title:'补码的范围', src:'COA1', body:'n 位补码：−2^(n−1) ~ 2^(n−1)−1。8 位是 −128~127。0 只有一个编码。'},
+    {id:'ca-2',  title:'取反加一', src:'COA1', body:'求 −x 的补码：把 x 的补码（含符号位）全部取反，再加 1。'},
+    {id:'ca-3',  title:'IEEE 754 单精度', src:'COA1', body:'1 位符号 + 8 位阶码 + 23 位尾数。阶码用移码，尾数隐含最高位 1。'},
+    {id:'ca-4',  title:'海明码公式', src:'COA1', body:'2^r ≥ k + r + 1。r 个校验位要能定位「任意一位出错」+「无错」。'},
+    {id:'ca-5',  title:'补码减法', src:'COA2', body:'[A−B]补 = [A]补 + [−B]补。硬件只需一个加法器。'},
+    {id:'ca-6',  title:'溢出判断', src:'COA2', body:'同号相加得异号才溢出。异号相加永远不溢出。'},
+    {id:'ca-7',  title:'Cache 命中率', src:'COA3', body:'平均访问时间 = H×Cache时间 + (1−H)×主存时间。'},
+    {id:'ca-8',  title:'Cache 三种映射', src:'COA3', body:'直接映射、全相联映射、组相联映射。「页式」是虚拟存储的概念，不是 Cache 的。'},
+    {id:'ca-9',  title:'变址 vs 基址', src:'COA4', body:'变址：EA = (IX) + A，IX 可变（数组遍历）。基址：EA = (BR) + A，BR 固定（重定位）。'},
+    {id:'ca-10', title:'流水线', src:'COA5', body:'提高吞吐率、不减少单条指令延迟。数据冒险靠转发，控制冒险靠分支预测。'}
   ]
 };
 
@@ -975,6 +1027,33 @@ const SUBJ_CHAPTERS = {
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
     {n:10, waves:6, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
      bank:['O1','O2','O3','O4','O5'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
+     newEnemy:'tank'}
+  ],
+  coa: [
+    {n:1,  waves:3, types:['drone'], map:'fortress', mods:[], bank:'A1',
+     traits:['multi','rapid','armor']},
+    {n:2,  waves:4, types:['drone'], map:'cross', mods:['rush'], bank:'A1',
+     traits:['multi','rapid','armor']},
+    {n:3,  waves:4, types:['drone','shooter'], map:'rooms', mods:[], bank:'A2',
+     traits:['multi','rapid','armor','pierce'], newEnemy:'shooter'},
+    {n:4,  waves:5, types:['drone','shooter'], map:'fortress', mods:['iron'], bank:'A2',
+     traits:['multi','rapid','armor','pierce','regen']},
+    {n:5,  waves:0, types:['drone','shooter'], map:'ring', mods:[], bank:['A1','A2'],
+     goal:'survive', survive:3600,
+     traits:['multi','rapid','armor','pierce','regen','speed']},
+    {n:6,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'], bank:'A3',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit'], newEnemy:'charger'},
+    {n:7,  waves:5, types:['drone','shooter','charger'], map:'rooms', mods:['elite'], bank:'A3',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce']},
+    {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[], bank:'A4',
+     goal:'escort',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
+    {n:9,  waves:6, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
+     bank:['A3','A4','A5'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
+    {n:10, waves:6, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+     bank:['A1','A2','A3','A4','A5'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
      newEnemy:'tank'}
   ]
