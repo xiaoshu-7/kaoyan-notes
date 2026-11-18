@@ -302,7 +302,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
       </div>
 
       <div class="hud">
-        <span>我 <span class="bar"><i id="meBar" style="width:100%;background:var(--cyan)"></i></span> <b id="meTxt">100</b></span>
+        <span>我 <span class="bar"><i id="meBar" style="width:100%;background:#7fd6ff"></i></span> <b id="meTxt">100</b></span>
         <span>基地 <span class="bar"><i id="hpBar" style="width:100%"></i></span> <b id="hpTxt">100</b></span>
         <span>火力 <b id="lvTxt">1</b></span>
         <span class="threat">威胁 <b id="threatTxt">1</b></span>
@@ -712,13 +712,13 @@ const TILE = 24;
 
 /* ============ 科目美术风格（墙 / 敌人形状） ============ */
 const SUBJ_ART = {
-  ds:  {wall:'rgba(22,52,40,.74)',   edge:'rgba(90,200,145,.26)', glow:'rgba(120,230,170,.05)', shape:'diamond'},
-  coa: {wall:'rgba(38,26,64,.78)',   edge:'rgba(170,120,255,.30)', glow:'rgba(200,160,255,.08)', shape:'square'},
-  os:  {wall:'rgba(10,36,32,.78)',   edge:'rgba(90,224,208,.30)',  glow:'rgba(120,240,225,.08)', shape:'block'},
-  net: {wall:'rgba(12,30,56,.78)',   edge:'rgba(95,168,255,.30)',  glow:'rgba(130,190,255,.08)', shape:'circle'},
-  math:{wall:'rgba(42,30,16,.78)',   edge:'rgba(255,169,77,.30)',  glow:'rgba(255,200,120,.08)', shape:'triangle'},
-  en:  {wall:'rgba(34,30,20,.78)',   edge:'rgba(224,208,144,.30)', glow:'rgba(240,230,170,.08)', shape:'round'},
-  pol: {wall:'rgba(42,16,20,.78)',   edge:'rgba(255,107,107,.30)', glow:'rgba(255,150,150,.08)', shape:'star'}
+  ds:  {wall:'rgba(22,52,40,.74)',   edge:'rgba(90,200,145,.26)', glow:'rgba(120,230,170,.05)', shape:'diamond',  base:'255,214,102', grid:'60,150,110'},
+  coa: {wall:'rgba(38,26,64,.78)',   edge:'rgba(170,120,255,.30)', glow:'rgba(200,160,255,.08)', shape:'square',   base:'199,125,255', grid:'140,100,220'},
+  os:  {wall:'rgba(10,36,32,.78)',   edge:'rgba(90,224,208,.30)',  glow:'rgba(120,240,225,.08)', shape:'block',    base:'95,224,208',  grid:'60,180,170'},
+  net: {wall:'rgba(12,30,56,.78)',   edge:'rgba(95,168,255,.30)',  glow:'rgba(130,190,255,.08)', shape:'circle',   base:'95,168,255',  grid:'70,130,220'},
+  math:{wall:'rgba(42,30,16,.78)',   edge:'rgba(255,169,77,.30)',  glow:'rgba(255,200,120,.08)', shape:'triangle', base:'255,169,77',  grid:'220,150,70'},
+  en:  {wall:'rgba(34,30,20,.78)',   edge:'rgba(224,208,144,.30)', glow:'rgba(240,230,170,.08)', shape:'round',    base:'224,208,144', grid:'180,170,120'},
+  pol: {wall:'rgba(42,16,20,.78)',   edge:'rgba(255,107,107,.30)', glow:'rgba(255,150,150,.08)', shape:'star',     base:'255,140,140', grid:'200,90,90'}
 };
 
 /* ============ 科目主题配色 ============ */
@@ -759,11 +759,7 @@ function applyTheme(subj){
   r.setProperty('--green', t.main);
   r.setProperty('--cyan', t.sub);
 
-  // 玩家和子弹跟随主题（用户自定义皮肤时保留）
-  if(G.skin){
-    if(!G.skin.body || G.skin.body === '#7fd6ff') G.skin.body = t.main;
-    if(!G.skin.bullet || G.skin.bullet === '#a8e6ff') G.skin.bullet = t.sub;
-  }
+  // 玩家与子弹由皮肤控制，不跟随科目主题
   return t;
 }
 
@@ -1932,7 +1928,7 @@ function boom(x,y,col){
    ============================================================ */
 function render(){
   const vw = G.viewW, vh = G.viewH;
-  ctx.fillStyle = '#' + G.skin.field;
+  ctx.fillStyle = (THEMES[G.subject] || THEMES.ds).bg;
   ctx.fillRect(0,0,vw,vh);
 
   ctx.save();
@@ -1949,7 +1945,8 @@ function render(){
   const r0 = Math.max(0, Math.floor(viewT/TILE)), r1 = Math.min(G.rows, Math.ceil(viewB/TILE)+1);
 
   // 网格
-  ctx.strokeStyle = 'rgba(60,150,110,.07)';
+  const GART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
+  ctx.strokeStyle = 'rgba(' + GART.grid + ',.07)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
@@ -2006,17 +2003,19 @@ function render(){
   const hpRate = b.hp / b.maxHp;
   ctx.save();
   ctx.translate(b.x, b.y);
-  ctx.strokeStyle = 'rgba(255,214,102,.22)';
+  const BART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
+  const B = BART.base;
+  ctx.strokeStyle = 'rgba(' + B + ',.22)';
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.arc(0,0,b.r*1.6*pulse,0,Math.PI*2); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,214,102,.11)';
+  ctx.strokeStyle = 'rgba(' + B + ',.11)';
   ctx.beginPath(); ctx.arc(0,0,b.r*2.15*pulse,0,Math.PI*2); ctx.stroke();
-  ctx.fillStyle = hpRate > .5 ? 'rgba(255,214,102,.15)' : 'rgba(255,120,90,.18)';
+  ctx.fillStyle = hpRate > .5 ? 'rgba(' + B + ',.15)' : 'rgba(255,120,90,.18)';
   ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle = hpRate > .5 ? 'rgba(255,214,102,.85)' : 'rgba(255,120,90,.9)';
+  ctx.strokeStyle = hpRate > .5 ? 'rgba(' + B + ',.85)' : 'rgba(255,120,90,.9)';
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(0,0,b.r,0,Math.PI*2); ctx.stroke();
-  ctx.fillStyle = hpRate > .5 ? 'rgba(255,232,160,.9)' : 'rgba(255,150,120,.9)';
+  ctx.fillStyle = hpRate > .5 ? 'rgba(' + B + ',.92)' : 'rgba(255,150,120,.9)';
   ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
   ctx.restore();
 
