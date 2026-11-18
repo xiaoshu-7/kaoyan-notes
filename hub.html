@@ -876,6 +876,25 @@ function lvKey(n){ return SUBJECT_ID + '-' + CHAPTER_ID + '-' + n; }
 /* ============================================================
    渲染
    ============================================================ */
+function subjectStars(){
+  const prog = loadProg();
+  let sum = 0;
+  for(const k in prog){
+    if(k.indexOf(SUBJECT_ID + '-') === 0) sum += prog[k].stars || 0;
+  }
+  return sum;
+}
+
+function chapterStars(ch){
+  const prog = loadProg();
+  let sum = 0;
+  for(let i=1;i<=10;i++){
+    const p = prog[SUBJECT_ID + '-' + ch + '-' + i];
+    if(p) sum += p.stars || 0;
+  }
+  return sum;
+}
+
 function renderHeader(){
   const meta = SUBJECTS_META[SUBJECT_ID] || SUBJECTS_META.ds;
   document.getElementById('subjName').textContent = meta.name;
@@ -886,7 +905,7 @@ function renderHeader(){
   box.innerHTML = '';
   CHAPTERS.forEach(c => {
     const b = document.createElement('button');
-    b.textContent = c.name + (c.ready ? '' : ' 🔒');
+    b.textContent = c.name + (c.ready ? ' ★' + chapterStars(c.no) : ' 🔒');
     if(c.ready && c.no === CHAPTER_ID) b.className = 'on';
     if(!c.ready) b.disabled = true;
     if(c.ready && c.no !== CHAPTER_ID){
@@ -900,29 +919,36 @@ function render(){
   const prog = loadProg();
   const wrong = loadWrong();
 
-  let stars = 0, okSum = 0, accSum = 0, accN = 0, scoreSum = 0, cleared = 0;
+  // 科目总星数（跨所有章）
+  let stars = 0;
+  for(const k in prog){
+    if(k.indexOf(SUBJECT_ID + '-') === 0) stars += prog[k].stars || 0;
+  }
+  const chCount = CHAPTERS.filter(c => c.ready).length || 1;
+  const starMax = chCount * 30;
 
+  // 当前章的统计
+  let okSum = 0, accSum = 0, accN = 0, scoreSum = 0, cleared = 0;
   for(let i=1;i<=LV_TOTAL;i++){
     const p = prog[lvKey(i)];
     if(!p) continue;
-    stars += p.stars || 0;
     if(p.cleared) cleared++;
     if(p.ok != null) okSum += p.ok;
     if(p.rate != null){ accSum += p.rate; accN++; }
     scoreSum += p.score || 0;
   }
 
-  // 星星行
-  const full = Math.floor(stars / 10);
-  const part = stars % 10;
+  // 星星行：10 颗代表总进度
+  const ratio = Math.min(1, stars / starMax);
+  const fullN = Math.floor(ratio * 10);
+  const partN = (ratio * 10 - fullN) > 0.05 ? 1 : 0;
   let row = '';
-  for(let i=0;i<full;i++) row += '<span class="on">★</span>';
-  if(part) row += '<span class="on" style="opacity:.55">★</span>';
-  const rest = 10 - full - (part ? 1 : 0);
-  for(let i=0;i<rest;i++) row += '<span class="off">★</span>';
+  for(let i=0;i<fullN;i++) row += '<span class="on">★</span>';
+  if(partN) row += '<span class="on" style="opacity:.55">★</span>';
+  for(let i=0;i<10-fullN-partN;i++) row += '<span class="off">★</span>';
   document.getElementById('starRow').innerHTML = row;
   document.getElementById('starGot').textContent = stars;
-  document.getElementById('starMax').textContent = LV_TOTAL * 3;
+  document.getElementById('starMax').textContent = starMax;
 
   document.getElementById('okNum').textContent = okSum;
   document.getElementById('accNum').textContent = accN ? Math.round(accSum / accN * 100) + '%' : '—';
