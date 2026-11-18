@@ -2436,9 +2436,10 @@ function render(){
   const FIELD = G.skin.fieldTexture || GART.bgStyle || 'grid';
 
   if(FIELD === 'circuit'){
-    // 计组：电路走线（世界坐标，跟着滚）
-    for(let r=r0;r<r1;r+=3){
-      for(let c=c0;c<c1;c+=3){
+    // 计组：电路走线（世界坐标，起点对齐到 3 的倍数，避免抖动）
+    const rC = Math.floor(r0/3)*3, cC = Math.floor(c0/3)*3;
+    for(let r=rC;r<r1;r+=3){
+      for(let c=cC;c<c1;c+=3){
         ctx.strokeStyle = 'rgba(' + GART.grid + ',.20)';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -2454,8 +2455,9 @@ function render(){
   } else if(FIELD === 'dots'){
     // 网络：点阵（世界坐标，跟着滚）
     ctx.fillStyle = 'rgba(' + GART.grid + ',.20)';
-    for(let r=r0;r<r1;r+=2){
-      for(let c=c0;c<c1;c+=2){
+    const rD = Math.floor(r0/2)*2, cD = Math.floor(c0/2)*2;
+    for(let r=rD;r<r1;r+=2){
+      for(let c=cD;c<c1;c+=2){
         ctx.fillRect(c*TILE - 1, r*TILE - 1, 2, 2);
       }
     }
