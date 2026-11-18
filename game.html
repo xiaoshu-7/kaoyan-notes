@@ -2229,6 +2229,19 @@ function showSettle(final){
   ).join('');
 
   const card = grantCard(G.chapter, G.level);
+
+  // 本章碎片收集情况
+  let cardGot = 0, cardMax = 10;
+  try{
+    const arr = JSON.parse(localStorage.getItem('qz:cards') || '[]');
+    let list = null;
+    if(G.subject === 'ds'){ list = CARDS[G.chapter]; }
+    else if(CARDS[G.subject]){ list = CARDS[G.subject].slice((G.chapter-1)*10, G.chapter*10); }
+    if(list){
+      cardMax = list.length;
+      list.forEach(function(c){ if(arr.indexOf(c.id) >= 0) cardGot++; });
+    }
+  }catch(e){}
   const cardHtml = card
     ? '<div style="margin:14px auto 4px;max-width:340px;padding:12px 14px;text-align:left;' +
       'background:rgba(255,209,102,.07);border:1px solid rgba(255,209,102,.35);border-radius:4px">' +
@@ -2246,7 +2259,8 @@ function showSettle(final){
       '第 ' + G.level + ' 关 · ' + (G.goal === 'survive' ? '生存关' : (G.goal === 'escort' ? '护送关' : ('第 ' + G.wave + ' / ' + G.totalWaves + ' 波'))) + '<br>' +
       '<div style="font-size:30px;letter-spacing:6px;color:#ffd166;margin-bottom:8px">' + starHtml + '</div>' +
       '答对 <b style="color:#5fe08a">' + G.okN + '</b> / ' + total + '（' + rate + '%）' +
-      '　得分 <b style="color:#ffd166">' + G.score + '</b>' +
+      '　得分 <b style="color:#ffd166">' + G.score + '</b><br>' +
+      '碎片 <b style="color:#7fd6ff">' + cardGot + '</b> / ' + cardMax +
     '</div>' +
     cardHtml +
     '<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center">' +
