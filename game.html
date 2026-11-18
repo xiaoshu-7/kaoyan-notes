@@ -2422,39 +2422,6 @@ function render(){
 
   const zoom = G.zoom, camX = G.cam.x, camY = G.cam.y;
   ctx.save();
-  // === 屏幕空间背景（不随镜头滚动） ===
-  const BGART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
-  // 地皮：皮肤优先，否则用科目默认
-  const FIELD = G.skin.fieldTexture || BGART.bgStyle || 'grid';
-
-  if(FIELD === 'circuit'){
-    // 计组：电路走线（固定在屏幕上）
-    const step = 74;
-    ctx.strokeStyle = 'rgba(' + BGART.grid + ',.22)';
-    ctx.lineWidth = 1;
-    for(let y=26; y<vh; y+=step){
-      for(let x=34; x<vw; x+=step){
-        ctx.beginPath();
-        ctx.moveTo(x, y); ctx.lineTo(x+22, y); ctx.lineTo(x+22, y+22);
-        ctx.stroke();
-        ctx.beginPath(); ctx.arc(x, y, 1.7, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(' + BGART.grid + ',.38)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(x+22, y+22, 1.7, 0, Math.PI*2); ctx.fill();
-      }
-    }
-  } else if(FIELD === 'dots'){
-    // 网络：点阵（固定在屏幕上）
-    const step = 26;
-    ctx.fillStyle = 'rgba(' + BGART.grid + ',.22)';
-    for(let y=13; y<vh; y+=step){
-      for(let x=13; x<vw; x+=step){
-        ctx.fillRect(x, y, 2, 2);
-      }
-    }
-  } else if(FIELD === 'none'){
-    // 无纹理
-  }
-
   ctx.scale(zoom, zoom);
   ctx.translate(-camX, -camY);
 
@@ -2464,18 +2431,42 @@ function render(){
   const c0 = Math.max(0, Math.floor(viewL/TILE)), c1 = Math.min(G.cols, Math.ceil(viewR/TILE)+1);
   const r0 = Math.max(0, Math.floor(viewT/TILE)), r1 = Math.min(G.rows, Math.ceil(viewB/TILE)+1);
 
-  // 背景纹理（按科目）
+  // 背景纹理（跟着世界滚，产生「在地图上走」的感觉）
   const GART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
-  const BGS = GART.bgStyle;
+  const FIELD = G.skin.fieldTexture || GART.bgStyle || 'grid';
 
-  if(BGS === 'grid' && FIELD === 'grid'){
+  if(FIELD === 'circuit'){
+    // 计组：电路走线（世界坐标，跟着滚）
+    for(let r=r0;r<r1;r+=3){
+      for(let c=c0;c<c1;c+=3){
+        ctx.strokeStyle = 'rgba(' + GART.grid + ',.20)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(c*TILE, r*TILE);
+        ctx.lineTo(c*TILE + TILE, r*TILE);
+        ctx.lineTo(c*TILE + TILE, r*TILE + TILE);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(' + GART.grid + ',.32)';
+        ctx.beginPath(); ctx.arc(c*TILE, r*TILE, 1.6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(c*TILE + TILE, r*TILE + TILE, 1.6, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  } else if(FIELD === 'dots'){
+    // 网络：点阵（世界坐标，跟着滚）
+    ctx.fillStyle = 'rgba(' + GART.grid + ',.20)';
+    for(let r=r0;r<r1;r+=2){
+      for(let c=c0;c<c1;c+=2){
+        ctx.fillRect(c*TILE - 1, r*TILE - 1, 2, 2);
+      }
+    }
+  } else if(FIELD === 'grid'){
     ctx.strokeStyle = 'rgba(' + GART.grid + ',.13)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
     for(let r=r0;r<=r1;r++){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); }
     ctx.stroke();
-  } else if(BGS === 'axis'){
+  } else if(FIELD === 'axis'){
     // 坐标纸：细网格 + 每 5 格加粗
     ctx.strokeStyle = 'rgba(' + GART.grid + ',.06)';
     ctx.lineWidth = 1;
@@ -2488,7 +2479,7 @@ function render(){
     for(let c=c0;c<=c1;c++){ if(c % 5 === 0){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); } }
     for(let r=r0;r<=r1;r++){ if(r % 5 === 0){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); } }
     ctx.stroke();
-  } else if(BGS === 'lines'){
+  } else if(FIELD === 'lines'){
     // 稿纸横线
     ctx.strokeStyle = 'rgba(' + GART.grid + ',.10)';
     ctx.lineWidth = 1;
