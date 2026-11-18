@@ -80,6 +80,10 @@ body{
   font-size:13px;color:var(--dim);
 }
 .starnum b{color:var(--gold);font-size:20px;margin-right:2px}
+.starpct{
+  font-size:11px;color:#5f8172;letter-spacing:.05em;
+  padding:2px 8px;border:1px solid rgba(90,210,150,.18);border-radius:10px;
+}
 
 .stats{display:flex;gap:22px;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
 .stats b{color:var(--ink);font-size:13px}
@@ -332,6 +336,7 @@ body{
     <div class="starline">
       <span class="stars" id="starRow"></span>
       <span class="starnum"><b id="starGot">0</b> / <span id="starMax">30</span></span>
+      <span class="starpct" id="starPct">0%</span>
     </div>
 
     <div class="stats">
@@ -950,6 +955,8 @@ function render(){
   document.getElementById('starRow').innerHTML = row;
   document.getElementById('starGot').textContent = stars;
   document.getElementById('starMax').textContent = starMax;
+  const pctEl = document.getElementById('starPct');
+  if(pctEl) pctEl.textContent = starMax ? ((stars / starMax * 100).toFixed(1) + '%') : '0%';
 
   document.getElementById('okNum').textContent = okSum;
   document.getElementById('accNum').textContent = accN ? Math.round(accSum / accN * 100) + '%' : '—';
