@@ -304,7 +304,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
     <div class="quiz">
       <div class="qhead">
         <span class="n" id="qno">第 1 题</span>
-        <span>数据结构 · 线性表</span>
+        <span id="quizSubj">数据结构 · 线性表</span>
         <span class="sp"></span>
         <span class="reward-tag" id="rewardTag">答对 ——</span>
         <span class="st" id="streakBox">连对 0</span>
@@ -419,7 +419,31 @@ const BANK = [
   {tag:'Q2',q:'链队列的队头和队尾分别在链表的？',o:['都在头部', '队头在尾部，队尾在头部', '队头在链表头部，队尾在链表尾部', '都在尾部'],a:2,why:'链队列用头指针指队头（出队 O(1)），用尾指针指队尾（入队 O(1)）。这样两个操作都是常数时间。'},
   {tag:'Q2',q:'双端队列（Deque）的特点是？',o:['两端都可以入队和出队', '只能入不能出', '只能一端入队一端出队', '只能出不能入'],a:0,why:'双端队列两端都能插入和删除。如果限制某一端只能入或只能出，就退化成栈或普通队列。408 常考「输入受限」和「输出受限」两种变体。'},
   {tag:'Q2',q:'二叉树的层次遍历需要用（　）辅助。',o:['队列', '数组', '栈', '链表'],a:0,why:'层次遍历是逐层访问，用队列：根入队，然后每次出队一个、访问它、把它的左右孩子入队。DFS（深度优先）才用栈。'},
-  {tag:'Q2',q:'操作系统中的打印缓冲区，本质上是（　）的应用。',o:['栈', '树', '数组', '队列'],a:3,why:'多个进程要打印，按提交顺序排队，先提交先打印——这就是队列。缓冲区、消息队列、任务调度都是队列的应用。'}
+  {tag:'Q2',q:'操作系统中的打印缓冲区，本质上是（　）的应用。',o:['栈', '树', '数组', '队列'],a:3,why:'多个进程要打印，按提交顺序排队，先提交先打印——这就是队列。缓冲区、消息队列、任务调度都是队列的应用。'},
+  {tag:'C1',q:'串（字符串）是一种特殊的线性表，它的数据元素是？',o:['记录', '字符', '整数', '结点'],a:1,why:'串是内容受限的线性表：元素只能是字符。这是它和普通线性表唯一的区别，其他操作（求长、比较、连接）都建立在「元素是字符」这个前提上。'},
+  {tag:'C1',q:'空串和空格串的区别是？',o:['空串有一个空格', '两者一样', '空串长度 0，空格串由空格组成且长度大于 0', '空格串长度为 0'],a:2,why:'空串是 \'\'（长度 0），空格串是 \'   \'（长度 > 0，元素全是空格字符）。很多题会用这个区分考生的细心程度。'},
+  {tag:'C1',q:'串的长度指的是？',o:['串中字符的个数', '串的 ASCII 码之和', '串占用的字节数', '串的存储空间'],a:0,why:'长度 = 字符个数，不是字节数。比如中文字符串「你好」长度是 2（两个字符），但可能占 6 个字节（UTF-8）。'},
+  {tag:'C1',q:'若串 S = \'software\'，其子串的数目是？',o:['8', '37', '9', '36'],a:1,why:'长度 n 的串，子串个数 = n(n+1)/2 + 1 = 8×9/2 + 1 = 37。加 1 是空串。注意「子串」要求连续，「子序列」不要求。'},
+  {tag:'C1',q:'子串和子序列的区别是？',o:['两者一样', '子序列必须连续', '子串必须连续，子序列不要求连续', '子串更长'],a:2,why:'\'abc\' 的子串有 \'ab\'、\'bc\'、\'abc\' 等（连续）；子序列可以是 \'ac\'（不连续）。考「子串数目」用 n(n+1)/2+1，考「子序列」是 2^n。'},
+  {tag:'C1',q:'串的存储结构通常有？',o:['散列存储', '只有链式存储', '只有顺序存储', '顺序存储和链式存储'],a:3,why:'顺序存储用字符数组（连续），链式存储用链表（每个结点存一个或多个字符）。实际中顺序存储更常用，因为串操作多是整体处理。'},
+  {tag:'C1',q:'两个串比较大小，依据是？',o:['字典序（逐字符比较 ASCII 码）', '长度', '字符总和', '哈希值'],a:0,why:'从第一个字符开始逐个比较 ASCII 码，第一个不同的字符决定大小；若一个串是另一个的前缀，长的那个更大。'},
+  {tag:'C1',q:'串的模式匹配是指？',o:['连接两个串', '比较两个串是否相等', '在主串中查找子串（模式串）的位置', '求串的长度'],a:2,why:'主串 S 中找模式串 T 第一次出现的位置。找不到返回 0（或 -1）。这是串最重要的操作，BF 和 KMP 都是解决它。'},
+  {tag:'C2',q:'BF（朴素）模式匹配算法的核心思想是？',o:['跳着比较', '用哈希加速', '主串和模式串逐字符比较，失配时主串指针回退到上次起点的下一个', '从后往前比较'],a:2,why:'BF 就是暴力：i 指向主串、j 指向模式串，相等就都后移；失配就 i 回到 i-j+1、j 回到 0，从头再来。简单但慢。'},
+  {tag:'C2',q:'BF 算法最坏情况下的时间复杂度是？',o:['O(n)', 'O(n×m)', 'O(m)', 'O(n+m)'],a:1,why:'n 是主串长度、m 是模式串长度。最坏情况是主串和模式串都是 \'aaaa...ab\'，每次都要比较 m 个字符才失配，共比较 (n-m+1)×m 次。'},
+  {tag:'C2',q:'BF 算法最好情况下的时间复杂度是？',o:['O(n×m)', 'O(m)', 'O(1)', 'O(n)'],a:3,why:'最好情况是第一次就匹配成功，或者每次第一个字符就失配，总共比较 n 次左右，所以是 O(n)。'},
+  {tag:'C2',q:'BF 算法失配时，主串指针 i 应该回到？',o:['当前位置不动', '模式串开头对应的位置', '0', '上次起点的下一个位置'],a:3,why:'假设这次从主串的 s 位置开始匹配，失配时 i 回到 s+1，j 回到 0。这就是「回溯」，也是 BF 慢的原因。KMP 就是避免这个回溯。'},
+  {tag:'C2',q:'主串长度 n、模式串长度 m，BF 最多需要尝试多少次起点？',o:['m', 'n', 'n−m+1', 'n+m'],a:2,why:'起点可以是 0 到 n−m（0-based），共 n−m+1 个位置。再往后主串剩余长度不够放下模式串了，不用试。'},
+  {tag:'C2',q:'以下哪种情况 BF 算法表现最差？',o:['主串很短', '模式串很短', '主串和模式串完全不同', '主串和模式串都是大量重复字符，最后才失配'],a:3,why:'比如主串 \'aaaaaaaaab\'、模式串 \'aaab\'，每次都要比较到第 4 个字符才失配，然后回退一位重来。这种「部分匹配」是最坏情况。'},
+  {tag:'C3',q:'KMP 算法相比 BF 的核心改进是？',o:['利用已匹配的信息，主串指针不回退', '把模式串排序', '用哈希表加速', '并行比较'],a:0,why:'KMP 的核心是：失配时主串指针 i 不动，只把模式串指针 j 滑动到一个合适位置。这个位置由 next 数组给出，利用了「已匹配部分的前缀和后缀」信息。'},
+  {tag:'C3',q:'KMP 算法的时间复杂度是？',o:['O(m²)', 'O(n+m)', 'O(n×m)', 'O(n)'],a:1,why:'求 next 数组 O(m)，匹配过程主串指针不回退、最多走 n 步，所以总共 O(n+m)。这是它比 BF 的 O(n×m) 强的关键。'},
+  {tag:'C3',q:'next 数组的含义是？',o:['模式串前 j 个字符中，最长相等前后缀的长度', '失配后主串要移动的距离', '模式串的长度', '字符的 ASCII 码'],a:0,why:'next[j] 表示：模式串的前 j 个字符组成的子串，它的最长「相等前缀和后缀」的长度。失配时 j 跳到这个值，因为前缀已经匹配过了，不用重比。'},
+  {tag:'C3',q:'采用 1-based 下标（next[1]=0）时，模式串 \'abab\' 的 next 数组是？',o:['0 0 1 2', '0 1 2 3', '1 1 2 3', '0 1 1 2'],a:3,why:'next[1]=0（约定）；next[2]：\'a\' 无相等前后缀，=1；next[3]：\'ab\' 无，=1；next[4]：\'aba\' 的相等前后缀是 \'a\'，长度 1，所以 =2。注意不同教材约定不同，做题要看清。'},
+  {tag:'C3',q:'KMP 中「失配时 j 跳到 next[j]」，这样做的依据是？',o:['减少比较次数', '随机跳', '节省内存', '模式串前 j 个字符的前缀和后缀相同，前缀已匹配，可直接对齐'],a:3,why:'如果模式串前 j 个字符有长度为 k 的相等前后缀，那么主串在失配位置前的 k 个字符一定和模式串的前 k 个字符相同，所以可以直接把模式串的前 k 个字符对齐过去。'},
+  {tag:'C3',q:'nextval 数组相比 next 数组的改进是？',o:['避免模式串中相同字符的重复比较', '计算更快', '适用于更长的串', '占空间更小'],a:0,why:'如果 p[j] == p[next[j]]，那么跳到 next[j] 后必然再次失配，可以直接跳到 next[next[j]]。nextval 就是做了这个优化。'},
+  {tag:'C3',q:'求 next 数组时，所谓「前缀」和「后缀」是指？',o:['任意子串', '第一个和最后一个字符', '整个串', '不含最后一个字符的前缀、不含第一个字符的后缀'],a:3,why:'前缀是除最后一个字符外的所有头部子串，后缀是除第一个字符外的所有尾部子串。求的是两者最长相等的长度。这个定义是 KMP 的核心。'},
+  {tag:'C3',q:'KMP 算法中，主串指针 i 会回退吗？',o:['会，和 BF 一样', '不会，一直向前', '取决于模式串', '偶尔回退'],a:1,why:'这正是 KMP 的关键：i 只增不减，所以匹配过程是 O(n)。回退的工作交给了模式串指针 j 的跳转。'},
+  {tag:'C3',q:'模式串 \'aaaa\' 的 next 数组（1-based，next[1]=0）是？',o:['0 1 1 1', '0 0 0 0', '0 1 2 3', '1 1 1 1'],a:2,why:'next[1]=0；next[2]：\'a\' 无前后缀，=1；next[3]：\'aa\' 的相等前后缀 \'a\' 长度 1，=2；next[4]：\'aaa\' 的相等前后缀 \'aa\' 长度 2，=3。全是相同字符时 next 递增。'},
+  {tag:'C3',q:'若模式串长度为 m，求 next 数组的时间复杂度是？',o:['O(m)', 'O(1)', 'O(m²)', 'O(m log m)'],a:0,why:'标准求法用两个指针 i、j，j 只增不减（或回退有限次），总比较次数 O(m)。即使写成看似两层的循环，实际是 O(m) 的均摊复杂度。'}
 ];
 
 /* ============================================================
@@ -449,7 +473,18 @@ const CARDS = {
     {id:'c2-7',  title:'循环队列判空判满', src:'2.3', body:'判空 front == rear；判满 (rear+1)%MAXSIZE == front（少用一个空间）。两者不能混。'},
     {id:'c2-8',  title:'循环队列元素个数', src:'2.3', body:'(rear − front + MAXSIZE) % MAXSIZE。加 MAXSIZE 是因为 rear 可能小于 front（绕回了）。'},
     {id:'c2-9',  title:'假溢出', src:'2.3', body:'顺序队列出队后队头前移，但队尾到了数组末尾就报满——明明前面还有空位。解法是改成循环队列。'},
-    {id:'c2-10', title:'队列的应用', src:'2.4', body:'二叉树层次遍历（BFS）、打印缓冲区、任务调度、消息队列。只要「先来先服务」就是队列。'}
+    {id:'c2-10', title:'队列的应用', src:'2.4', body:'二叉树层次遍历（BFS）、打印缓冲区、任务调度、消息队列。只要「先来先服务」就是队列。'}  ],
+  3: [
+    {id:'c3-1',  title:'串的定义', src:'3.1', body:'串是元素为字符的线性表（内容受限）。长度 = 字符个数，不是字节数。'},
+    {id:'c3-2',  title:'空串 vs 空格串', src:'3.1', body:'空串（长度为 0）vs 空格串（全是空格字符、长度大于 0）。这是最容易记混的一对。'},
+    {id:'c3-3',  title:'子串数目', src:'3.1', body:'长度 n 的串，子串个数 = n(n+1)/2 + 1（含空串）。子序列则是 2^n。'},
+    {id:'c3-4',  title:'串的比较', src:'3.1', body:'按字典序逐字符比 ASCII；若一个是另一个的前缀，长的更大。'},
+    {id:'c3-5',  title:'BF 的核心', src:'3.2', body:'暴力匹配：失配时主串指针回退到起点+1，模式串回到开头。简单但慢。'},
+    {id:'c3-6',  title:'BF 的复杂度', src:'3.2', body:'最坏 O(n×m)（大量重复字符、最后才失配），最好 O(n)（每次第一个字符就失配）。'},
+    {id:'c3-7',  title:'KMP 的核心', src:'3.3', body:'失配时主串指针 i 不回退，只让模式串指针 j 跳到 next[j]。这是 O(n+m) 的关键。'},
+    {id:'c3-8',  title:'next 数组的含义', src:'3.3', body:'next[j] = 模式串前 j 个字符中「最长相等前后缀」的长度。前缀不含最后一个字符，后缀不含第一个。'},
+    {id:'c3-9',  title:'KMP 的复杂度', src:'3.3', body:'求 next 数组 O(m)，匹配 O(n)，总共 O(n+m)。i 只增不减是根本原因。'},
+    {id:'c3-10', title:'nextval 优化', src:'3.3', body:'若 p[j] == p[next[j]]，跳到 next[j] 后必然再失配，可直接跳到 next[next[j]]。'}
   ]
 };
 
@@ -539,10 +574,37 @@ const CHAPTERS = {
      bank:['S1','S2','Q1','Q2'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
      newEnemy:'tank'}
+  ],
+  3: [   // 第三章 串 —— 主题：连续匹配
+    {n:1,  waves:3, types:['drone'], map:'fortress', mods:[], bank:'C1',
+     traits:['multi','rapid','armor']},
+    {n:2,  waves:4, types:['drone'], map:'cross', mods:['rush'], bank:'C1',
+     traits:['multi','rapid','armor']},
+    {n:3,  waves:4, types:['drone','shooter'], map:'rooms', mods:[], bank:'C2',
+     traits:['multi','rapid','armor','pierce'], newEnemy:'shooter'},
+    {n:4,  waves:5, types:['drone','shooter'], map:'fortress', mods:['iron'], bank:'C2',
+     traits:['multi','rapid','armor','pierce','regen']},
+    {n:5,  waves:0, types:['drone','shooter'], map:'ring', mods:[], bank:['C1','C2'],
+     goal:'survive', survive:3900,
+     traits:['multi','rapid','armor','pierce','regen','speed']},
+    {n:6,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'], bank:'C3',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit'], newEnemy:'charger'},
+    {n:7,  waves:5, types:['drone','shooter','charger'], map:'rooms', mods:['elite'], bank:'C3',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce']},
+    {n:8,  waves:5, types:['drone','shooter','charger'], map:'fortress', mods:[], bank:['C2','C3'],
+     goal:'escort',
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns']},
+    {n:9,  waves:6, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
+     bank:['C1','C2','C3'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
+    {n:10, waves:6, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+     bank:['C1','C2','C3'],
+     traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
+     newEnemy:'tank'}
   ]
 };
 
-const CHAP_NAMES = {1:'第一章 线性表', 2:'第二章 栈与队列'};
+const CHAP_NAMES = {1:'第一章 线性表', 2:'第二章 栈与队列', 3:'第三章 串'};
 
 function levelCfg(n){
   const chs = CHAPTERS[G.chapter] || CHAPTERS[1];
@@ -1341,6 +1403,8 @@ function startLevel(lv){
     : null;
 
   buildQuestionPool();
+  var qs = document.getElementById('quizSubj');
+  if(qs) qs.textContent = '数据结构 · ' + (CHAPTERS[G.chapter] ? ['','线性表','栈与队列','串'][G.chapter] : '线性表');
   updateTraitsUI();
   updateHud();
   updateWaveUI();
@@ -2045,7 +2109,7 @@ function startGame(){
   // 先解析章节/关卡参数
   const qs2 = new URLSearchParams(location.search);
   const chQ = parseInt(qs2.get('chapter'));
-  G.chapter = (chQ === 2) ? 2 : 1;
+  G.chapter = (chQ >= 1 && chQ <= 3) ? chQ : 1;
   const lvQ = parseInt(qs2.get('level'));
   const startLv = (lvQ >= 1 && lvQ <= 10) ? lvQ : 1;
 
