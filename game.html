@@ -2422,6 +2422,36 @@ function render(){
 
   const zoom = G.zoom, camX = G.cam.x, camY = G.cam.y;
   ctx.save();
+  // === 屏幕空间背景（不随镜头滚动） ===
+  const BGART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
+  if(BGART.bgStyle === 'circuit'){
+    // 计组：电路走线（固定在屏幕上）
+    const step = 74;
+    ctx.strokeStyle = 'rgba(' + BGART.grid + ',.11)';
+    ctx.lineWidth = 1;
+    for(let y=26; y<vh; y+=step){
+      for(let x=34; x<vw; x+=step){
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x+22, y); ctx.lineTo(x+22, y+22);
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, 1.7, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(' + BGART.grid + ',.22)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(x+22, y+22, 1.7, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  } else if(BGART.bgStyle === 'dots'){
+    // 网络：点阵（固定在屏幕上）
+    const step = 26;
+    ctx.fillStyle = 'rgba(' + BGART.grid + ',.13)';
+    for(let y=13; y<vh; y+=step){
+      for(let x=13; x<vw; x+=step){
+        ctx.fillRect(x, y, 2, 2);
+      }
+    }
+  } else if(BGART.bgStyle === 'none'){
+    // 政治：无纹理
+  }
+
   ctx.scale(zoom, zoom);
   ctx.translate(-camX, -camY);
 
@@ -2442,29 +2472,6 @@ function render(){
     for(let c=c0;c<=c1;c++){ ctx.moveTo(c*TILE, r0*TILE); ctx.lineTo(c*TILE, r1*TILE); }
     for(let r=r0;r<=r1;r++){ ctx.moveTo(c0*TILE, r*TILE); ctx.lineTo(c1*TILE, r*TILE); }
     ctx.stroke();
-  } else if(BGS === 'circuit'){
-    // 电路走线：每隔 3 格画一段 L 形
-    ctx.strokeStyle = 'rgba(' + GART.grid + ',.10)';
-    ctx.lineWidth = 1;
-    for(let r=r0;r<r1;r+=3){
-      for(let c=c0;c<c1;c+=3){
-        ctx.beginPath();
-        ctx.moveTo(c*TILE, r*TILE);
-        ctx.lineTo(c*TILE + TILE, r*TILE);
-        ctx.lineTo(c*TILE + TILE, r*TILE + TILE);
-        ctx.stroke();
-        ctx.beginPath(); ctx.arc(c*TILE, r*TILE, 1.6, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(' + GART.grid + ',.20)'; ctx.fill();
-      }
-    }
-  } else if(BGS === 'dots'){
-    // 点阵
-    ctx.fillStyle = 'rgba(' + GART.grid + ',.14)';
-    for(let r=r0;r<r1;r+=2){
-      for(let c=c0;c<c1;c+=2){
-        ctx.fillRect(c*TILE - 1, r*TILE - 1, 2, 2);
-      }
-    }
   } else if(BGS === 'axis'){
     // 坐标纸：细网格 + 每 5 格加粗
     ctx.strokeStyle = 'rgba(' + GART.grid + ',.06)';
