@@ -2093,7 +2093,11 @@ function loop(ts){
   let guard = 0;
   while(acc >= 16.667 && guard < 4){ update(); acc -= 16.667; guard++; }
   if(G.player && G.state !== 'menu') render();
+  if(QUIZ_MODE){
+  startQuiz();
+} else {
   requestAnimationFrame(loop);
+}
 }
 
 /* ============================================================
@@ -2160,6 +2164,7 @@ function buildQuestionPool(){
 }
 
 function nextQuestion(){
+  if(QUIZ_MODE && qIdx >= quizLimit){ finishQuiz(); return; }
   qLocked = false;
   if(!G.qPool.length) buildQuestionPool();
   const qi = G.qPool[qIdx % G.qPool.length];
@@ -2191,7 +2196,7 @@ function nextQuestion(){
 }
 
 function answer(pick){
-  if(qLocked || G.state !== 'play') return;
+  if(qLocked || (G.state !== 'play' && G.state !== 'quiz')) return;
   qLocked = true;
   const q = G.curQ;
   const btns = [...document.querySelectorAll('.opt')];
@@ -2226,7 +2231,7 @@ function answer(pick){
   }
   updateHud();
 
-  setTimeout(() => { if(G.state==='play') nextQuestion(); }, right ? 1300 : 2500);
+  setTimeout(() => { if(G.state==='play' || G.state==='quiz') nextQuestion(); }, right ? 1300 : 2500);
 }
 
 function addFloat(x, y, text, color){
@@ -2518,6 +2523,62 @@ document.getElementById('startBtn').onclick = startGame;
 /* ============================================================
    启动
    ============================================================ */
+/* ===== 极速模式：?mode=quiz 只刷题，不玩关卡 ===== */
+const QUIZ_MODE = new URLSearchParams(location.search).get('mode') === 'quiz';
+let quizCount = 0, quizLimit = 10, quizStart = 0;
+
+function finishQuiz(){
+  G.state = 'quizEnd';
+  const total = G.okN + G.noN;
+  const rate = total ? Math.round(G.okN / total * 100) : 0;
+  const sec = Math.max(1, Math.round((Date.now() - quizStart) / 1000));
+  const color = rate >= 90 ? '#5fe08a' : (rate >= 70 ? '#ffd166' : '#ff8f8f');
+
+  document.getElementById('qno').textContent = '已完成';
+  document.getElementById('qtext').innerHTML =
+    '<div style="text-align:center;padding:18px 0">' +
+      '<div style="font-size:44px;color:' + color + ';line-height:1.1">' + rate + '%</div>' +
+      '<div style="font-size:11px;color:#7fa894;margin-top:6px;letter-spacing:.1em">正确率</div>' +
+      '<div style="font-size:12px;margin-top:18px;line-height:2.2;color:#b6d2c2">' +
+        '答对 <b style="color:#5fe08a">' + G.okN + '</b> / ' + total + '<br>' +
+        '用时 <b style="color:#ffd166">' + sec + '</b> 秒' +
+        (total ? '<br>平均每题 <b>' + (sec / total).toFixed(1) + '</b> 秒' : '') +
+      '</div>' +
+      '<button class="btn-start" id="quizAgain" style="margin-top:20px">再 来 一 局</button>' +
+    '</div>';
+  document.getElementById('opts').innerHTML = '';
+  document.getElementById('why').className = 'why';
+
+  const btn = document.getElementById('quizAgain');
+  if(btn) btn.onclick = () => location.reload();
+}
+
+function startQuiz(){
+  document.querySelector('.stage').style.display = 'none';
+  const main = document.querySelector('.main');
+  main.style.display = 'block';
+  const quiz = document.querySelector('.quiz');
+  quiz.style.width = '100%';
+  quiz.style.maxWidth = '760px';
+  quiz.style.margin = '0 auto';
+  quiz.style.flex = 'none';
+  quiz.style.height = '100%';
+  document.querySelector('.top .kv').textContent = '极速模式 · 10 题';
+  const rtag = document.getElementById('rewardTag');
+  if(rtag) rtag.style.display = 'none';
+  const stbox = document.getElementById('streakBox');
+  if(stbox) stbox.textContent = '第 0 / 10 题';
+
+  G.state = 'quiz';
+  G.chapter = 1;
+  G.okN = 0; G.noN = 0; G.streak = 0; G.score = 0;
+  G.qPool = []; G.qOrder = 'random';
+  buildQuestionPool();
+  quizCount = 0;
+  quizStart = Date.now();
+  nextQuestion();
+}
+
 fitCanvas();
 loadSettings();
 updateHud();
