@@ -92,10 +92,11 @@ body{
 .card .meta b{color:#8fb8a2;font-weight:400}
 
 .card .stars{
-  flex:0 0 auto;text-align:right;
+  flex:0 0 auto;text-align:right;white-space:nowrap;
+  display:flex;align-items:baseline;gap:2px;
 }
-.card .stars .n{font-size:17px;color:var(--gold);line-height:1}
-.card .stars .s{font-size:9px;color:#4d6b5c;margin-top:3px}
+.card .stars .n{font-size:15px;color:var(--gold);line-height:1;font-weight:500}
+.card .stars .s{font-size:11px;color:#4d6b5c}
 
 .card .badge{
   position:absolute;top:0;right:0;
@@ -117,7 +118,6 @@ body{
     <a href="index.html">← 返回笔记</a>
     <span class="name">刷题防线</span>
     <span class="sp"></span>
-    <span class="total">总星数 <b id="totalStars">0</b> / <span id="totalMax">—</span></span>
   </div>
 
   <div class="head">
@@ -181,17 +181,15 @@ function render(){
         '</div>' +
       '</div>' +
       '<div class="stars">' +
-        '<div class="n">' + got + '</div>' +
-        '<div class="s">/ ' + max + ' ★</div>' +
+        '<span class="n">' + got + '</span>' +
+        '<span class="s">/ ' + max + '</span>' +
       '</div>' +
       '<div class="badge">' + (s.ready ? '可进入' : '待开放') + '</div>';
 
     grid.appendChild(el);
   });
 
-  document.getElementById('totalStars').textContent = total;
-  const totalMax = SUBJECTS.filter(function(x){ return x.ready; }).reduce(function(acc, x){ return acc + x.chapters * 30; }, 0);
-  document.getElementById('totalMax').textContent = totalMax;
+  // 顶部总星数已移除（只保留每个科目卡片上的星数）
 
   const readyN = SUBJECTS.filter(s => s.ready).length;
   document.getElementById('foot').innerHTML =
