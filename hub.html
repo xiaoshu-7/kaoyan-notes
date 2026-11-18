@@ -75,15 +75,21 @@ body{
   margin-bottom:12px;
 }
 .stars{font-size:20px;letter-spacing:3px;color:var(--gold);line-height:1}
+.pbar{
+  display:inline-block;width:200px;height:10px;
+  background:#152b1f;border-radius:5px;overflow:hidden;
+  border:1px solid #1e3529;
+}
+.pbar i{
+  display:block;height:100%;
+  background:linear-gradient(90deg,#5fe08a,#ffd166);
+  transition:width .35s ease;
+}
 .stars .off{color:#1e3529}
 .starnum{
   font-size:13px;color:var(--dim);
 }
 .starnum b{color:var(--gold);font-size:20px;margin-right:2px}
-.starpct{
-  font-size:11px;color:#5f8172;letter-spacing:.05em;
-  padding:2px 8px;border:1px solid rgba(90,210,150,.18);border-radius:10px;
-}
 
 .stats{display:flex;gap:22px;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
 .stats b{color:var(--ink);font-size:13px}
@@ -334,9 +340,8 @@ body{
     <h1 id="subjName">数据结构</h1>
 
     <div class="starline">
-      <span class="stars" id="starRow"></span>
-      <span class="starnum"><b id="starGot">0</b> / <span id="starMax">30</span></span>
-      <span class="starpct" id="starPct">0%</span>
+      <span class="pbar"><i id="starBar" style="width:0%"></i></span>
+      <span class="starnum">已得 <b id="starGot">0</b> 星<span style="opacity:.45;font-size:12px;margin-left:4px">／ <span id="starMax">180</span></span></span>
     </div>
 
     <div class="stats">
@@ -905,7 +910,8 @@ function renderHeader(){
   const meta = SUBJECTS_META[SUBJECT_ID] || SUBJECTS_META.ds;
   document.getElementById('subjName').textContent = meta.name;
   const chName = CHAPTERS[CHAPTER_ID - 1] ? CHAPTERS[CHAPTER_ID - 1].name : '';
-  document.getElementById('crumb').textContent = chName;
+  const ready = CHAPTERS.filter(function(c){ return c.ready; }).length;
+  document.getElementById('crumb').textContent = '共 ' + ready + ' 章 · ' + (ready * 10) + ' 关';
 
   const box = document.getElementById('chapters');
   box.innerHTML = '';
@@ -946,17 +952,10 @@ function render(){
 
   // 星星行：10 颗代表总进度
   const ratio = Math.min(1, stars / starMax);
-  const fullN = Math.floor(ratio * 10);
-  const partN = (ratio * 10 - fullN) > 0.05 ? 1 : 0;
-  let row = '';
-  for(let i=0;i<fullN;i++) row += '<span class="on">★</span>';
-  if(partN) row += '<span class="on" style="opacity:.55">★</span>';
-  for(let i=0;i<10-fullN-partN;i++) row += '<span class="off">★</span>';
-  document.getElementById('starRow').innerHTML = row;
+  const bar = document.getElementById('starBar');
+  if(bar) bar.style.width = (ratio * 100).toFixed(1) + '%';
   document.getElementById('starGot').textContent = stars;
   document.getElementById('starMax').textContent = starMax;
-  const pctEl = document.getElementById('starPct');
-  if(pctEl) pctEl.textContent = starMax ? ((stars / starMax * 100).toFixed(1) + '%') : '0%';
 
   document.getElementById('okNum').textContent = okSum;
   document.getElementById('accNum').textContent = accN ? Math.round(accSum / accN * 100) + '%' : '—';

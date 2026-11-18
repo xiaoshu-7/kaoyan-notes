@@ -183,18 +183,18 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .why b{color:var(--cyan)}
 
 .qnav{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 16px;border-top:1px solid var(--line2);
-  background:#0a1410;flex:0 0 auto;
+  display:none;gap:8px;padding:10px 18px;
+  border-top:1px solid var(--line2);
 }
+.qnav.on{display:flex}
 .qnav button{
-  padding:7px 18px;background:#0e2018;color:#8fb8a2;
-  border:1px solid rgba(90,210,150,.25);border-radius:3px;
-  font-family:inherit;font-size:11.5px;cursor:pointer;transition:.15s;
+  flex:1;padding:9px;background:#0a1710;color:#8fb8a2;
+  border:1px solid rgba(90,210,150,.18);border-radius:3px;
+  font-family:inherit;font-size:12px;cursor:pointer;transition:.15s;
+  letter-spacing:.06em;
 }
-.qnav button:hover:not(:disabled){background:#16301f;color:#c9e8d8;border-color:rgba(95,224,138,.5)}
-.qnav button:disabled{opacity:.35;cursor:not-allowed}
-.qnav-sp{flex:1}
+.qnav button:hover:not(:disabled){color:#5fe08a;border-color:#5fe08a;background:#0e2118}
+.qnav button:disabled{opacity:.3;cursor:not-allowed}
 
 .foot{
   padding:7px 15px;border-top:1px solid var(--line2);
@@ -328,11 +328,11 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
         <div class="opts" id="opts"></div>
         <div class="why" id="why"></div>
       </div>
-      <div class="qnav" id="qnav" style="display:none">
+      <div class="qnav" id="qnav">
         <button id="prevBtn">← 上一题</button>
-        <span class="qnav-sp"></span>
         <button id="nextBtn">下一题 →</button>
       </div>
+
       <div class="foot">
         <span>对 <b class="ok" id="okN">0</b></span>
         <span>错 <b class="no" id="noN">0</b></span>
@@ -2113,6 +2113,13 @@ function loop(ts){
   while(acc >= 16.667 && guard < 4){ update(); acc -= 16.667; guard++; }
   if(G.player && G.state !== 'menu') render();
   if(QUIZ_MODE){
+  const pvB = document.getElementById('prevBtn');
+  const nxB = document.getElementById('nextBtn');
+  if(pvB) pvB.onclick = goPrev;
+  if(nxB) nxB.onclick = function(){
+    if(qIdx >= quizLimit) finishQuiz();
+    else { qLocked = false; nextQuestion(); }
+  };
   startQuiz();
 } else {
   requestAnimationFrame(loop);
@@ -2192,56 +2199,10 @@ function buildQuestionPool(){
   qIdx = 0;
 }
 
-var quizHist = [];
-var quizBack = false;
-
-function showPrev(){
-  if(!quizHist.length) return;
-  quizBack = true;
-  qLocked = true;
-  var h = quizHist[quizHist.length - 1];
-  var q = h.q;
-  document.getElementById('qno').textContent = '回看 · 第 ' + h.idx + ' 题';
-  document.getElementById('qtext').innerHTML = q.q;
-  var box = document.getElementById('opts');
-  box.innerHTML = '';
-  q.o.forEach(function(txt, i){
-    var b = document.createElement('button');
-    b.className = 'opt' + (i === q.a ? ' right' : (i === h.pick ? ' wrong' : ''));
-    b.disabled = true;
-    b.innerHTML = '<span class="k">' + (i+1) + '</span><span>' + txt + '</span>';
-    box.appendChild(b);
-  });
-  var w = document.getElementById('why');
-  w.innerHTML = '<b>' + (h.right ? '✓ 答对　' : '✗ 答错　') + '</b>' + q.why;
-  w.className = 'why on';
-  document.getElementById('prevBtn').disabled = quizHist.length <= 1;
-  document.getElementById('nextBtn').textContent = '回到当前 →';
-}
-
-function showCurrentQ(){
-  quizBack = false;
-  qLocked = false;
-  var q = G.curQ;
-  if(!q) return;
-  document.getElementById('qno').textContent = '第 ' + qIdx + ' 题';
-  document.getElementById('qtext').innerHTML = q.q;
-  document.getElementById('why').className = 'why';
-  var box = document.getElementById('opts');
-  box.innerHTML = '';
-  q.o.forEach(function(txt, i){
-    var b = document.createElement('button');
-    b.className = 'opt';
-    b.innerHTML = '<span class="k">' + (i+1) + '</span><span>' + txt + '</span>';
-    b.onclick = function(ev){ ev.stopPropagation(); answer(i); };
-    box.appendChild(b);
-  });
-  document.getElementById('prevBtn').disabled = quizHist.length === 0;
-  document.getElementById('nextBtn').textContent = '下一题 →';
-}
-
 function nextQuestion(){
   if(QUIZ_MODE && qIdx >= quizLimit){ finishQuiz(); return; }
+  const nav0 = document.getElementById('qnav');
+  if(nav0) nav0.classList.remove('on');
   qLocked = false;
   if(!G.qPool.length) buildQuestionPool();
   const qi = G.qPool[qIdx % G.qPool.length];
@@ -2281,7 +2242,6 @@ function answer(pick){
   btns.forEach(b => b.disabled = true);
 
   const right = pick === q.a;
-  if(QUIZ_MODE) quizHist.push({ q: q, pick: pick, right: right, idx: qIdx });
   if(right) btns[pick].classList.add('right');
   else { btns[pick].classList.add('wrong'); btns[q.a].classList.add('miss'); }
 
@@ -2310,8 +2270,13 @@ function answer(pick){
   }
   updateHud();
 
-  var wait = QUIZ_MODE ? (right ? 650 : 1800) : (right ? 1300 : 2500);
-  setTimeout(() => { if(G.state==='play' || G.state==='quiz') nextQuestion(); }, wait);
+  if(right){
+    setTimeout(() => { if(G.state==='play' || G.state==='quiz') nextQuestion(); }, 1300);
+  } else if(QUIZ_MODE){
+    showQuizNav();
+  } else {
+    setTimeout(() => { if(G.state==='play') nextQuestion(); }, 2500);
+  }
 }
 
 function addFloat(x, y, text, color){
@@ -2607,6 +2572,32 @@ document.getElementById('startBtn').onclick = startGame;
 const QUIZ_MODE = new URLSearchParams(location.search).get('mode') === 'quiz';
 let quizCount = 0, quizLimit = 10, quizStart = 0;
 
+function showQuizNav(){
+  const nav = document.getElementById('qnav');
+  if(!nav) return;
+  nav.classList.add('on');
+  const pv = document.getElementById('prevBtn');
+  const nx = document.getElementById('nextBtn');
+  if(pv) pv.disabled = (qIdx <= 1);
+  if(nx) nx.textContent = (qIdx >= quizLimit) ? '看结果 →' : '下一题 →';
+}
+
+function goPrev(){
+  if(qIdx <= 1) return;
+  qIdx -= 2;
+  qLocked = false;
+  nextQuestion();
+  // 直接展示答案（不恢复选择，不能重答）
+  const q = G.curQ;
+  const btns = [].slice.call(document.querySelectorAll('.opt'));
+  btns.forEach(function(b){ b.disabled = true; });
+  if(btns[q.a]) btns[q.a].classList.add('right');
+  const why = document.getElementById('why');
+  why.innerHTML = '<b>✓ 正确答案</b>　' + q.why;
+  why.className = 'why on';
+  showQuizNav();
+}
+
 function finishQuiz(){
   G.state = 'quizEnd';
   const total = G.okN + G.noN;
@@ -2614,7 +2605,6 @@ function finishQuiz(){
   const sec = Math.max(1, Math.round((Date.now() - quizStart) / 1000));
   const color = rate >= 90 ? '#5fe08a' : (rate >= 70 ? '#ffd166' : '#ff8f8f');
 
-  document.getElementById('qnav').style.display = 'none';
   document.getElementById('qno').textContent = '已完成';
   document.getElementById('qtext').innerHTML =
     '<div style="text-align:center;padding:18px 0">' +
@@ -2647,16 +2637,6 @@ function startQuiz(){
   document.querySelector('.top .kv').textContent = '极速模式 · 10 题';
   const rtag = document.getElementById('rewardTag');
   if(rtag) rtag.style.display = 'none';
-  document.getElementById('qnav').style.display = 'flex';
-  document.getElementById('prevBtn').onclick = function(){
-    if(quizBack) return;
-    showPrev();
-  };
-  document.getElementById('nextBtn').onclick = function(){
-    if(quizBack){ showCurrentQ(); return; }
-    if(qLocked) return;
-    nextQuestion();
-  };
   const stbox = document.getElementById('streakBox');
   if(stbox) stbox.textContent = '第 0 / 10 题';
 
