@@ -454,6 +454,10 @@ body{
         <h4>地 皮</h4>
         <div class="skin-row" id="skinField"></div>
       </div>
+      <div class="skin-sec">
+        <h4>景 深</h4>
+        <div class="skin-row" id="skinDepth"></div>
+      </div>
       <div style="font-size:10.5px;color:#4d6b5c;margin-top:6px;line-height:1.9">
         通关指定关卡或累计星数即可解锁，点击切换。机体是你的形状，弹丸是子弹，地皮是战场底纹（点阵/电路/无纹）。
       </div>
@@ -1632,6 +1636,21 @@ function renderSkins(){
     if(t === 'none')    return '<span style="font-size:11px">▢</span>';
     return '<span style="font-size:11px">▦</span>';
   };
+  // 景深（立体/扁平）
+  const curDepth = set.depth || 'depth';
+  const depthSkins = [
+    {name:'立体', val:'depth', icon:'◨', ok:true, desc:'障碍悬浮 + 你贴地'},
+    {name:'扁平', val:'flat',  icon:'▣', ok:true, desc:'无投影，纯平面'}
+  ];
+  document.getElementById('skinDepth').innerHTML = depthSkins.map(sk => {
+    const on = sk.ok && (sk.val === curDepth);
+    return '<div class="skin' + (on ? ' on' : '') + '" data-key="depth" data-val="' + sk.val + '">' +
+      '<span style="font-size:14px">' + sk.icon + '</span>' +
+      '<span>' + sk.name + '</span>' +
+      (on ? '<span style="font-size:8px;color:#5fe08a">使用中</span>' : '') +
+    '</div>';
+  }).join('');
+
   document.getElementById('skinField').innerHTML = fieldSkins.map(sk => {
     const on = sk.ok && (sk.tex === curTex);
     return '<div class="skin' + (sk.ok ? '' : ' lock') + (on ? ' on' : '') + '"' +

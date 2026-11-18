@@ -1499,7 +1499,7 @@ const G = {
   shake:0, zoom:1,
   viewW:0, viewH:0,
   fireMode:'manual', floats:[],
-  skin:{ body:'#7fd6ff', bullet:'#a8e6ff', field:'040a07', fieldTexture:'' },
+  skin:{ body:'#7fd6ff', bullet:'#a8e6ff', field:'040a07', fieldTexture:'', depth:'depth' },
   slowT:0, rageT:0, pendReward:null,
   traits:{}, orbitA:0, chainCd:0, regenCd:0,
   qOrder:'random', qPool:[], curQ:null,
@@ -2512,6 +2512,16 @@ function render(){
       const ART = SUBJ_ART[G.subject] || SUBJ_ART.ds;
       const WS = ART.wallShape;
       const cxw = x + TILE/2, cyw = y + TILE/2;
+      // 投影（制造浮空感，仅立体模式）
+      if(G.skin.depth !== 'flat'){
+        ctx.fillStyle = 'rgba(0,0,0,.26)';
+        if(WS === 'node'){
+          ctx.beginPath(); ctx.arc(cxw + 3, cyw + 4, TILE/2 - 4, 0, Math.PI*2); ctx.fill();
+        } else {
+          ctx.fillRect(x+pad+3, y+pad+4, TILE-pad*2, TILE-pad*2);
+        }
+      }
+
       ctx.fillStyle = hpw >= 2 ? ART.wall : 'rgba(46,32,22,.8)';
       ctx.strokeStyle = hpw >= 2 ? ART.edge : 'rgba(210,140,80,.42)';
       ctx.lineWidth = 1;
@@ -2724,6 +2734,14 @@ function render(){
   // 玩家
   const p = G.player;
   if(p){
+    // 贴地阴影（仅立体模式）
+    if(G.skin.depth !== 'flat'){
+      ctx.fillStyle = 'rgba(0,0,0,.40)';
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y + p.r*0.6, p.r*0.9, p.r*0.38, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+
     ctx.save();
     ctx.translate(p.x, p.y);
     if(p.shield > 0){
@@ -3285,6 +3303,7 @@ function loadSettings(){
     if(s.skinBullet) G.skin.bullet = s.skinBullet;
     if(s.skinField) G.skin.field = s.skinField;
     if(s.fieldTexture) G.skin.fieldTexture = s.fieldTexture;
+    if(s.depth) G.skin.depth = s.depth;
   }catch(e){}
   syncSeg('segSize', G.size);
   syncSeg('segDiff', G.diff);
