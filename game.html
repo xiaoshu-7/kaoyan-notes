@@ -1220,7 +1220,7 @@ const CHAPTERS = {
     {n:5,  waves:0, types:['drone','shooter'], map:'ring', mods:[], bank:['G1','G2'],
      goal:'survive', survive:4500,
      traits:['multi','rapid','armor','pierce','regen','speed']},
-    {n:6,  waves:5, types:['drone','shooter','charger'], map:'cross', mods:['frenzy'], bank:'G3',
+    {n:6,  waves:5, types:['drone','shooter','link'], map:'cross', mods:['frenzy'], bank:'G3',
      traits:['multi','rapid','armor','pierce','regen','speed','crit'], newEnemy:'charger'},
     {n:7,  waves:5, types:['drone','shooter','charger'], map:'rooms', mods:['elite'], bank:'G3',
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce']},
@@ -1482,7 +1482,8 @@ const ETYPES = {
   tank:    {name:'重甲', hp:5, spd:0.50, fire:1, r:12, col:'#c77dff', score:260, keep:120},
   swarm:   {name:'排队者', hp:1, spd:1.35, fire:0, r:7,  col:'#c77dff', score:90,  keep:0},
   split:   {name:'复制者', hp:2, spd:1.00, fire:0, r:9,  col:'#7fd6ff', score:140, keep:0, onDeath:1},
-  branch:  {name:'分叉者', hp:3, spd:0.85, fire:0, r:11, col:'#ffa94d', score:180, keep:0, onDeath:2}
+  branch:  {name:'分叉者', hp:3, spd:0.85, fire:0, r:11, col:'#ffa94d', score:180, keep:0, onDeath:2},
+  link:    {name:'连接者', hp:2, spd:0.90, fire:0, r:8,  col:'#5fa8ff', score:150, keep:0, linked:true}
 };
 
 /* ============================================================
@@ -1934,6 +1935,17 @@ function update(){
             e.hp -= crit ? 2 : 1;
             e.flash = 5;
             if(crit) addFloat(e.x, e.y-e.r-10, '×2', '#ffe066');
+            // 连接者：伤害传导给最近的同伴
+            if(e.linked){
+              const mate = G.enemies.filter(function(o){
+                return o !== e && o.linked && o.hp > 0 && Math.hypot(o.x-e.x, o.y-e.y) < 130;
+              })[0];
+              if(mate){
+                mate.hp -= 1;
+                mate.flash = 4;
+                addFloat(mate.x, mate.y - 14, '共享', '#5fa8ff');
+              }
+            }
             if(e.hp<=0){
               boom(e.x,e.y,'#ff8f8f'); G.killed++; G.score+=120;
               if(G.traits.steal && p.hp < p.maxHp){
@@ -2391,6 +2403,7 @@ function spawnEnemy(){
       keep: T.keep || 0,
       suicide: !!T.suicide,
       onDeath: T.onDeath || 0,
+      linked: !!T.linked,
       cd: 40 + Math.random()*60,
       fireGap: fg
     });
@@ -2641,6 +2654,24 @@ function render(){
     ctx.fillRect(b.x - 12, b.y - b.r - 11, 24, 3);
     ctx.fillStyle = b.hp > 50 ? '#5fe08a' : '#ff6b6b';
     ctx.fillRect(b.x - 12, b.y - b.r - 11, 24 * (b.hp / b.maxHp), 3);
+  }
+
+  // 连接者之间的连线（图的连通性）
+  {
+    const lnk = G.enemies.filter(e => e.linked && e.hp > 0);
+    for(let i=0;i<lnk.length;i++){
+      for(let j=i+1;j<lnk.length;j++){
+        const a = lnk[i], b = lnk[j];
+        const d = Math.hypot(a.x-b.x, a.y-b.y);
+        if(d < 130){
+          ctx.strokeStyle = 'rgba(95,168,255,.22)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
   }
 
   // 敌人
