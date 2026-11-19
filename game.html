@@ -1149,7 +1149,7 @@ const CHAPTERS = {
     {n:9,  waves:11, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
      bank:['Q1','Q2'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
-    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true, bossType:'swarm',
      bank:['S1','S2','Q1','Q2'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
      newEnemy:'tank'}
@@ -1176,7 +1176,7 @@ const CHAPTERS = {
     {n:9,  waves:11, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
      bank:['C1','C2','C3'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
-    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true, bossType:'split',
      bank:['C1','C2','C3'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
      newEnemy:'tank'}
@@ -1203,7 +1203,7 @@ const CHAPTERS = {
     {n:9,  waves:11, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
      bank:['T2','T3','T4'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
-    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true, bossType:'branch',
      bank:['T1','T2','T3','T4'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
      newEnemy:'tank'}
@@ -1230,7 +1230,7 @@ const CHAPTERS = {
     {n:9,  waves:11, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
      bank:['G3','G4','G5'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
-    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true, bossType:'link',
      bank:['G1','G2','G3','G4','G5'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
      newEnemy:'tank'}
@@ -1257,7 +1257,7 @@ const CHAPTERS = {
     {n:9,  waves:11, types:['drone','shooter','charger'], map:'arena', mods:['rush','iron'],
      bank:['F3','F4','F5'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit']},
-    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true,
+    {n:10, waves:12, types:['drone','shooter','charger','tank'], map:'fortress', mods:[], boss:true, bossType:'ordered',
      bank:['F1','F2','F3','F4','F5'],
      traits:['multi','rapid','armor','pierce','regen','speed','crit','bounce','thorns','orbit','chain','steal'],
      newEnemy:'tank'}
@@ -2361,17 +2361,30 @@ function spawnBoss(){
   x = Math.max(TILE*3, Math.min(G.worldW - TILE*3, x));
   y = Math.max(TILE*3, Math.min(G.worldH - TILE*3, y));
 
+  // 每章 Boss 不同
+  const BOSSES = {
+    default: {name:'重甲统领', hp:30, col:'#ff6b6b'},
+    swarm:   {name:'潮涌者',   hp:24, col:'#c77dff'},
+    split:   {name:'模式者',   hp:20, col:'#7fd6ff'},
+    branch:  {name:'树王',     hp:26, col:'#ffa94d'},
+    link:    {name:'枢纽',     hp:24, col:'#5fa8ff'},
+    ordered: {name:'排序者',   hp:18, col:'#ffd166'}
+  };
+  const bt = (levelCfg(G.level) || {}).bossType || 'default';
+  const B = BOSSES[bt] || BOSSES.default;
+
   const boss = {
     x, y, r: 22,
-    hp: 30, maxHp: 30,
+    hp: B.hp, maxHp: B.hp,
     speed: 0.6, angle: 0,
     phase: 1, cd: 70, summonCd: 200,
     flash: 0, isBoss: true,
+    bossType: bt, bossName: B.name, bossCol: B.col,
     type: 'boss', keep: 0, target: 'player'
   };
   G.boss = boss;
   G.enemies.push(boss);
-  addFloat(G.viewW/2, 80, 'BOSS 出现', '#ff5c5c');
+  addFloat(G.viewW/2, 80, B.name + ' 出现', B.col);
 }
 
 function spawnEnemy(){
@@ -2721,10 +2734,13 @@ function render(){
         ctx.lineTo(e.x + Math.cos(a)*e.r, e.y + Math.sin(a)*e.r);
       }
       ctx.closePath();
-      ctx.fillStyle = e.flash > 0 ? '#ffffff'
-        : (e.phase === 3 ? '#ff3b3b' : (e.phase === 2 ? '#e060a0' : '#c77dff'));
+      const BC = e.bossCol || '#c77dff';
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : BC;
+      ctx.globalAlpha = (e.phase === 3 ? 1.0 : (e.phase === 2 ? 0.85 : 0.7));
+      ctx.fillStyle = e.flash > 0 ? '#ffffff' : BC;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,210,210,.75)';
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,.55)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
