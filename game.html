@@ -1766,12 +1766,36 @@ function update(){
       if(!hitsWall(bnx, e.y, e.r)) e.x = bnx;
       if(!hitsWall(e.x, bny, e.r)) e.y = bny;
 
-      // 二阶段起召唤
+      // 二阶段起召唤（按 Boss 类型）
       e.summonCd--;
       if(e.summonCd <= 0 && e.phase >= 2){
         e.summonCd = 300;
-        for(let k=0;k<2;k++) spawnEnemy();
-        addFloat(e.x, e.y - 34, '召唤援军', '#c77dff');
+        if(e.bossType === 'swarm'){
+          for(let k=0;k<3;k++) spawnTyped('swarm');
+          addFloat(e.x, e.y - 34, '潮涌！', '#c77dff');
+        } else if(e.bossType === 'branch'){
+          for(let k=0;k<2;k++) spawnTyped('branch');
+          addFloat(e.x, e.y - 34, '分枝！', '#ffa94d');
+        } else {
+          for(let k=0;k<2;k++) spawnEnemy();
+          addFloat(e.x, e.y - 34, '召唤援军', '#c77dff');
+        }
+      }
+
+      // 排序者：缓慢回血（越打越硬）
+      if(e.bossType === 'ordered' && e.hp < e.maxHp){
+        e.hp = Math.min(e.maxHp, e.hp + 0.004);
+      }
+
+      // 枢纽：给最近的普通敌人加护盾感（连线）
+      if(e.bossType === 'link'){
+        e._linkT = (e._linkT || 0) + 1;
+        if(e._linkT % 30 === 0){
+          const near = G.enemies.filter(function(o){
+            return !o.isBoss && o.hp > 0 && Math.hypot(o.x-e.x, o.y-e.y) < 160;
+          }).slice(0, 2);
+          near.forEach(function(o){ o.hp = Math.min(o.maxHp, o.hp + 0.5); });
+        }
       }
 
       // 扇形弹幕
@@ -1865,6 +1889,20 @@ function update(){
       e.cd = e.fireGap;
     }
   }
+  // Boss 死亡分裂（模式者/树王）
+  G.enemies.forEach(function(e){
+    if(e.isBoss && e.hp <= 0 && !e._splitDone){
+      e._splitDone = true;
+      if(e.bossType === 'split'){
+        for(let i=0;i<3;i++) spawnTyped('split', e.x + (i-1)*22, e.y + 14);
+        addFloat(e.x, e.y - 20, '分裂！', '#7fd6ff');
+      } else if(e.bossType === 'branch'){
+        for(let i=0;i<2;i++) spawnTyped('branch', e.x + (i-0.5)*26, e.y + 16);
+        addFloat(e.x, e.y - 20, '断枝！', '#ffa94d');
+      }
+    }
+  });
+
   // 死亡分裂（复制者/分叉者）
   const deadSplitters = G.enemies.filter(e => e.hp <= 0 && e.onDeath > 0 && !e._splitDone);
   deadSplitters.forEach(e => {
@@ -2349,6 +2387,33 @@ function startWave(){
   G.spawnCd = 0;
   G.waveBonus = 1;
   updateWaveUI();
+}
+
+function spawnTyped(type, px, py){
+  const T = ETYPES[type];
+  if(!T || !G.player) return;
+  const p = G.player;
+  let x, y;
+  if(px != null && py != null){
+    x = px; y = py;
+  } else {
+    const ang = Math.random() * Math.PI * 2;
+    x = p.x + Math.cos(ang) * (300 + Math.random()*100);
+    y = p.y + Math.sin(ang) * (300 + Math.random()*100);
+  }
+  x = Math.max(TILE*2, Math.min(G.worldW - TILE*2, x));
+  y = Math.max(TILE*2, Math.min(G.worldH - TILE*2, y));
+  if(hitsWall(x, y, T.r)) return;
+
+  G.enemies.push({
+    x: x, y: y, type: type, r: T.r,
+    angle: 0, speed: T.spd,
+    hp: T.hp, maxHp: T.hp,
+    flash: 0, keep: T.keep || 0, suicide: !!T.suicide,
+    onDeath: T.onDeath || 0, linked: !!T.linked, scaling: !!T.scaling,
+    target: 'player', cd: 60, fireGap: 120,
+    _splitDone: false
+  });
 }
 
 function spawnBoss(){
