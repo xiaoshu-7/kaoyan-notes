@@ -2440,6 +2440,21 @@ function update(){
         break;
       }
 
+      // 炸药桶
+      if(b.owner === 'player'){
+        let hitBarrel = null;
+        for(const br of G.barrels){
+          if(br.hp <= 0) continue;
+          if(Math.hypot(b.x-br.x, b.y-br.y) < br.r + 3){ hitBarrel = br; break; }
+        }
+        if(hitBarrel){
+          b.dead = true;
+          hitBarrel.hp = 0;
+          explodeBarrel(hitBarrel, 0);
+          break;
+        }
+      }
+
       if(b.owner === 'player'){
         for(const e of G.enemies){
           if(e.hp<=0) continue;
@@ -2816,7 +2831,7 @@ function startLevel(lv){
   G.waveLeft = 0;
   G.waveBonus = 1;
   G.settled = false;
-  G.enemies = []; G.bullets = []; G.parts = []; G.floats = [];
+  G.enemies = []; G.bullets = []; G.parts = []; G.floats = []; G.barrels = [];
   G.traits = {}; G.orbitA = 0; G.chainCd = 0; G.regenCd = 0; G.arc = null;
   G.zoom = 1;
 
@@ -2824,6 +2839,29 @@ function startLevel(lv){
   genWorld();
   G.player.hp = G.player.maxHp;
   G.player.shield = 120;
+
+  // 环境互动：炸药桶（每关只生成一次）
+  G.barrels = [];
+  {
+    const want = 3 + Math.floor(Math.random()*3);
+    let guard = 0;
+    while(G.barrels.length < want && guard++ < 300){
+      const bx = TILE*3 + Math.random()*(G.worldW - TILE*6);
+      const by = TILE*3 + Math.random()*(G.worldH - TILE*6);
+      if(hitsWall(bx, by, 10)) continue;
+      if(Math.hypot(bx - G.base.x, by - G.base.y) < 110) continue;
+      if(G.barrels.some(function(b){ return Math.hypot(b.x-bx, b.y-by) < 70; })) continue;
+      G.barrels.push({x:bx, y:by, r:11, hp:1, fuse:0});
+    }
+    // 兜底：如果随机全失败，就在基地周围固定位置放 3 个
+    if(G.barrels.length === 0){
+      const offs = [[130, 0], [-130, 0], [0, 130]];
+      offs.forEach(function(o){
+        const bx = G.base.x + o[0], by = G.base.y + o[1];
+        if(!hitsWall(bx, by, 10)) G.barrels.push({x:bx, y:by, r:11, hp:1, fuse:0});
+      });
+    }
+  }
 
   G.newTip = cfg.newEnemy
     ? {name: ETYPES[cfg.newEnemy].name, col: ETYPES[cfg.newEnemy].col, t: 200}
@@ -2860,7 +2898,37 @@ function startWave(){
   G.waveLeft = Math.max(2, Math.round(base * (G.waveBonus || 1)));
   G.spawnCd = 0;
   G.waveBonus = 1;
+
   updateWaveUI();
+}
+
+function explodeBarrel(br, depth){
+  if(depth > 3) return;
+  const R = 66;
+  boom(br.x, br.y, '#ff8a4c');
+  boom(br.x, br.y, '#ffd166');
+  G.shake = Math.max(G.shake || 0, 7);
+
+  // 范围内敌人受伤
+  for(const e of G.enemies){
+    if(e.hp <= 0) continue;
+    const d = Math.hypot(e.x - br.x, e.y - br.y);
+    if(d < R){
+      const dmg = e.isBoss ? 3 : 4;
+      e.hp -= dmg;
+      e.flash = 6;
+      addFloat(e.x, e.y - e.r - 8, '-' + dmg, '#ff8a4c');
+    }
+  }
+
+  // 连锁引爆其他桶
+  for(const o of G.barrels){
+    if(o === br || o.hp <= 0) continue;
+    if(Math.hypot(o.x - br.x, o.y - br.y) < R){
+      o.hp = 0;
+      setTimeout(function(){ explodeBarrel(o, depth + 1); }, 90);
+    }
+  }
 }
 
 function spawnTyped(type, px, py){
@@ -3236,6 +3304,32 @@ function render(){
     ctx.fillRect(b.x - 12, b.y - b.r - 11, 24, 3);
     ctx.fillStyle = b.hp > 50 ? '#5fe08a' : '#ff6b6b';
     ctx.fillRect(b.x - 12, b.y - b.r - 11, 24 * (b.hp / b.maxHp), 3);
+  }
+
+  // 炸药桶
+  for(const b of G.barrels){
+    const pulse = b.fuse > 0 ? (0.6 + Math.sin(G.t*0.8)*0.4) : 1;
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    // 投影
+    if(G.skin.depth !== 'flat'){
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      ctx.beginPath(); ctx.ellipse(2, 4, b.r*0.9, b.r*0.42, 0, 0, Math.PI*2); ctx.fill();
+    }
+    // 桶身
+    ctx.fillStyle = b.fuse > 0 ? 'rgba(255,120,60,' + (0.5 + pulse*0.5) + ')' : 'rgba(200,80,50,.85)';
+    ctx.beginPath(); ctx.arc(0, 0, b.r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = b.fuse > 0 ? '#ffd166' : 'rgba(255,180,120,.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, 0, b.r, 0, Math.PI*2); ctx.stroke();
+    // 引线
+    ctx.strokeStyle = 'rgba(255,220,150,.7)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, -b.r); ctx.lineTo(3, -b.r - 6); ctx.stroke();
+    // 中心标记
+    ctx.fillStyle = 'rgba(255,240,200,.85)';
+    ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
   }
 
   // 连接者之间的连线（图的连通性）
