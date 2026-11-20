@@ -326,7 +326,7 @@ body{
     <span class="name">刷题防线</span>
     <span class="sp"></span>
     <div class="acts">
-      <button onclick="location.href='game.html?mode=quiz'" title="极速刷题" style="color:#ffd166">⚡</button>
+      <button id="quizBtn" title="极速刷题" style="color:#ffd166">⚡</button>
       <button data-panel="settings" title="设置">⚙</button>
       <button data-panel="bank" title="题库">▤</button>
       <button data-panel="wrong" title="错题本">✗</button>
@@ -336,12 +336,12 @@ body{
   </div>
 
   <div class="hero">
-    <div class="crumb" id="crumb">第一章 · 线性表</div>
-    <h1 id="subjName">数据结构</h1>
+    <div class="crumb" id="crumb"></div>
+    <h1 id="subjName"></h1>
 
     <div class="starline">
       <span class="pbar"><i id="starBar" style="width:0%"></i></span>
-      <span class="starnum">已得 <b id="starGot">0</b> 星<span style="opacity:.45;font-size:12px;margin-left:4px">／ <span id="starMax">180</span></span></span>
+      <span class="starnum">已得 <b id="starGot">0</b> 星<span style="opacity:.45;font-size:12px;margin-left:4px">／ <span id="starMax">—</span></span></span>
     </div>
 
     <div class="stats">
@@ -1934,6 +1934,11 @@ function renderSkins(){
 /* ============================================================
    启动
    ============================================================ */
+// 极速模式入口（带上当前科目，避免落到数据结构）
+{
+  const qb = document.getElementById('quizBtn');
+  if(qb) qb.onclick = () => { location.href = 'game.html?mode=quiz&subject=' + SUBJECT_ID; };
+}
 applyTheme(SUBJECT_ID);
 renderHeader();
 render();
