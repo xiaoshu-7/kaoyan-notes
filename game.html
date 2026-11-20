@@ -212,6 +212,32 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
   .quiz{width:auto;flex:none;border-top:1px solid var(--line)}
   .screen{min-height:320px}
 }
+
+/* 手机竖屏（<=520px）：压缩顶栏、HUD 换行、特性横滑 */
+@media(max-width:520px){
+  body{padding:4px}
+  .top{flex-wrap:wrap;gap:4px 8px;padding:6px 8px}
+  .top .name{font-size:11px;letter-spacing:.1em}
+  .top .kv{font-size:9.5px}
+  .top .kv:last-of-type{display:none}          /* 隐藏「WASD 移动…」操作提示 */
+  .top .sp{display:none}
+  .screen{min-height:260px}
+
+  .hud{flex-wrap:wrap;gap:4px 10px;font-size:9.5px;padding:5px 8px}
+  .hud .bar{min-width:56px}
+
+  .traits{flex-wrap:nowrap;overflow-x:auto;gap:5px;padding:6px 8px}
+  .traits .tag{flex:0 0 auto;font-size:9.5px;padding:3px 6px}
+
+  .quiz{padding:0}
+  .qhead{padding:6px 10px;font-size:10px}
+  .qtext{padding:10px 10px 4px;font-size:13px;line-height:1.6}
+  .opts{padding:6px 10px;gap:6px}
+  .opt{padding:8px 10px;font-size:11.5px;line-height:1.5}
+  .why{padding:7px 10px;font-size:10.5px}
+  .foot{padding:5px 10px;font-size:9.5px;gap:8px}
+  .foot .sp{display:none}
+}
 </style>
 </head>
 <body>
