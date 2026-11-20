@@ -544,7 +544,8 @@ const CHAPTERS_BY_SUBJ = {
          {no:2, name:'第二章 物理层与链路层', ready:true}],
   math: [{no:1, name:'第一章 高等数学', ready:true},
          {no:2, name:'第二章 高数深入', ready:true}],
-  en:   [{no:1, name:'第一章 阅读理解', ready:true}],
+  en:   [{no:1, name:'第一章 阅读理解', ready:true},
+         {no:2, name:'第二章 长难句与写作', ready:true}],
   pol:  [{no:1, name:'第一章 马克思主义基本原理', ready:true}]
 };
 
@@ -1356,7 +1357,47 @@ const BANK = [
   {tag:'M10',subj:'math',q:'椭球面的标准方程是？',o:['x²/a² + y²/b² + z²/c² = 1', 'x²/a² − y²/b² = 1', 'x²/a² + y²/b² = z', 'x²+y²+z²=1'],a:0,why:'椭球面：三项系数为正且等于 1。若有两项为负则是单叶双曲面，一项为负是双叶双曲面。'},
   {tag:'M10',subj:'math',q:'空间曲线在坐标面上的投影怎么求？',o:['直接取坐标', '求导', '积分', '消去一个变量得到投影柱面方程'],a:3,why:'如求在 xOy 面的投影：从方程组中消去 z，得到只含 x、y 的方程（投影柱面），再联立 z=0。'},
   {tag:'M10',subj:'math',q:'向量的混合积 [a b c] 的几何意义是？',o:['以 a、b、c 为棱的平行六面体的体积', '向量的长度', '平行四边形的面积', '三角形的面积'],a:0,why:'混合积 = (a×b)·c，绝对值等于平行六面体体积。等于 0 说明三向量共面。'},
-  {tag:'M10',subj:'math',q:'直线 x/1 = y/2 = z/3 的方向向量是？',o:['(1, 2, 3)', '(3, 2, 1)', '(1, 1, 1)', '(0, 0, 0)'],a:0,why:'对称式 x/a = y/b = z/c 中，分母就是方向向量 (a,b,c)。这是直线方程最直观的形式。'}
+  {tag:'M10',subj:'math',q:'直线 x/1 = y/2 = z/3 的方向向量是？',o:['(1, 2, 3)', '(3, 2, 1)', '(1, 1, 1)', '(0, 0, 0)'],a:0,why:'对称式 x/a = y/b = z/c 中，分母就是方向向量 (a,b,c)。这是直线方程最直观的形式。'},
+  {tag:'E6',subj:'en',q:'分析长难句的第一步应该是？',o:['找生词', '看标点', '逐词翻译', '找主谓宾（句子主干）'],a:3,why:'长难句的破解顺序：① 找主句的主谓宾；② 识别从句和修饰成分；③ 理清修饰关系；④ 再翻译。先抓主干，细节才有落脚点。'},
+  {tag:'E6',subj:'en',q:'「The book that I bought yesterday is interesting.」中 that 引导的是？',o:['主语从句', '宾语从句', '状语从句', '定语从句，修饰 book'],a:3,why:'that I bought yesterday 修饰 the book（限定它是哪本书）。判断方法：去掉 that 从句，句子主干「The book is interesting」仍然完整。'},
+  {tag:'E6',subj:'en',q:'「What he said surprised us.」中 What 引导的是？',o:['定语从句', '主语从句', '宾语从句', '状语从句'],a:1,why:'What he said 整个作主语（「他说的话」）。主语从句常用 what/that/whether 引导，谓语用单数。'},
+  {tag:'E6',subj:'en',q:'「It is said that he is rich.」中的 it 是？',o:['强调句', '代词（指代前文）', '形式主语', '无实义'],a:2,why:'it 是形式主语，真正的主语是 that 从句。类似的还有 It is important that...、It seems that...。'},
+  {tag:'E6',subj:'en',q:'强调句型「It is ... that ...」的判断方法是？',o:['去掉 It is 和 that，剩下部分仍能组成完整句子', '看谓语单复数', '看时态', '看有没有 that'],a:0,why:'强调句：It is + 被强调部分 + that + 其余部分。去掉框架后句子仍完整（如 It was yesterday that he left → He left yesterday）。定语从句则不能。'},
+  {tag:'E6',subj:'en',q:'「Not until he came back did I leave.」这个句子用了什么结构？',o:['被动语态', '强调句', '定语从句', 'not until 置于句首引起的部分倒装'],a:3,why:'否定词（not until/never/hardly）置于句首时，主句要部分倒装：助动词提前。所以是 did I leave 而不是 I left。'},
+  {tag:'E6',subj:'en',q:'「The more you read, the more you know.」的结构是？',o:['虚拟语气', '并列句', 'the + 比较级, the + 比较级（越…越…）', '定语从句'],a:2,why:'「the + 比较级 + 主语 + 谓语, the + 比较级 + 主语 + 谓语」表示「越…越…」。前句是从句，后句是主句。'},
+  {tag:'E6',subj:'en',q:'「Given that he is young, he did well.」中 Given that 的意思是？',o:['虽然', '考虑到（引导原因状语）', '被给予', '如果'],a:1,why:'Given that = considering that（考虑到）。注意 given 在这里是介词/连词用法，不是被动语态的「被给予」。'},
+  {tag:'E7',subj:'en',q:'英译汉中，「定语从句」最常见的处理方式是？',o:['拆成独立的短句（分译）', '译成状语', '省略不译', '一律前置成「的」'],a:0,why:'英语定语从句长，中文习惯短句。所以常把从句拆出来单独成句（如 which 指代前句时）。短定语才前置成「…的」。'},
+  {tag:'E7',subj:'en',q:'「This is the house where he lived.」译为中文时，where 从句通常？',o:['译成原因', '译成「这就是房子，他住在那里」', '译成「他住过的房子」（前置定语）', '省略'],a:2,why:'where 引导的定语从句较短时，前置成「他住过的」。如果从句很长，才拆成两句。判断依据是长度和流畅度。'},
+  {tag:'E7',subj:'en',q:'英译汉中「名词化结构」的常见处理是？',o:['译成形容词', '转译成动词（汉语多动词）', '保留名词', '省略'],a:1,why:'英语爱用名词（the implementation of the plan），汉语爱用动词（实施这个计划）。所以常把英语名词转成汉语动词，更通顺。'},
+  {tag:'E7',subj:'en',q:'「It is universally acknowledged that ...」的推荐译法是？',o:['人们普遍认为……', '这是普遍的认知', '它被普遍承认', '普遍承认它'],a:0,why:'英语被动 + 形式主语，译成中文的主动式「人们认为/据认为」更自然。直译「被普遍承认」显得生硬。'},
+  {tag:'E7',subj:'en',q:'翻译中「词性转换」最常见的是？',o:['名词↔连词', '动词↔介词', '只有一种', '名词↔动词、形容词↔副词'],a:3,why:'英译汉最常见的转换：名词→动词（implementation→实施）、形容词→副词（quick→迅速地）、介词→动词（with→用）。目的是符合汉语表达习惯。'},
+  {tag:'E7',subj:'en',q:'遇到不认识的生词，翻译时应该？',o:['根据上下文和构词法推测，保证句子通顺', '跳过整句', '留空', '音译'],a:0,why:'考研翻译按「意思准确 + 汉语通顺」评分。个别词不认识时，靠上下文推大意，保证整体通顺比卡在一个词上好。'},
+  {tag:'E7',subj:'en',q:'「as ... as」结构在翻译中常译为？',o:['「除非」', '「虽然」', '「因为」', '「和…一样」或「既…又…」'],a:3,why:'as...as 表示同级比较。但在不同语境下也可能是「随着」（as 引导时间状语）或「因为」（as 引导原因）。要看句子结构。'},
+  {tag:'E7',subj:'en',q:'翻译评分中最容易失分的是？',o:['用词不够华丽', '漏译或错译关键信息', '字数不够', '标点'],a:1,why:'考研翻译按「信息点」给分。漏掉一个要点就扣分，用词朴素不扣。所以**宁可朴素，不要漏译**。'},
+  {tag:'E8',subj:'en',q:'小作文（书信）中，开头段的常用表达是？',o:['In conclusion ...', 'I am writing to ...', 'As we all know ...', 'Once upon a time ...'],a:1,why:'书信开头：I am writing to apply for / complain about / inquire about...（我写信是为了申请/投诉/询问）。直接说明目的。'},
+  {tag:'E8',subj:'en',q:'小作文中「投诉信」的语气应该是？',o:['随意口语', '愤怒谩骂', '卑微恳求', '礼貌但明确（坚定而不失礼）'],a:3,why:'投诉信要「firm but polite」：说明问题、表达不满、提出要求，但保持礼貌。过于情绪化会失分（不符合书信规范）。'},
+  {tag:'E8',subj:'en',q:'大作文描述图画时，常用的开头句式是？',o:['First of all ...', 'In my opinion ...', 'I think that ...', 'As is vividly depicted in the picture, ...'],a:3,why:'图画描述常用：As is vividly depicted/shown/illustrated in the picture, ...（如图所示）。这是「描述段」的标准开头。'},
+  {tag:'E8',subj:'en',q:'大作文分析原因段，常用的过渡表达是？',o:['All in all ...', 'To sum up ...', 'Several factors contribute to this phenomenon.', 'In a word ...'],a:2,why:'原因分析段开头：Several factors contribute to / account for this phenomenon（几个因素造成了这个现象）。然后 First...Second...Finally。'},
+  {tag:'E8',subj:'en',q:'写作中避免「中式英语」的关键是？',o:['多用长句', '用英语的句式和搭配，不逐字翻译中文', '多用成语', '多用难词'],a:1,why:'中式英语来自「中文思维直译」。改进方法：背地道搭配（make a decision 而非 do a decision）、用简单句保证正确、少用没把握的长句。'},
+  {tag:'E8',subj:'en',q:'大作文结尾段，除了建议还可以写？',o:['重复描述图画', '道歉', '列举数据', '展望未来或呼吁行动'],a:3,why:'结尾三选一：① 提出建议（we should...）；② 展望（only in this way can we...）；③ 呼吁（it is high time that...）。不重复描述。'},
+  {tag:'E8',subj:'en',q:'写作中「it is high time that」后面的从句谓语用？',o:['过去式（虚拟语气）', '现在式', '将来式', '原形'],a:0,why:'It is high time that sb. did sth.（早就该做某事了）。这是虚拟语气，从句用过去式。类似的还有 would rather that...。'},
+  {tag:'E8',subj:'en',q:'考研写作的字数要求大约是？',o:['都 200 词', '都 100 词', '不限', '小作文 100 词，大作文 160-200 词'],a:3,why:'英语一：小作文约 100 词，大作文 160-200 词。字数不足或过多都会影响分数。宁可写满要求，不要超太多。'},
+  {tag:'E9',subj:'en',q:'阅读中「词汇题」问某词的意思，答案通常？',o:['无法判断', '就是词典第一个义项', '是熟词僻义之外的原义', '在该词前后的上下文里（解释、对比、举例）'],a:3,why:'考研阅读的词汇题 90% 是「熟词僻义」或「上下文定义」。找线索：破折号、冒号、such as、that is、or 后面的解释。'},
+  {tag:'E9',subj:'en',q:'阅读中「推理题」的标志词是？',o:['infer / imply / suggest / learn', 'state / mention', 'list', 'define'],a:0,why:'infer/imply/suggest 都是「推断」，答案不能是原文照抄，要推一步。而 state/mention 问的是「文中说了什么」，可以直接对应原文。'},
+  {tag:'E9',subj:'en',q:'「Which of the following is TRUE?」这类题的做法是？',o:['逐项回原文定位验证', '选最长的', '凭印象选', '选最抽象的'],a:0,why:'判断正误题必须逐项定位：找到原文对应句，看是否一致。注意「部分正确」「偷换概念」「过度推断」都是常见的错误项设计。'},
+  {tag:'E9',subj:'en',q:'阅读中「指代题」问 it/they 指什么，应该？',o:['往前找最近的名词（单复数一致）', '指作者', '指读者', '往后找'],a:0,why:'代词指代通常在前文。找「最近的、数一致的、意义通顺的」名词短语。有时指代整个前句的意思（如 this means...）。'},
+  {tag:'E9',subj:'en',q:'「The author’s attitude towards X is ...」选项中，objective 通常？',o:['是正确的（学术文章多客观）', '表示反对', '表示支持', '是干扰项'],a:0,why:'学术文章作者态度多为 objective（客观）、critical（批判）、supportive（支持）。indifferent（漠不关心）几乎总是错的。'},
+  {tag:'E9',subj:'en',q:'阅读中「段落作用题」问某段的作用，应该看？',o:['该段的生词', '该段与前后段的逻辑关系', '该段的长度', '该段有几个词'],a:1,why:'段落作用：① 提出论点（首段）；② 提供论据（中间）；③ 转折/对比（But 开头）；④ 总结（末段）。看它和前后文的关系。'},
+  {tag:'E9',subj:'en',q:'阅读时间不够时，最该优先做的是？',o:['先做细节题（好定位），主旨题最后', '先做主旨题', '按顺序做', '随机'],a:0,why:'细节题有定位词，能快速找到答案。主旨题要通读全文，耗时长。所以「先细节后主旨」是常见策略。'},
+  {tag:'E9',subj:'en',q:'「干扰项」的常见特征不包括？',o:['过度推断', '答非所问', '与原文完全一致', '偷换概念（换主语/范围）'],a:2,why:'干扰项设计：① 偷换概念；② 过度推断（推两步）；③ 答非所问（回答了别的问题）；④ 绝对化。**与原文完全一致的是正确答案**。'},
+  {tag:'E10',subj:'en',q:'affect 和 effect 的区别是？',o:['effect 是动词（影响）', 'affect 是名词', 'affect 是动词（影响），effect 是名词（效果）', '两者都是动词'],a:2,why:'affect（v. 影响）vs effect（n. 效果）。但 effect 也可作动词表示「实现」（effect a change）。考研最爱考 affect/effect 混用。'},
+  {tag:'E10',subj:'en',q:'「considerable」和「considerate」的区别是？',o:['considerable 是「相当大的」，considerate 是「体贴的」', 'considerate 是相当大的', '两者一样', 'considerable 是体贴的'],a:0,why:'considerable（adj. 相当大的、可观的）vs considerate（adj. 体贴的、考虑周到的）。拼写只差一个字母，意思完全不同。'},
+  {tag:'E10',subj:'en',q:'「economic」和「economical」的区别是？',o:['economic 是「经济的（学科的）」，economical 是「节约的」', 'economical 是经济学', 'economic 是节约的', '两者一样'],a:0,why:'economic（经济的，如 economic growth 经济增长）vs economical（节约的，如 an economical car 省油的车）。'},
+  {tag:'E10',subj:'en',q:'「respectable / respectful / respective」分别指？',o:['都是「尊敬的」', '可敬的 / 恭敬的 / 各自的', '都是「各自的」', '可敬的 / 各自的 / 恭敬的'],a:1,why:'respectable（值得尊敬的）respectful（恭敬的，对人态度）respective（各自的）。三个词根相同但后缀决定意思。'},
+  {tag:'E10',subj:'en',q:'「sensible」和「sensitive」的区别是？',o:['sensible 是「明智的」，sensitive 是「敏感的」', '两者一样', 'sensitive 是明智的', 'sensible 是敏感的'],a:0,why:'sensible（明智的、合理的）vs sensitive（敏感的、易受影响的）。a sensible decision（明智的决定）vs sensitive skin（敏感皮肤）。'},
+  {tag:'E10',subj:'en',q:'「principal」和「principle」的区别是？',o:['principle 是主要的', 'principal 是「主要的/校长」，principle 是「原则」', '两者一样', 'principal 是原则'],a:1,why:'principal（adj. 主要的；n. 校长/本金）vs principle（n. 原则/原理）。拼写相近，词性不同。考研常考 in principle（原则上）。'},
+  {tag:'E10',subj:'en',q:'「adapt / adopt / adept」分别指？',o:['都是「适应」', '适应 / 采用 / 熟练的', '适应 / 熟练的 / 采用', '采用 / 适应 / 熟练的'],a:1,why:'adapt（适应、改编）adopt（采用、收养）adept（熟练的）。adapt to（适应）、adopt a policy（采取政策）。'},
+  {tag:'E10',subj:'en',q:'「complement」和「compliment」的区别是？',o:['complement 是赞美', 'complement 是「补充」，compliment 是「赞美」', 'compliment 是补充', '两者一样'],a:1,why:'complement（n./v. 补充、补足）vs compliment（n./v. 赞美、恭维）。拼写只差一个字母（e/i）。'}
 ];
 
 const TAG_NAMES = {
@@ -1377,10 +1418,11 @@ const TAG_NAMES = {
   M1:'极限与连续', M2:'导数与微分', M3:'积分', M4:'线性代数', M5:'概率统计',
   M6:'多元微分', M7:'多重积分', M8:'无穷级数', M9:'微分方程', M10:'空间解析几何',
   E1:'词汇与语法', E2:'完形填空', E3:'阅读理解', E4:'新题型', E5:'翻译与写作',
+  E6:'长难句', E7:'翻译实战', E8:'写作', E9:'阅读题型', E10:'易混词汇',
   P1:'马原', P2:'毛中特', P3:'史纲', P4:'思修', P5:'时政'
 };
 
-const BANK_LEN = 658;
+const BANK_LEN = 698;
 
 /* ============================================================
    读写
@@ -1618,6 +1660,7 @@ var BANK_CHAPS = [
   {id:'math', name:'数学一（第一章）', tags:['M1','M2','M3','M4','M5'], subj:'math'},
   {id:10, name:'数学一（第二章）', tags:['M6','M7','M8','M9','M10'], subj:'math'},
   {id:'en', name:'英语一（第一章）', tags:['E1','E2','E3','E4','E5'], subj:'en'},
+  {id:11, name:'英语一（第二章）', tags:['E6','E7','E8','E9','E10'], subj:'en'},
   {id:'pol', name:'政治（第一章）', tags:['P1','P2','P3','P4','P5'], subj:'pol'}
 ];
 
