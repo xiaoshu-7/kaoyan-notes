@@ -4054,10 +4054,15 @@ function showSettle(final){
     '</div>';
 
   document.getElementById('endBtn').onclick = () => {
-    if(G.level >= 10){ location.href = 'hub.html?subject=ds&chapter=' + G.chapter; return; }
+    if(G.level >= 10){ location.href = 'hub.html?subject=' + G.subject + '&chapter=' + G.chapter; return; }
     m.innerHTML = ''; m.classList.add('off');
     G.state = 'play';
     startLevel(G.level + 1);
+    // 关键：刷新右侧答题区（否则还停在上一关的题）
+    qIdx = 0;
+    G.qPool = [];
+    buildQuestionPool();
+    nextQuestion();
   };
   document.getElementById('hubBtn').onclick = () => { location.href = 'hub.html'; };
   document.getElementById('contBtn').onclick = () => {
@@ -5337,9 +5342,10 @@ document.getElementById('restartBtn').onclick = () => {
   document.getElementById('pauseMenu').classList.add('off');
   G.state = 'play';
   startLevel(G.level);
+  qIdx = 0; G.qPool = []; buildQuestionPool(); nextQuestion();
 };
 document.getElementById('quitBtn').onclick = () => {
-  location.href = 'hub.html?subject=ds&chapter=' + G.chapter;
+  location.href = 'hub.html?subject=' + G.subject + '&chapter=' + G.chapter;
 };
 document.getElementById('pauseFire').querySelectorAll('button').forEach(b => {
   b.onclick = () => {
