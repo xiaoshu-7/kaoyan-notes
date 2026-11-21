@@ -4084,7 +4084,7 @@ function startLevel(lv){
   G.wave = 0;
   G.waveState = 'gap';
   G.waveTimer = 240;
-  G.waveGap = 480;
+  G.waveGap = 330;
   G.waveLeft = 0;
   G.waveBonus = 1;
   G.settled = false;
@@ -4151,7 +4151,7 @@ function startWave(){
     G.waveLeft = 2;             // 只带两个小怪
     setTimeout(() => spawnBoss(), 400);
   }
-  const base = 3 + Math.floor(G.wave * 0.55) + Math.floor(G.level * 0.4);
+  const base = 5 + Math.floor(G.wave * 1.05) + Math.floor(G.level * 0.7);
   G.waveLeft = Math.max(2, Math.round(base * (G.waveBonus || 1)));
   G.spawnCd = 0;
   G.waveBonus = 1;
@@ -4965,7 +4965,7 @@ function buildQuestionPool(){
   pool = pool.filter(function(i){ return (BANK[i].subj || 'ds') === G.subject; });
   if(tags){
     const filtered = pool.filter(i => tags.indexOf(BANK[i].tag) >= 0);
-    if(filtered.length >= 5) pool = filtered;
+    if(filtered.length >= 18) pool = filtered;   // 池子太小就不锁题组，用全科题避免重复
   }
 
   if(G.qOrder === 'seq'){
@@ -4986,6 +4986,16 @@ function nextQuestion(){
   if(nav0) nav0.classList.remove('on');
   qLocked = false;
   if(!G.qPool.length) buildQuestionPool();
+  // 一轮抽完 → 重新洗牌再来（保证相邻两轮不重复同样的顺序）
+  if(qIdx >= G.qPool.length && G.qPool.length > 1){
+    if(G.qOrder !== 'seq'){
+      for(let i=G.qPool.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        const t = G.qPool[i]; G.qPool[i] = G.qPool[j]; G.qPool[j] = t;
+      }
+    }
+    qIdx = 0;
+  }
   const qi = G.qPool[qIdx % G.qPool.length];
   const q = BANK[qi];
   G.curQ = q;
