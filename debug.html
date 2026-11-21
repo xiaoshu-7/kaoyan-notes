@@ -5016,7 +5016,7 @@ const TRAITS = [
 ];
 
 // 调试：把关键对象暴露到 window
-try{ window.TRAITS = TRAITS; window.G = G; }catch(e){}
+try{ window.TRAITS = TRAITS; window.G = G; window.applyReward = applyReward; window.updateTraitsUI = updateTraitsUI; window.addFloat = addFloat; }catch(e){}
 
 function pickReward(){
   const cfg = levelCfg(G.level);
@@ -5032,19 +5032,17 @@ function pickReward(){
 
 function applyReward(t){
   if(!t) return;
-  const p = G.player;
   G.traits[t.id] = (G.traits[t.id] || 0) + 1;
   const lv = G.traits[t.id];
+  const p = G.player;
 
-  if(t.id === 'blast' || t.id === 'split' || t.id === 'slow'){
-    addFloat(p.x, p.y - 30, t.name + ' Lv' + lv, t.col);
-    return;
-  }
-  if(t.id === 'armor'){
+  // 装甲：加血上限并回满（必须重开关卡后仍生效）
+  if(t.id === 'armor' && p){
     p.maxHp += 25;
     p.hp = p.maxHp;
   }
-  addFloat(p.x, p.y - 30, t.name + ' Lv' + lv, t.col);
+  // 浮动提示（没有玩家对象就跳过，菜单状态下也能改特性）
+  if(p) addFloat(p.x, p.y - 30, t.name + ' Lv' + lv, t.col);
   updateTraitsUI();
 }
 
@@ -5505,7 +5503,7 @@ if(new URLSearchParams(location.search).has('demo')){
 <script>
 /* ===== 调试面板（?debug=1 开启）===== */
 (function(){
-  // debug.html：永远显示面板（不依赖 URL 参数）
+  // debug.html：永远显示面板
   const panel = document.getElementById('dbg');
   panel.style.display = 'block';
 
@@ -5553,12 +5551,18 @@ if(new URLSearchParams(location.search).has('demo')){
     b.onclick = () => {
       if(typeof G === 'undefined' || !G.traits) return;
       const cur = G.traits[t.id] || 0;
-      const next = (cur + 1) > t.max ? 0 : cur + 1;
-      G.traits[t.id] = next;
-      if(next === 0) delete G.traits[t.id];
-      b.style.borderColor = next > 0 ? t.col : '#2a4a3a';
-      b.style.background = next > 0 ? 'rgba(95,224,138,.18)' : '#0e2018';
-      b.textContent = t.icon + t.name + (next > 0 ? ' ' + next : '');
+      if(cur >= t.max){
+        // 到顶 → 归零
+        delete G.traits[t.id];
+      } else {
+        // 走游戏内部的发放逻辑（环绕/装甲等有副作用）
+        if(typeof applyReward === 'function') applyReward(t);
+        else G.traits[t.id] = cur + 1;
+      }
+      const now = G.traits[t.id] || 0;
+      b.style.borderColor = now > 0 ? t.col : '#2a4a3a';
+      b.style.background = now > 0 ? 'rgba(95,224,138,.18)' : '#0e2018';
+      b.textContent = t.icon + t.name + (now > 0 ? ' ' + now : '');
       if(typeof updateTraitsUI === 'function') updateTraitsUI();
     };
     box.appendChild(b);
