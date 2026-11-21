@@ -3556,6 +3556,11 @@ function update(){
     const distT = Math.hypot(tx - e.x, ty - e.y);
     let moveAng = ang;
     let moveSpd = e.speed * (G.slowT > 0 ? 0.45 : 1);
+    // 迟滞力场：靠近玩家时减速
+    if((G.traits.slow||0) > 0 && !e.isBoss){
+      const dslow = Math.hypot(e.x-p.x, e.y-p.y);
+      if(dslow < 130 + (G.traits.slow-1)*40) moveSpd *= 0.75;
+    }
 
     // 射手/重甲：保持在射程边缘
     if(e.keep > 0){
@@ -3729,6 +3734,26 @@ function update(){
                 mate.hp -= 1;
                 mate.flash = 4;
                 addFloat(mate.x, mate.y - 14, '共享', '#5fa8ff');
+              }
+            }
+            // 爆裂弹：命中点小范围爆炸
+            if((G.traits.blast||0) > 0){
+              const R2 = 34 + (G.traits.blast-1)*10;
+              boom(e.x, e.y, '#ff8a4c');
+              for(const o of G.enemies){
+                if(o === e || o.hp <= 0) continue;
+                if(Math.hypot(o.x-e.x, o.y-e.y) < R2){
+                  o.hp -= 1; o.flash = 4;
+                }
+              }
+            }
+            // 分裂弹：命中后向两侧分裂小弹
+            if((G.traits.split||0) > 0 && !b._isChild){
+              for(let k=0;k<2;k++){
+                const na = b.a + (k===0 ? 0.45 : -0.45);
+                const nb = { x:b.x, y:b.y, a:na, speed:b.speed*0.85, owner:'player',
+                             dmg:1, crit:b.crit, bounce:0, pierce:0, dead:false, _isChild:true };
+                G.bullets.push(nb);
               }
             }
             if(e.hp<=0){
@@ -4113,7 +4138,7 @@ function startLevel(lv){
       if(hitsWall(bx, by, 10)) continue;
       if(Math.hypot(bx - G.base.x, by - G.base.y) < 110) continue;
       if(G.barrels.some(function(b){ return Math.hypot(b.x-bx, b.y-by) < 70; })) continue;
-      G.barrels.push({x:bx, y:by, r:11, hp:1, fuse:0});
+      G.barrels.push({x:bx, y:by, r:14, hp:1, fuse:0});
     }
     // 兜底：如果随机全失败，就在基地周围固定位置放 3 个
     if(G.barrels.length === 0){
@@ -4166,10 +4191,16 @@ function startWave(){
 
 function explodeBarrel(br, depth){
   if(depth > 3) return;
-  const R = 66;
+  const R = 95;
+  // 视觉：三层爆炸 + 冲击环
   boom(br.x, br.y, '#ff8a4c');
   boom(br.x, br.y, '#ffd166');
-  G.shake = Math.max(G.shake || 0, 7);
+  boom(br.x, br.y, '#ffffff');
+  for(let i=0;i<14;i++){
+    const a = Math.PI*2*i/14;
+    spark(br.x + Math.cos(a)*20, br.y + Math.sin(a)*20);
+  }
+  G.shake = Math.max(G.shake || 0, 9);
 
   // 范围内敌人受伤
   for(const e of G.enemies){
@@ -5092,13 +5123,19 @@ const TRAITS = [
   {id:'speed',  name:'疾行',     icon:'⇒', col:'#a8e6ff', max:3, desc:'移动速度 +15%'},
   {id:'orbit',  name:'环绕',     icon:'◍', col:'#c77dff', max:3, desc:'增加 1 颗环绕光球'},
   {id:'chain',  name:'电弧',     icon:'⌁', col:'#7fd6ff', max:3, desc:'每 3 秒电击最近敌人'},
-  {id:'steal',  name:'吸血',     icon:'♥', col:'#ff6b8a', max:2, desc:'击杀回 2 血'}
+  {id:'steal',  name:'吸血',     icon:'♥', col:'#ff6b8a', max:2, desc:'击杀回 2 血'},
+  {id:'blast',  name:'爆裂弹',   icon:'✸', col:'#ff8a4c', max:2, desc:'子弹命中炸开，波及周围'},
+  {id:'split',  name:'分裂弹',   icon:'✦', col:'#7fd6ff', max:2, desc:'命中后分裂成 2 发小弹'},
+  {id:'slow',   name:'迟滞力场', icon:'◷', col:'#9b7bff', max:2, desc:'附近敌人移速 -25%'}
 ];
 
 function pickReward(){
   const cfg = levelCfg(G.level);
+  // 三个「玩法型」特性全局可用（不依赖关卡配置）
+  const GLOBAL_TRAITS = ['blast', 'split', 'slow'];
   const pool = TRAITS.filter(t =>
-    cfg.traits.includes(t.id) && (G.traits[t.id] || 0) < t.max
+    (cfg.traits.includes(t.id) || GLOBAL_TRAITS.indexOf(t.id) >= 0) &&
+    (G.traits[t.id] || 0) < t.max
   );
   if(!pool.length) return null;
   return pool[Math.floor(Math.random() * pool.length)];
@@ -5110,6 +5147,10 @@ function applyReward(t){
   G.traits[t.id] = (G.traits[t.id] || 0) + 1;
   const lv = G.traits[t.id];
 
+  if(t.id === 'blast' || t.id === 'split' || t.id === 'slow'){
+    addFloat(p.x, p.y - 30, t.name + ' Lv' + lv, t.col);
+    return;
+  }
   if(t.id === 'armor'){
     p.maxHp += 25;
     p.hp = p.maxHp;
